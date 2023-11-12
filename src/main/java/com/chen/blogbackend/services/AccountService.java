@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 public class AccountService {
 
     public static boolean validate(String username, String password) {
-        JWT.create();
+
         return true;
     }
 }
