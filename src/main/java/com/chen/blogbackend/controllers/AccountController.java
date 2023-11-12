@@ -23,7 +23,6 @@ public class AccountController {
     @Autowired
     AccountService accountService;
 
-
     @RequestMapping("login")
     public LoginMessage login(@Param("userName") String userName, @Param("password") String password)
     {
