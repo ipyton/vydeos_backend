@@ -22,7 +22,7 @@ public class ArticleController {
         return service.getArticles(authorID);
     }
 
-    @RequestMapping("get")
+    @RequestMapping("get_from_to")
     public ArrayList<Article> getArticle(@RequestParam("author_id") String authorID, @RequestParam("from") int from, @RequestParam("to") int to) {
         return service.getArticles(authorID, from, to);
     }

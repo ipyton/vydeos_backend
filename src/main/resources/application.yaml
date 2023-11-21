@@ -1,0 +1,17 @@
+mybatis:
+  # 别名配置
+  typeAliasesPackage: com.example.demo.entity
+  # Mapper XML文件存放路径
+  mapperLocations: classpath*:mapper/*.xml
+  # 数据库连接池配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/test?useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: czh3840941
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      minimumIdle: 5
+      maximumPoolSize: 20
+      idleTimeout: 300000
+      connectionTimeout: 30000
