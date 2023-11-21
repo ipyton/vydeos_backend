@@ -4,39 +4,32 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class Token {
-    private String userID;
-    private String username;
+    private String email;
     private Date expiresDateAndTime;
 
-    public String getUserID() {
-        return userID;
+    public String getEmail() {
+        return email;
     }
 
-    public Token(String userID, String username, int expiresSeconds) {
-        this.userID = userID;
-        this.username = username;
+    public Token(String email, int expiresSeconds) {
+        this.email = email;
+
         Calendar instance = Calendar.getInstance();
         instance.add(Calendar.SECOND, expiresSeconds);
         this.expiresDateAndTime = instance.getTime();
     }
 
-    public Token(String userID, String username, Date expiresDateAndTime) {
-        this.userID = userID;
-        this.username = username;
+    public Token(String email, Date expiresDateAndTime) {
+        this.email = email;
+
         this.expiresDateAndTime = expiresDateAndTime;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
-    public String getUsername() {
-        return username;
-    }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public Date getExpiresDateAndTime() {
         return expiresDateAndTime;

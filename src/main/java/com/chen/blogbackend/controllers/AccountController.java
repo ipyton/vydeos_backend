@@ -24,26 +24,22 @@ public class AccountController {
     AccountService accountService;
 
     @PostMapping("/login")
-    public LoginMessage login(@Param("userName") String userName, @Param("password") String password)
+    public LoginMessage login(@Param("userName") String email, @Param("password") String password)
     {
-        String userId = accountService.validatePassword(userName, password);
-        if(userId != null) {
-            String token = TokenUtil.createToken(new Token(userId, userName,30 * 3600 * 24));
-            Token token1 = TokenUtil.resolveToken(token);
-            System.out.println(token1.getUserID());
-            System.out.println(token1.getUsername());
-            System.out.println(token1.getExpiresDateAndTime());
-
-            return new LoginMessage(1, token);
+        if(accountService.validatePassword(email, password)) {
+            String token = TokenUtil.createToken(new Token(email,30 * 3600 * 24));
+            if(0 != accountService.setToken(email, token)) {
+                return new LoginMessage(1, token);
+            }
         }
-        else return new LoginMessage(-1, "Check your user name and password!");
+        return new LoginMessage(-1, "Check your user name and password!");
     }
 
     @PostMapping("/register")
     public LoginMessage register(Account accountInfo) {
         if (AccountInfoValidator.validateAccount(accountInfo)) {
             accountService.insert(accountInfo);
-            return new LoginMessage(1, "Regist Successfully");
+            return new LoginMessage(1, "Registered Successfully");
         }
         else return new LoginMessage(-1, "register error");
 
@@ -51,14 +47,15 @@ public class AccountController {
 
     @PostMapping("/info")
     public Account getAccountInformation(HttpServletRequest request) {
+        accountService.selectAccount("sdfsdf");
         String token = request.getHeader("token");
         Token token1 = TokenUtil.resolveToken(token);
-        System.out.println(token1.getUserID() + token1.getUsername() + token1.getExpiresDateAndTime());
+        System.out.println(token1.getEmail() + token1.getExpiresDateAndTime());
         if (null == token1) {
             return new Account();
         }
-        System.out.println(token1.getUserID());
-        return accountService.selectAccount(token1.getUserID());
+        System.out.println(token1.getEmail());
+        return accountService.selectAccount(token1.getEmail());
     }
 
 

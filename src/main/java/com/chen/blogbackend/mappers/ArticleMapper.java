@@ -1,9 +1,11 @@
 package com.chen.blogbackend.mappers;
 
 import com.chen.blogbackend.entities.Article;
+import org.apache.ibatis.annotations.Mapper;
 
 import java.util.ArrayList;
 
+@Mapper
 public interface ArticleMapper {
     ArrayList<Article> getArticles(String articleID);
 

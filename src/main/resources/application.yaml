@@ -1,8 +1,8 @@
 mybatis:
   # 别名配置
-  typeAliasesPackage: com.example.demo.entity
+  # typeAliasesPackage: com.example.demo.entity
   # Mapper XML文件存放路径
-  mapperLocations: classpath*:mapper/*.xml
+  # mapperLocations: classpath*:mapper/*.xml
   # 数据库连接池配置
   datasource:
     url: jdbc:mysql://localhost:3306/test?useSSL=false&serverTimezone=Asia/Shanghai

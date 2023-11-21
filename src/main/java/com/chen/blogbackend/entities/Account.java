@@ -8,19 +8,19 @@ import java.sql.Date;
 @EntityScan
 public class Account {
     @Autowired
-    private String userID="";
+    private String userEmail ="";
     private String userName="";
     private String password="";
     private String introduction="";
     private String avatar="";
     private Date dateOfBirth = null;
 
-    public String getUserID() {
-        return userID;
+    public String getUserEmail() {
+        return userEmail;
     }
 
-    public void setUserID(String userID) {
-        this.userID = userID;
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 
     public String getUserName() {
@@ -49,6 +49,18 @@ public class Account {
 
     public String getAvatar() {
         return avatar;
+    }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "userID='" + userEmail + '\'' +
+                ", userName='" + userName + '\'' +
+                ", password='" + password + '\'' +
+                ", introduction='" + introduction + '\'' +
+                ", avatar='" + avatar + '\'' +
+                ", dateOfBirth=" + dateOfBirth +
+                '}';
     }
 
     public void setAvatar(String avatar) {

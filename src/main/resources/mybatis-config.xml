@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!--configuration核心配置文件-->
+<!--顺序 properties->settings->typeAliases->typeHandlers->objectFactory->objectWrapperFactory->reflectorFactory->plugins->environments->databaseIdProvider->mappers-->
+<configuration>
+    <!--jdbc.properties配置文件-->
+
+    <!--设置mybatis输出日志 Mybatis默认就是STDOUT_LOGGING-->
+    <settings>
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+
+    <!--  类型别名 默认为类名 指定这个后 mapper的xml文件指定返回值时候 可直接写类名(不区分大小写) 建议直接拷贝类名  -->
+    <typeAliases>
+        <package name="com.chen.blogbackend.entities"/>
+    </typeAliases>
+
+    <!-- 环境配置 -->
+    <!-- development IDEA默认 开发环境 -->
+    <!-- 可以自定义 比如定义test formal 看心情 每个SqlSessionFactory实例只能选择一种环境 这个可随时配置 -->
+    <!-- test 测试环境 -->
+    <!-- formal 正式环境 -->
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/blog?useSSL=false&amp;serverTimezone=Asia/Shanghai"/>
+                <property name="username" value="root"/>
+                <property name="password" value="czh3840941"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <!-- 映射器 每一个mapper.xml都需要在Mybatis的核心文件中注册! -->
+    <!-- 注册方式1 使用xml文件 <mapper resource="com/ceaning/efmis/mapper/UserMapper.xml"/> -->
+    <!-- 注册方式2 使用class文件 <mapper class="com.ceaning.efmis.mapper.UserMapper"/> -->
+    <!-- 注册方式3 mapper代理方式 <package name="com.ceaning.efmis.mapper"/> -->
+    <!--
+        注册方式2(使用class文件)和注册方式3(使用包扫描注册)
+        1.接口和他的Mapper配置文件必须同名
+        2.接口和他的Mapper配置文件必须在同一个包下
+    -->
+    <mappers>
+        <package name="com.chen.blogbackend.mappers"/>
+    </mappers>
+</configuration>
