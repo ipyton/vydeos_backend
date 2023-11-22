@@ -5,24 +5,41 @@ import java.util.Date;
 
 public class Token {
     private String email;
-    private Date expiresDateAndTime;
+    private Date expireDatetime;
+
+    public String getTokenString() {
+        return tokenString;
+    }
+
+    public void setTokenString(String tokenString) {
+        this.tokenString = tokenString;
+    }
+
+    private String tokenString;
+
 
     public String getEmail() {
         return email;
     }
 
-    public Token(String email, int expiresSeconds) {
+    public Token(String email, String tokenString, int expiresSeconds) {
         this.email = email;
-
         Calendar instance = Calendar.getInstance();
+        this.tokenString = tokenString;
         instance.add(Calendar.SECOND, expiresSeconds);
-        this.expiresDateAndTime = instance.getTime();
+        this.expireDatetime = instance.getTime();
     }
 
-    public Token(String email, Date expiresDateAndTime) {
+    public Token(String email, String tokenString, Date expireDatetime) {
         this.email = email;
 
-        this.expiresDateAndTime = expiresDateAndTime;
+        this.tokenString = tokenString;
+        this.expireDatetime = expireDatetime;
+    }
+
+    public Token(String email, Date expireDatetime) {
+        this.email = email;
+        this.expireDatetime = expireDatetime;
     }
 
     public void setEmail(String email) {
@@ -30,12 +47,11 @@ public class Token {
     }
 
 
-
-    public Date getExpiresDateAndTime() {
-        return expiresDateAndTime;
+    public Date getExpireDatetime() {
+        return expireDatetime;
     }
 
-    public void setExpiresDateAndTime(Date expiresDateAndTime) {
-        this.expiresDateAndTime = expiresDateAndTime;
+    public void setExpireDatetime(Date expireDatetime) {
+        this.expireDatetime = expireDatetime;
     }
 }

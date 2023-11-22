@@ -1,18 +1,15 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.Util.PasswordEncryption;
+import com.chen.blogbackend.Util.TokenUtil;
 import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Token;
 import com.chen.blogbackend.mappers.AccountMapper;
-import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Date;
 
 @Service
@@ -22,23 +19,34 @@ public class AccountService {
     SqlSessionFactory sqlSessionFactory;
 
     public boolean insert(Account account) {
-
-        return true;
+        SqlSession session = sqlSessionFactory.openSession();
+        AccountMapper mapper = session.getMapper(AccountMapper.class);
+        int result = mapper.insertAccount(account);
+        session.commit();
+        session.close();
+        return result != 0;
     }
 
     public Account selectAccount(String accountID) {
         SqlSession session = sqlSessionFactory.openSession();
         AccountMapper mapper = session.getMapper(AccountMapper.class);
-        System.out.println(mapper.getAccount("9999999"));
+        System.out.println(mapper.getAccount(accountID));
         session.close();
         return new Account();
     }
 
     public boolean haveValidLogin(String token) {
+        if (null == token) return false;
         SqlSession session = sqlSessionFactory.openSession();
         AccountMapper mapper = session.getMapper(AccountMapper.class);
         Token tokenGet = mapper.getToken(token);
-        return tokenGet != null && tokenGet.getExpiresDateAndTime().after(new Date());
+        session.close();
+
+        if(null == tokenGet || null == TokenUtil.resolveToken(token).getEmail() ||
+                !TokenUtil.resolveToken(token).getEmail().equals(tokenGet.getEmail())){
+            return false;
+        }
+        return tokenGet.getExpireDatetime().after(new Date());
     }
 
     public boolean validatePassword(String email,String password){
@@ -46,15 +54,21 @@ public class AccountService {
         SqlSession session = sqlSessionFactory.openSession();
         AccountMapper mapper = session.getMapper(AccountMapper.class);
         Account account = mapper.getAccount(email);
-        if (account.getPassword().equals(password)) {
+        session.close();
+        if (null != account && account.getPassword().equals(password)) {
             return true;
         }
         return false;
     }
 
-    public int setToken(String email,String token) {
+    public int setToken(Token token) {
         SqlSession session = sqlSessionFactory.openSession();
         AccountMapper mapper = session.getMapper(AccountMapper.class);
-        return mapper.setToken(email, token, new Date());
+        if (null != mapper.getToken(token.getEmail())) return 0;
+        int result = mapper.setToken(token);
+        session.commit();
+        session.close();
+        return result;
     }
+
 }

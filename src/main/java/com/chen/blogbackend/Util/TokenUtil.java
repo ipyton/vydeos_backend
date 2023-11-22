@@ -7,7 +7,6 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.chen.blogbackend.entities.Token;
 
-import java.util.Calendar;
 import java.util.HashMap;
 
 //using symmetric encryption option.
@@ -15,19 +14,21 @@ public class TokenUtil {
 
     private static String pubKey = "Asdasd1";
 
-    public static String createToken(Token token){
-        return JWT.create().withHeader(new HashMap<>()).withClaim("email", token.getEmail())
-                .withExpiresAt(token.getExpiresDateAndTime())
+    public static Token createToken(Token token){
+        String tokenString = JWT.create().withHeader(new HashMap<>()).withClaim("email", token.getEmail())
+                .withExpiresAt(token.getExpireDatetime())
                 .sign(Algorithm.HMAC256(pubKey));
+        token.setTokenString(tokenString);
+        return token;
     }
 
 
     public static Token resolveToken(String tokenString){
-        Calendar cal = Calendar.getInstance();
+//        Calendar cal = Calendar.getInstance();
         JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(pubKey)).build();
         DecodedJWT decodedJWT = jwtVerifier.verify(tokenString);
         Claim userId = decodedJWT.getClaim("email");
-        if (decodedJWT.getExpiresAt().before(cal.getTime())) return null;
+//        if (decodedJWT.getExpiresAt().before(cal.getTime())) return null;
         return new Token(userId.asString(), decodedJWT.getExpiresAt());
     }
 

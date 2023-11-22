@@ -11,14 +11,18 @@ import java.util.Date;
 @Mapper
 public interface AccountMapper {
 
-    @Select("select * from user_info where user_email = #{email}")
+    @Select("select * from user_info where user_email = #{userEmail}")
     Account getAccount(String email);
 
-    @Select("select * from token  where token = #{token}")
+    @Insert("insert into user_info(user_email, user_name, password, introduction, avatar, date_of_birth) values(#{userEmail}," +
+            "#{userName},#{password},#{introduction},#{avatar}, #{dateOfBirth})")
+    int insertAccount(Account account);
+
+    @Select("select * from token where token_string = '#{token}'")
     Token getToken(String token);
 
-    int addAccount(Account account);
 
-    @Insert("insert token(user_email, token, expire_datetime) values(#{email}, #{token}, #{date})")
-    int setToken(String email, String token, Date date);
+    @Insert("insert into token(user_email, token_string, expire_datetime) values(#{email}, #{tokenString}, #{expireDatetime})")
+    int setToken(Token token);
+
 }

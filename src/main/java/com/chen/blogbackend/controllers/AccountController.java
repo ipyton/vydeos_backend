@@ -24,12 +24,14 @@ public class AccountController {
     AccountService accountService;
 
     @PostMapping("/login")
-    public LoginMessage login(@Param("userName") String email, @Param("password") String password)
+    public LoginMessage login(@Param("email") String email, @Param("password") String password)
     {
+        System.out.println(email);
+        System.out.println(password);
         if(accountService.validatePassword(email, password)) {
-            String token = TokenUtil.createToken(new Token(email,30 * 3600 * 24));
-            if(0 != accountService.setToken(email, token)) {
-                return new LoginMessage(1, token);
+            Token token = TokenUtil.createToken(new Token(email,null,30 * 3600 * 24));
+            if(0 != accountService.setToken(token)) {
+                return new LoginMessage(1, token.getTokenString());
             }
         }
         return new LoginMessage(-1, "Check your user name and password!");
@@ -37,12 +39,12 @@ public class AccountController {
 
     @PostMapping("/register")
     public LoginMessage register(Account accountInfo) {
+        System.out.println(accountInfo);
         if (AccountInfoValidator.validateAccount(accountInfo)) {
-            accountService.insert(accountInfo);
-            return new LoginMessage(1, "Registered Successfully");
+            System.out.println("sdgfisiodf");
+            if (accountService.insert(accountInfo)) return new LoginMessage(1, "Registered Successfully");
         }
-        else return new LoginMessage(-1, "register error");
-
+        return new LoginMessage(-1, "register error");
     }
 
     @PostMapping("/info")
@@ -50,13 +52,20 @@ public class AccountController {
         accountService.selectAccount("sdfsdf");
         String token = request.getHeader("token");
         Token token1 = TokenUtil.resolveToken(token);
-        System.out.println(token1.getEmail() + token1.getExpiresDateAndTime());
-        if (null == token1) {
-            return new Account();
-        }
+        System.out.println(token1.getEmail() + token1.getExpireDatetime());
         System.out.println(token1.getEmail());
         return accountService.selectAccount(token1.getEmail());
     }
 
+    @PostMapping("/verifyToken")
+    public LoginMessage verifyToken(@Param("token") String token) {
+        System.out.println(token);
+        if (null != token) {
+            if(accountService.haveValidLogin(token)){
+                return new LoginMessage(1,"valid token!");
+            }
+        }
+        return new LoginMessage(-1, "invalid token");
+    }
 
 }

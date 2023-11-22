@@ -5,9 +5,8 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import java.sql.Date;
 
-@EntityScan
 public class Account {
-    @Autowired
+
     private String userEmail ="";
     private String userName="";
     private String password="";

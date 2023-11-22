@@ -1,5 +1,7 @@
 package com.chen.blogbackend.entities;
 
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+
 import java.util.ArrayList;
 import java.util.Date;
 
