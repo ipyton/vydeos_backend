@@ -51,6 +51,13 @@ public class AccountController {
         return new LoginMessage(-1, "register error");
     }
 
+    @PostMapping("/changePassword")
+    public LoginMessage changePassword() {
+        return new LoginMessage(-1, "hello");
+    }
+
+
+
     @PostMapping("/info")
     public Account getAccountInformation(HttpServletRequest request) {
         accountService.selectAccount("sdfsdf");

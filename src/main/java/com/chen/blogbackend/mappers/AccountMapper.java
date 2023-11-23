@@ -25,4 +25,7 @@ public interface AccountMapper {
     @Insert("insert into token(user_email, token_string, expire_datetime) values(#{userEmail}, #{tokenString}, #{expireDatetime})")
     int setToken(Token token);
 
+
+
+
 }
