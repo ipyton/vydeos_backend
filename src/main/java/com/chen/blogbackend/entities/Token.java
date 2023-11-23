@@ -1,10 +1,9 @@
 package com.chen.blogbackend.entities;
 
-import java.util.Calendar;
 import java.util.Date;
 
 public class Token {
-    private String email;
+    private String userEmail;
     private Date expireDatetime;
 
     public String getTokenString() {
@@ -18,32 +17,20 @@ public class Token {
     private String tokenString;
 
 
-    public String getEmail() {
-        return email;
+    public String getUserEmail() {
+        return userEmail;
     }
 
-    public Token(String email, String tokenString, int expiresSeconds) {
-        this.email = email;
-        Calendar instance = Calendar.getInstance();
-        this.tokenString = tokenString;
-        instance.add(Calendar.SECOND, expiresSeconds);
-        this.expireDatetime = instance.getTime();
-    }
 
-    public Token(String email, String tokenString, Date expireDatetime) {
-        this.email = email;
 
+    public Token(String userEmail, Date expireDatetime, String tokenString) {
+        this.userEmail = userEmail;
         this.tokenString = tokenString;
         this.expireDatetime = expireDatetime;
     }
 
-    public Token(String email, Date expireDatetime) {
-        this.email = email;
-        this.expireDatetime = expireDatetime;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 
 

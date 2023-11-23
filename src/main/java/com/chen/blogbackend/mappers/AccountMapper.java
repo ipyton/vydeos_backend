@@ -18,11 +18,11 @@ public interface AccountMapper {
             "#{userName},#{password},#{introduction},#{avatar}, #{dateOfBirth})")
     int insertAccount(Account account);
 
-    @Select("select * from token where token_string = '#{token}'")
+    @Select("select * from token where token_string = #{token}")
     Token getToken(String token);
 
 
-    @Insert("insert into token(user_email, token_string, expire_datetime) values(#{email}, #{tokenString}, #{expireDatetime})")
+    @Insert("insert into token(user_email, token_string, expire_datetime) values(#{userEmail}, #{tokenString}, #{expireDatetime})")
     int setToken(Token token);
 
 }

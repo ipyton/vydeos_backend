@@ -42,8 +42,8 @@ public class AccountService {
         Token tokenGet = mapper.getToken(token);
         session.close();
 
-        if(null == tokenGet || null == TokenUtil.resolveToken(token).getEmail() ||
-                !TokenUtil.resolveToken(token).getEmail().equals(tokenGet.getEmail())){
+        if(null == tokenGet || null == TokenUtil.resolveToken(token).getUserEmail() ||
+                !TokenUtil.resolveToken(token).getUserEmail().equals(tokenGet.getUserEmail())){
             return false;
         }
         return tokenGet.getExpireDatetime().after(new Date());
@@ -64,7 +64,7 @@ public class AccountService {
     public int setToken(Token token) {
         SqlSession session = sqlSessionFactory.openSession();
         AccountMapper mapper = session.getMapper(AccountMapper.class);
-        if (null != mapper.getToken(token.getEmail())) return 0;
+        if (null != mapper.getToken(token.getUserEmail())) return 0;
         int result = mapper.setToken(token);
         session.commit();
         session.close();

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Calendar;
+
 @Controller
 @ResponseBody
 @RequestMapping("account")
@@ -29,7 +31,9 @@ public class AccountController {
         System.out.println(email);
         System.out.println(password);
         if(accountService.validatePassword(email, password)) {
-            Token token = TokenUtil.createToken(new Token(email,null,30 * 3600 * 24));
+            Calendar instance = Calendar.getInstance();
+            instance.add(Calendar.SECOND, 30 * 3600 * 24);
+            Token token = TokenUtil.createToken(new Token(email,instance.getTime(),null));
             if(0 != accountService.setToken(token)) {
                 return new LoginMessage(1, token.getTokenString());
             }
@@ -52,9 +56,9 @@ public class AccountController {
         accountService.selectAccount("sdfsdf");
         String token = request.getHeader("token");
         Token token1 = TokenUtil.resolveToken(token);
-        System.out.println(token1.getEmail() + token1.getExpireDatetime());
-        System.out.println(token1.getEmail());
-        return accountService.selectAccount(token1.getEmail());
+        System.out.println(token1.getUserEmail() + token1.getExpireDatetime());
+        System.out.println(token1.getUserEmail());
+        return accountService.selectAccount(token1.getUserEmail());
     }
 
     @PostMapping("/verifyToken")
