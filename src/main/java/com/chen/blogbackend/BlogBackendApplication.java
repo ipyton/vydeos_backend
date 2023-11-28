@@ -1,11 +1,10 @@
 package com.chen.blogbackend;
 
+import com.mongodb.MongoClient;
 import io.minio.MinioClient;
-import jakarta.annotation.Resource;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -44,6 +43,11 @@ public class BlogBackendApplication {
                 .endpoint("http://180.164.75.24:8090")
                 .credentials("minioadmin", "minioadmin")
                 .build();
+    }
+
+    @Bean
+    public static MongoClient setMongoClient(){
+        return new MongoClient("127.0.0.1", 27017);
     }
 
 }

@@ -20,7 +20,6 @@ public class ArticleService {
     }
 
     public int  uploadArticle(String userEmail, Article article){
-
         return 1;
 
     }
