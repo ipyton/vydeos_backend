@@ -1,5 +1,6 @@
 package com.chen.blogbackend;
 
+import io.minio.MinioClient;
 import jakarta.annotation.Resource;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -34,6 +35,15 @@ public class BlogBackendApplication {
         return new SqlSessionFactoryBuilder().build(
                 Resources.getResourceAsStream("mybatis-config.xml")
         );
+    }
+
+    @Bean
+    public static MinioClient setMinioClient(){
+        return MinioClient.builder()
+                // api地址
+                .endpoint("http://180.164.75.24:8090")
+                .credentials("minioadmin", "minioadmin")
+                .build();
     }
 
 }

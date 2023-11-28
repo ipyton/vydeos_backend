@@ -2,6 +2,8 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.entities.Article;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -9,34 +11,38 @@ import java.util.Date;
 
 @Service
 public class ArticleService {
+    @Autowired
+    SqlSessionFactory sqlSessionFactory;
+
 
     public ArrayList<Article> getArticles(String userEmail, int from ,int to) {
         return new ArrayList<>();
     }
 
-    public boolean setArticle(Article article){
-        return true;
+    public int  uploadArticle(String userEmail, Article article){
+
+        return 1;
+
     }
 
+    public Article getArticleByArticleID(String articleID) {
 
-    public ArrayList<Article> getArticlesByFollowingAndFriends(String userEmail){
+        return new Article();
+    }
+
+    public ArrayList<Article> getArticlesByFollowingAndFriends(String userEmail,int from, int to){
         ArrayList<Article> result = new ArrayList<>();
-        ArrayList<Article> articlesFollowing= getArticlesFollowing(userEmail);
-        ArrayList<Article> articlesFriends = getArticlesOfFriends(userEmail);
-
-
-
+        ArrayList<Article> articlesFollowing = getArticlesFollowing(userEmail, from, to);
+        ArrayList<Article> articlesFriends = getArticlesOfFriends(userEmail, from , to);
         return new ArrayList<>();
     }
 
-
-    public ArrayList<Article> getArticlesFollowing(String userEmail) {
+    public ArrayList<Article> getArticlesFollowing(String userEmail, int from, int to) {
         return new ArrayList<>();
     }
 
-    public ArrayList<Article> getArticlesOfFriends(String userEmail) {
+    public ArrayList<Article> getArticlesOfFriends(String userEmail, int from, int to) {
         return new ArrayList<>();
-
     }
 
 }

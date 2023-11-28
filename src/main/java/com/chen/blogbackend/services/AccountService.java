@@ -35,6 +35,7 @@ public class AccountService {
         return new Account();
     }
 
+
     public boolean haveValidLogin(String token) {
         if (null == token) return false;
         SqlSession session = sqlSessionFactory.openSession();

@@ -1,7 +1,5 @@
 package com.chen.blogbackend.entities;
 
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -9,7 +7,7 @@ public class Article {
     String userID = "";
     String articleID = "";
     Date lastEdit = null;
-    String url = "";
+    String content = "";
     int likes = 0;
     String commentUrl = "";
     ArrayList<String> pictureUrl;
@@ -38,12 +36,12 @@ public class Article {
         this.lastEdit = lastEdit;
     }
 
-    public String getUrl() {
-        return url;
+    public String getContent() {
+        return content;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setContent(String content) {
+        this.content = content;
     }
 
     public int getLikes() {

@@ -2,6 +2,7 @@ package com.chen.blogbackend.filters;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.ResponseMessage.LoginMessage;
+import com.chen.blogbackend.Util.TokenUtil;
 import com.chen.blogbackend.services.AccountService;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
@@ -53,6 +54,7 @@ public class LoginTokenFilter implements Filter {
                 return;
             }
         }
+        request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserEmail());
         chain.doFilter(request, response);
     }
 
