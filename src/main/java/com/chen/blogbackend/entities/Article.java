@@ -1,16 +1,14 @@
 package com.chen.blogbackend.entities;
 
-import java.util.ArrayList;
 import java.util.Date;
 
 public class Article {
-    String userID = "";
-    String articleID = "";
-    Date lastEdit = null;
-    String content = "";
-    int likes = 0;
-    String commentUrl = "";
-    ArrayList<String> pictureUrl;
+    private String userID = "";
+    private String articleID = "";
+    private Date lastEdit = null;
+    private String content = "";
+    private int likes = 0;
+    private int pictureAmount = 0;
 
     public String getArticleID() {
         return articleID;
@@ -52,19 +50,11 @@ public class Article {
         this.likes = likes;
     }
 
-    public String getCommentUrl() {
-        return commentUrl;
+    public int getPictureAmount() {
+        return pictureAmount;
     }
 
-    public void setCommentUrl(String commentUrl) {
-        this.commentUrl = commentUrl;
-    }
-
-    public ArrayList<String> getPictureUrl() {
-        return pictureUrl;
-    }
-
-    public void setPictureUrl(ArrayList<String> pictureUrl) {
-        this.pictureUrl = pictureUrl;
+    public void setPictureAmount(int pictureAmount) {
+        this.pictureAmount = pictureAmount;
     }
 }

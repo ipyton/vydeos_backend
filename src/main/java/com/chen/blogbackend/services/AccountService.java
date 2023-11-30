@@ -72,4 +72,8 @@ public class AccountService {
         return result;
     }
 
+    public boolean update(Account account) {
+        return true;
+    }
+
 }

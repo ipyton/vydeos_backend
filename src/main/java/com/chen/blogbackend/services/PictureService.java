@@ -28,7 +28,8 @@ public class PictureService {
 
     public boolean uploadAvatarPicture(String userEmail, MultipartFile file) {
         String hash = StringUtil.getHash(userEmail);
-        String bucket = "avatar/" + hash;
+        System.out.println(hash);
+        String bucket = "avatar";
         try {
             boolean found = fileClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
             if (!found) {

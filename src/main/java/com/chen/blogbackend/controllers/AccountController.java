@@ -1,6 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 
+import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.ResponseMessage.LoginMessage;
 import com.chen.blogbackend.Util.AccountInfoValidator;
 import com.chen.blogbackend.Util.TokenUtil;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -59,39 +61,38 @@ public class AccountController {
     @PostMapping("/changePassword")
     public LoginMessage changePassword(Account accountInfo) {
 
-
-
-
         return new LoginMessage(-1, "hello");
     }
 
 
     @PostMapping(value = "/uploadAvatar")
-    public LoginMessage uploadAvatar(MultipartFile multipartFile, HttpServletRequest request){
+    public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile, HttpServletRequest request){
+        System.out.println(request);
         boolean result = pictureService.uploadAvatarPicture(request.getHeader("userEmail"), multipartFile);
         if(!result) return new LoginMessage(-1, "hello");
         else return new LoginMessage(1, "success");
     }
 
 
-    @PostMapping(value = "/uploadArticlePics")
-    public LoginMessage uploadArticlePics(MultipartFile multipartFile, String articleID){
-        boolean result = pictureService.uploadAvatarPicture(articleID, multipartFile);
-        if(!result) return new LoginMessage(-1, "hello");
-        else return new LoginMessage(1, "success");
+    @PostMapping("/getinfo")
+    public LoginMessage getAccountInformation(HttpServletRequest request) {
+        String userEmail = request.getHeader("userEmail");
+        Account result = accountService.selectAccount(userEmail);
+        if (null == result) {
+            return new LoginMessage(-1, "error");
+        }
+        return new LoginMessage(1, JSON.toJSONString(result));
     }
 
-
-
-    @PostMapping("/info")
-    public Account getAccountInformation(HttpServletRequest request) {
-        accountService.selectAccount("sdfsdf");
-        String token = request.getHeader("token");
-        Token token1 = TokenUtil.resolveToken(token);
-        System.out.println(token1.getUserEmail() + token1.getExpireDatetime());
-        System.out.println(token1.getUserEmail());
-        return accountService.selectAccount(token1.getUserEmail());
+    @PostMapping("/setinfo")
+    public LoginMessage setAccountInformation(Account account) {
+        boolean result = accountService.update(account);
+        if (result) {
+            return new LoginMessage(1, "Success");
+        }
+        return new LoginMessage(-1, "setError");
     }
+
 
     @PostMapping("/verifyToken")
     public LoginMessage verifyToken(@Param("token") String token) {

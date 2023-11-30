@@ -1,5 +1,7 @@
 package com.chen.blogbackend;
 
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Session;
 import com.mongodb.MongoClient;
 import io.minio.MinioClient;
 import org.apache.ibatis.io.Resources;
@@ -45,9 +47,19 @@ public class BlogBackendApplication {
                 .build();
     }
 
-    @Bean
-    public static MongoClient setMongoClient(){
-        return new MongoClient("127.0.0.1", 27017);
-    }
+//    @Bean
+//    public static MongoClient setMongoClient(){
+//        return new MongoClient("127.0.0.1", 27017);
+//    }
 
+//
+//    @Bean
+//    public static Session setScyllaSession(){
+//        String ip = "192.168.1.1";
+//        Cluster cluster = Cluster.builder().addContactPoints(ip).withPort(8848).build();
+//        System.out.printf("connected to cluster : %s%n", cluster.getMetadata().getClusterName());
+//        Session session = cluster.connect();
+//        return session;
+//
+//    }
 }

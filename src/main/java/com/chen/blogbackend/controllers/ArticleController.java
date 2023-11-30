@@ -41,6 +41,13 @@ public class ArticleController {
         return articleService.getArticles(authorID, from, to);
     }
 
+    @PostMapping(value = "/uploadArticlePics")
+    public LoginMessage uploadArticlePics(MultipartFile multipartFile, String articleID){
+        boolean result = pictureService.uploadAvatarPicture(articleID, multipartFile);
+        if(!result) return new LoginMessage(-1, "hello");
+        else return new LoginMessage(1, "success");
+    }
+
     @PostMapping("get_pic")
     public ResponseEntity<StreamingResponseBody> getArticlePicture(String picAddress) {
         InputStream picture = pictureService.getPicture(picAddress);
@@ -85,6 +92,17 @@ public class ArticleController {
         return new LoginMessage(-1, "Error");
 
     }
+
+    @PostMapping("get_articles_range")
+    public LoginMessage getRangeArticle(String userID, int from, int to) {
+        return new LoginMessage(-1, "Error");
+    }
+
+    @PostMapping("get_recommend_articles")
+    public LoginMessage getRecommendArticles(String userID, int from, int to) {
+        return new LoginMessage(-1, "error");
+    }
+
 
 
 }

@@ -5,6 +5,7 @@ import com.chen.blogbackend.entities.Token;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.Date;
 
@@ -24,6 +25,13 @@ public interface AccountMapper {
 
     @Insert("insert into token(user_email, token_string, expire_datetime) values(#{userEmail}, #{tokenString}, #{expireDatetime})")
     int setToken(Token token);
+
+    @Update("")
+    int updateAccount(Account account);
+
+    @Update("")
+    int changePassword(Account account);
+
 
 
 

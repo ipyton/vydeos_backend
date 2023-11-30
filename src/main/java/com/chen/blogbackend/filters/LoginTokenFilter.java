@@ -33,28 +33,28 @@ public class LoginTokenFilter implements Filter {
         response.addHeader("Access-Control-Allow-Origin","*");
         response.addHeader("Access-Control-Allow-Methods","*");
         response.addHeader("Access-Control-Allow-Headers","*");
-
-        String token = request.getHeader("token");
-        boolean result = accountService.haveValidLogin(request.getHeader("token"));
-        if(null == token) {
-            System.out.println(request.getRequestURI());
-            if (request.getRequestURI().equals("/account/login") || request.getRequestURI().equals("/account/register") || request.getRequestURI().equals("/account/verifyToken") ) {
-                chain.doFilter(request, response);
-            }
-            else {
-                servletResponse.setContentType("application/json");
-                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-2, "please login first")).getBytes(StandardCharsets.UTF_8));
-            }
-            return;
-        }
-        else {
-            if(!result) {
-                servletResponse.setContentType("application/json");
-                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "wrong password or username!")).getBytes(StandardCharsets.UTF_8));
-                return;
-            }
-        }
-        request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserEmail());
+//
+//        String token = request.getHeader("token");
+//        boolean result = accountService.haveValidLogin(request.getHeader("token"));
+//        if(null == token) {
+//            System.out.println(request.getRequestURI());
+//            if (request.getRequestURI().equals("/account/login") || request.getRequestURI().equals("/account/register") || request.getRequestURI().equals("/account/verifyToken") ) {
+//                chain.doFilter(request, response);
+//            }
+//            else {
+//                servletResponse.setContentType("application/json");
+//                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-2, "please login first")).getBytes(StandardCharsets.UTF_8));
+//            }
+//            return;
+//        }
+//        else {
+//            if(!result) {
+//                servletResponse.setContentType("application/json");
+//                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "wrong password or username!")).getBytes(StandardCharsets.UTF_8));
+//                return;
+//            }
+//        }
+//        request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserEmail());
         chain.doFilter(request, response);
     }
 
