@@ -28,18 +28,11 @@ import java.util.ArrayList;
 @Controller("article")
 public class ArticleController {
 
-
     @Autowired
     PictureService pictureService;
 
     @Autowired
     ArticleService articleService;
-
-
-    @PostMapping("get_from_to")
-    public ArrayList<Article> getArticleByAmount(@RequestParam("author_id") String authorID, @RequestParam("from") int from, @RequestParam("to") int to) {
-        return articleService.getArticles(authorID, from, to);
-    }
 
     @PostMapping(value = "/uploadArticlePics")
     public LoginMessage uploadArticlePics(MultipartFile multipartFile, String articleID){
@@ -50,15 +43,7 @@ public class ArticleController {
 
     @PostMapping("get_pic")
     public ResponseEntity<StreamingResponseBody> getArticlePicture(String picAddress) {
-        InputStream picture = pictureService.getPicture(picAddress);
-
-        StreamingResponseBody responseBody = outputStream -> {
-            int numberToWrite = 0;
-            byte[] data = new byte[1024];
-            while ((numberToWrite = picture.read(data, 0, data.length)) != -1) {
-                outputStream.write(data, 0, numberToWrite);
-            }
-        };
+        StreamingResponseBody responseBody = pictureService.getPicture(picAddress);
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(responseBody);
     }
 
@@ -87,7 +72,6 @@ public class ArticleController {
         Article article = articleService.getArticleByArticleID(articleID);
         if(null != articleService.getArticleByArticleID(articleID)) {
             return new LoginMessage(1, JSON.toJSONString(article));
-
         }
         return new LoginMessage(-1, "Error");
 
@@ -102,7 +86,5 @@ public class ArticleController {
     public LoginMessage getRecommendArticles(String userID, int from, int to) {
         return new LoginMessage(-1, "error");
     }
-
-
 
 }

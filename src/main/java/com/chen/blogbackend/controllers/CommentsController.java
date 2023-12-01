@@ -14,7 +14,7 @@ public class CommentsController {
     CommentService commentService;
 
     @PostMapping("get")
-    public LoginMessage getComment(String commentID) {
+    public LoginMessage getComment(String commentID, int from, int to) {
         return new LoginMessage(-1, "");
     }
 

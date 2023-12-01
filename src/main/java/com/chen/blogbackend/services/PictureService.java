@@ -10,6 +10,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.File;
 import java.io.IOException;
@@ -74,29 +75,44 @@ public class PictureService {
     }
 
 
-    public InputStream getPicture(String picAddress) {
-        InputStream stream;
+    public StreamingResponseBody getPicture(String picAddress) {
+        StreamingResponseBody responseBody;
         try {
-            stream = fileClient.getObject(GetObjectArgs.builder().bucket("articlePics/").object(picAddress).build());
+            InputStream stream = fileClient.getObject(GetObjectArgs.builder().bucket("articlePics/").object(picAddress).build());
+            responseBody = inputStreamConverter(stream);
         }
         catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-        return stream;
+        return responseBody;
     }
 
-    public InputStream getAvatar(String userEmail) {
-        InputStream stream;
+    private StreamingResponseBody inputStreamConverter(InputStream stream) {
+        StreamingResponseBody responseBody;
+        responseBody = outputStream ->{
+            int numberToWrite = 0;
+            byte[] data = new byte[1024];
+            while ((numberToWrite = stream.read(data, 0, data.length)) != -1) {
+                outputStream.write(data, 0, numberToWrite);
+            }
+        };
+        return responseBody;
+
+    }
+
+    public StreamingResponseBody getAvatar(String userEmail) {
+        StreamingResponseBody responseBody;
         String hash = StringUtil.getHash(userEmail);
         try {
-            stream = fileClient.getObject(GetObjectArgs.builder().bucket("avatar/" + hash).object(userEmail).build());
+            InputStream stream = fileClient.getObject(GetObjectArgs.builder().bucket("avatar/" + hash).object(userEmail).build());
+            responseBody = inputStreamConverter(stream);
         }
         catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-        return stream;
+        return responseBody;
     }
 
     public ArrayList<String> getArticlePictureAddress(String articleId) {
