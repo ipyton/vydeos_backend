@@ -110,7 +110,12 @@ public class AccountController {
     }
 
     @PostMapping("/getAvatar")
-    public ResponseEntity<StreamingResponseBody> getAvatar(String userEmail) {
+    public ResponseEntity<StreamingResponseBody> getAvatar(HttpServletRequest request) {
+        String userEmail = request.getHeader("userEmail");
+        if (null == userEmail) {
+            return (ResponseEntity<StreamingResponseBody>) ResponseEntity.notFound();
+        }
+        System.out.println(userEmail);
         StreamingResponseBody avatar = pictureService.getAvatar(userEmail);
 
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(avatar);

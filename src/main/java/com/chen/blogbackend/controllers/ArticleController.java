@@ -42,8 +42,8 @@ public class ArticleController {
     }
 
     @PostMapping("get_pic")
-    public ResponseEntity<StreamingResponseBody> getArticlePicture(String picAddress) {
-        StreamingResponseBody responseBody = pictureService.getPicture(picAddress);
+    public ResponseEntity<StreamingResponseBody> getArticlePicture(String articleID, int idx) {
+        StreamingResponseBody responseBody = pictureService.getPicture(articleID, idx);
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(responseBody);
     }
 

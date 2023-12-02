@@ -8,6 +8,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.catalina.Globals;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +34,8 @@ public class LoginTokenFilter implements Filter {
         response.addHeader("Access-Control-Allow-Origin","*");
         response.addHeader("Access-Control-Allow-Methods","*");
         response.addHeader("Access-Control-Allow-Headers","*");
+        request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR, true);
+
 //
 //        String token = request.getHeader("token");
 //        boolean result = accountService.haveValidLogin(request.getHeader("token"));

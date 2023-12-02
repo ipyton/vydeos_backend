@@ -48,7 +48,7 @@ public class PictureService {
 
     public boolean uploadArticlePicture(String articleID, MultipartFile file, int number) {
         String hash = StringUtil.getHash(articleID);
-        String bucket = "articlePics/" + hash;
+        String bucket = "articlePics";
         try {
             boolean found = fileClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
             if (!found) {
@@ -63,7 +63,7 @@ public class PictureService {
     }
 
     public StatObjectResponse getObjectStatus(String picAddress)  {
-        StatObjectArgs args = StatObjectArgs.builder().bucket("articlePics/").object(picAddress).build();
+        StatObjectArgs args = StatObjectArgs.builder().bucket("articlePics").object(picAddress).build();
         StatObjectResponse response;
         try {
             response = fileClient.statObject(args);
@@ -75,10 +75,10 @@ public class PictureService {
     }
 
 
-    public StreamingResponseBody getPicture(String picAddress) {
+    public StreamingResponseBody getPicture(String articleID, int index) {
         StreamingResponseBody responseBody;
         try {
-            InputStream stream = fileClient.getObject(GetObjectArgs.builder().bucket("articlePics/").object(picAddress).build());
+            InputStream stream = fileClient.getObject(GetObjectArgs.builder().bucket("articlePics").object(articleID + Integer.toString(index)).build());
             responseBody = inputStreamConverter(stream);
         }
         catch (Exception e) {
@@ -105,7 +105,7 @@ public class PictureService {
         StreamingResponseBody responseBody;
         String hash = StringUtil.getHash(userEmail);
         try {
-            InputStream stream = fileClient.getObject(GetObjectArgs.builder().bucket("avatar/" + hash).object(userEmail).build());
+            InputStream stream = fileClient.getObject(GetObjectArgs.builder().bucket("avatar").object(userEmail).build());
             responseBody = inputStreamConverter(stream);
         }
         catch (Exception e) {
