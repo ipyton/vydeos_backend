@@ -1,7 +1,6 @@
 package com.chen.blogbackend;
 
-import com.datastax.driver.core.Cluster;
-import com.datastax.driver.core.Session;
+
 import com.mongodb.MongoClient;
 import io.minio.MinioClient;
 import org.apache.ibatis.io.Resources;
