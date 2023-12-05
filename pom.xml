@@ -115,6 +115,11 @@
             <artifactId>java-driver-mapper-runtime</artifactId>
             <version>4.17.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.scylladb</groupId>
+            <artifactId>scylla-driver-mapping</artifactId>
+            <version>3.10.2-scylla-0</version>
+        </dependency>
     </dependencies>
 
     <build>

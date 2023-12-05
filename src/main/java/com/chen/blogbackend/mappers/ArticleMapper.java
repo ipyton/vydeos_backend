@@ -1,17 +1,12 @@
 package com.chen.blogbackend.mappers;
 
 import com.chen.blogbackend.entities.Article;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-
-import java.util.ArrayList;
+import com.datastax.oss.driver.api.mapper.annotations.DaoFactory;
+import com.datastax.oss.driver.api.mapper.annotations.Mapper;
 
 @Mapper
 public interface ArticleMapper {
 
-    @Select("select")
-    ArrayList<Article> getArticles(String articleID);
-
-    ArrayList<Article> getArticlesByUserID(String userID);
-
+    @DaoFactory
+    public Article getArticle();
 }

@@ -1,6 +1,9 @@
 package com.chen.blogbackend;
 
 
+import com.datastax.driver.core.Session;
+import com.datastax.driver.mapping.MappingManager;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.mongodb.MongoClient;
 import io.minio.MinioClient;
 import org.apache.ibatis.io.Resources;
@@ -14,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @ServletComponentScan("com.chen.blogbackend.filters")
@@ -51,14 +55,15 @@ public class BlogBackendApplication {
 //        return new MongoClient("127.0.0.1", 27017);
 //    }
 
-//
-//    @Bean
-//    public static Session setScyllaSession(){
-//        String ip = "192.168.1.1";
-//        Cluster cluster = Cluster.builder().addContactPoints(ip).withPort(8848).build();
-//        System.out.printf("connected to cluster : %s%n", cluster.getMetadata().getClusterName());
-//        Session session = cluster.connect();
-//        return session;
-//
-//    }
+
+    @Bean
+    public static MappingManager setScyllaSession(){
+        CqlSession session = CqlSession.builder()
+                .addContactPoint(new InetSocketAddress("101.132.222.131", 9042))
+                .withLocalDatacenter("datacenter1")
+                .build();
+
+        return new MappingManager((Session) session);
+
+    }
 }

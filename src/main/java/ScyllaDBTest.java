@@ -1,5 +1,6 @@
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.Row;
+import org.apache.catalina.Cluster;
 
 import java.net.InetSocketAddress;
 
