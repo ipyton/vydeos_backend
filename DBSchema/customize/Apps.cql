@@ -1,0 +1,1 @@
+create table application(applicationId text primary key, version text, introduction text, lastModified timestamp, ratings text, type text, system_requirements map<text, text>, config_template map<text, text>, history_versions list<text>, pictures list<text>);

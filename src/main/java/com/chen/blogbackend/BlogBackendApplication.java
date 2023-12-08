@@ -57,13 +57,12 @@ public class BlogBackendApplication {
 
 
     @Bean
-    public static MappingManager setScyllaSession(){
-        CqlSession session = CqlSession.builder()
+    public static CqlSession setScyllaSession(){
+
+        return CqlSession.builder()
                 .addContactPoint(new InetSocketAddress("101.132.222.131", 9042))
                 .withLocalDatacenter("datacenter1")
                 .build();
-
-        return new MappingManager((Session) session);
 
     }
 }

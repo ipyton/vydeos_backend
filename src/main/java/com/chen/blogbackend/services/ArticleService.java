@@ -1,7 +1,11 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.entities.Article;
-import org.apache.ibatis.annotations.Mapper;
+import com.datastax.driver.mapping.DefaultPropertyMapper;
+import com.datastax.driver.mapping.Mapper;
+import com.datastax.driver.mapping.MappingManager;
+
+import com.datastax.driver.mapping.PropertyMapper;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,8 +18,13 @@ public class ArticleService {
     @Autowired
     SqlSessionFactory sqlSessionFactory;
 
+    @Autowired
+    MappingManager manager;
 
     public ArrayList<Article> getArticles(String userEmail, int from ,int to) {
+
+        Mapper<Article> articleMapper = manager.mapper(Article.class);
+        articleMapper.get();
         return new ArrayList<>();
     }
 

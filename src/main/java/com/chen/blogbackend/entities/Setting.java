@@ -3,16 +3,32 @@ package com.chen.blogbackend.entities;
 import java.util.HashMap;
 
 public class Setting {
-    String settingID;
+    String name = "null";
+    String applicationID = "3wjdikf";
     HashMap<String, String> map;
 
-    public String getSettingID() {
-        return settingID;
+    public Setting(String name, String applicationID, HashMap<String, String> map) {
+        this.name = name;
+        this.applicationID = applicationID;
+        this.map = map;
     }
 
-    public void setSettingID(String settingID) {
-        this.settingID = settingID;
+    public String getName() {
+        return name;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getApplicationID() {
+        return applicationID;
+    }
+
+    public void setApplicationID(String applicationID) {
+        this.applicationID = applicationID;
+    }
+
 
     public HashMap<String, String> getMap() {
         return map;
