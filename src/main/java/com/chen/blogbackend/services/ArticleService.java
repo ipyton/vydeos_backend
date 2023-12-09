@@ -3,6 +3,7 @@ package com.chen.blogbackend.services;
 import com.chen.blogbackend.entities.Article;
 import com.chen.blogbackend.entities.Friend;
 
+import com.chen.blogbackend.filters.PostRecognizer;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.*;
 import jakarta.annotation.PostConstruct;
@@ -26,8 +27,8 @@ public class ArticleService {
     @Autowired
     CqlSession session;
 
-
-
+    @Autowired
+    PostRecognizer recognizer;
 
     PreparedStatement getRangeArticles;
     PreparedStatement getArticleById;
@@ -36,6 +37,7 @@ public class ArticleService {
     PreparedStatement getFriendsArticles;
 
     public int pageSize = 10;
+    public Long timeSlice = 5l;
 
     @PostConstruct
     public void init() {
@@ -76,15 +78,10 @@ public class ArticleService {
         return new ArrayList<>();
     }
 
-    public ArrayList<Article> getArticlesByGroup(String userId,String groupId) {
+    public ArrayList<Article> getArticlesByGroup(String userId,String groupId, Long startIndex) {
         ArrayList<Article> result = new ArrayList<>();
-        ArrayList<Friend> friendByGroupId = friendsService.getFriendsByGroupId(userId, groupId);
-        for (Friend friend: friendByGroupId) {
-            String userId1 = friend.getUserId();
-
-
-
-        }
+        ArrayList<String> friendIdsByGroupId = friendsService.getFriendIdsByGroupId(userId, groupId);
+        ArrayList<String> strings = recognizer.get(friendIdsByGroupId, startIndex, timeSlice);
 
 
         return result;

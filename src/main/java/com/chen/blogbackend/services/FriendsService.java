@@ -26,6 +26,11 @@ public class FriendsService {
         return friends;
     }
 
+    public ArrayList<String> getFriendIdsByGroupId(String userId, String groupId) {
+        ArrayList<String> friendIds = new ArrayList<>();
+        return friendIds;
+    }
+
     public ArrayList<UserGroup> getGroupById(String userId) {
         ArrayList<UserGroup> userGroups = new ArrayList<>();
         return userGroups;

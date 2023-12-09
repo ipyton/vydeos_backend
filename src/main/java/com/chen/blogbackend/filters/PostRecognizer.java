@@ -5,12 +5,13 @@ import com.datastax.oss.driver.shaded.guava.common.hash.BloomFilter;
 
 import com.datastax.oss.driver.shaded.guava.common.hash.Funnels;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-
+@Service
 public class PostRecognizer {
 
     class DecoratedBloomFilter<T> {
@@ -83,7 +84,14 @@ public class PostRecognizer {
         userIds.forEach(x->current.getContent().put(x));
     }
 
-    public ArrayList<String> get(ArrayList<String> userIds, Long timeSlices){
+    public void set(String userId) {
+        if (outOfBoundary()) {
+            createSlice();
+        }
+        current.getContent().put(userId);
+    }
+
+    public ArrayList<String> get(ArrayList<String> userIds,Long start, Long timeSlices){
         Set<String> set = new HashSet<>();
         if(outOfBoundary()) {
             createSlice();
