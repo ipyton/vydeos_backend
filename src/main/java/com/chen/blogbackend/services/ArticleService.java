@@ -1,13 +1,8 @@
 package com.chen.blogbackend.services;
 
-import com.chen.blogbackend.controllers.ArticleController;
 import com.chen.blogbackend.entities.Article;
-import com.chen.blogbackend.entities.Friends;
-import com.datastax.driver.mapping.DefaultPropertyMapper;
-import com.datastax.driver.mapping.Mapper;
-import com.datastax.driver.mapping.MappingManager;
+import com.chen.blogbackend.entities.Friend;
 
-import com.datastax.driver.mapping.PropertyMapper;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.*;
 import jakarta.annotation.PostConstruct;
@@ -16,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Date;
 
 @Service
 public class ArticleService {
@@ -55,7 +49,7 @@ public class ArticleService {
 
 
     public ArrayList<Article> getArticlesByUserID(String userEmail, PagingState state) {
-        ResultSet result = session.execute(getRangeArticles.bind("").setPageSize(pageSize).setPagingState(state));
+        ResultSet result = session.execute(getRangeArticles.bind(":").setPageSize(pageSize).setPagingState(state));
         ArrayList<Article> articles = new ArrayList<>();
 
         for (Row row : result) {
@@ -82,17 +76,27 @@ public class ArticleService {
         return new ArrayList<>();
     }
 
-    public ArrayList<Article> getArticlesByGroup(String groupId) {
+    public ArrayList<Article> getArticlesByGroup(String userId,String groupId) {
         ArrayList<Article> result = new ArrayList<>();
+        ArrayList<Friend> friendByGroupId = friendsService.getFriendsByGroupId(userId, groupId);
+        for (Friend friend: friendByGroupId) {
+            String userId1 = friend.getUserId();
+
+
+
+        }
+
+
         return result;
     }
 
     public ArrayList<Article> getArticlesFollowing(String userEmail, int from, int to) {
+
         return new ArrayList<>();
     }
 
     public ArrayList<Article> getArticlesOfFriends(String userEmail, int from, int to) {
-        ArrayList<Friends> friendsByUserId = friendsService.getFriendsByUserId(userEmail);
+        ArrayList<Friend> friendByUserId = friendsService.getFriendsByUserId(userEmail);
         ArrayList<Article> result = new ArrayList<>();
         return result;
     }

@@ -1,6 +1,6 @@
 package com.chen.blogbackend.entities;
 
-public class Friends {
+public class Friend {
     String userId = "";
     String avatar = "";
     String introduction = "";
@@ -38,7 +38,7 @@ public class Friends {
         this.apps = apps;
     }
 
-    public Friends(String userId, String avatar, String introduction, String[] apps) {
+    public Friend(String userId, String avatar, String introduction, String[] apps) {
         this.userId = userId;
         this.avatar = avatar;
         this.introduction = introduction;
