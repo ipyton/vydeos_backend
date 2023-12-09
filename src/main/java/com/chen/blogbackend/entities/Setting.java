@@ -7,6 +7,9 @@ public class Setting {
     String applicationID = "3wjdikf";
     HashMap<String, String> map;
 
+    public Setting() {
+    }
+
     public Setting(String name, String applicationID, HashMap<String, String> map) {
         this.name = name;
         this.applicationID = applicationID;

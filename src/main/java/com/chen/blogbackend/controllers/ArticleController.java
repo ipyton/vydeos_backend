@@ -33,6 +33,7 @@ public class ArticleController {
 
     @Autowired
     ArticleService articleService;
+    const int page_size = 10;
 
     @PostMapping(value = "/uploadArticlePics")
     public LoginMessage uploadArticlePics(MultipartFile multipartFile, String articleID){
@@ -78,7 +79,10 @@ public class ArticleController {
     }
 
     @PostMapping("get_articles_range")
-    public LoginMessage getRangeArticle(String userID, int from, int to) {
+    public LoginMessage getRangeArticle(String userID,) {
+
+
+
         return new LoginMessage(-1, "Error");
     }
 

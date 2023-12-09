@@ -3,6 +3,7 @@ package com.chen.blogbackend.services;
 import com.chen.blogbackend.entities.Setting;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.*;
+import com.datastax.oss.driver.api.core.metadata.Node;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,21 +44,37 @@ public class SettingsService {
     }
 
 
-    public Setting getSettingsByUser(String userId) {
+    public ArrayList<Setting> getSettingsByUser(String userId) {
         ResultSet execute = session.execute(selectSettingsByUserId.bind(userId));
+        ArrayList<Setting> settings = new ArrayList<>();
+        for (Row row : execute) {
+            HashMap<String, String> hashmap = new HashMap<>();
+            Setting setting = new Setting();
+            setting.setName(userId);
+            setting.setApplicationID(row.getString("applicationId"));
+            for (ColumnDefinition definition : row.getColumnDefinitions()) {
+                if (!definition.getName().asInternal().equals("applicationId")) {
+                    hashmap.put(definition.getName().asInternal(), row.getString(definition.getName().asInternal()));
+                }
+            }
+            setting.setMap(hashmap);
 
-
+        }
+        return settings;
     }
 
 
-    public void set(String userId, Setting setting) {
-
+    public boolean set(String userId, ArrayList<Setting> settings) {
         BatchStatementBuilder  builder = new BatchStatementBuilder(BatchType.LOGGED);
-        for (Map.Entry<String,String> entry:setting.getMap().entrySet()) {
-            builder.addStatement(setSetting.bind(userId, setting.getApplicationID(), entry.getKey(), entry.getValue()));
+        for (Setting setting : settings) {
+            String applicationId = setting.getApplicationID();
+            for (Map.Entry<String,String> entry:setting.getMap().entrySet()) {
+                builder.addStatement(setSetting.bind(userId, applicationId, entry.getKey(), entry.getValue()));
+            }
+
         }
         ResultSet result = session.execute(builder.build());
-        result.getExecutionInfo().get
-
+        List<Map.Entry<Node, Throwable>>  errors = result.getExecutionInfo().getErrors();
+        return 0 == errors.size();
     }
 }

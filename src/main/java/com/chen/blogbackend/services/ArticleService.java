@@ -6,6 +6,8 @@ import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 
 import com.datastax.driver.mapping.PropertyMapper;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import jakarta.annotation.PostConstruct;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,8 +20,18 @@ public class ArticleService {
     @Autowired
     SqlSessionFactory sqlSessionFactory;
 
-    @Autowired
-    MappingManager manager;
+    PreparedStatement getRangeArticles;
+    PreparedStatement getArticleById;
+    PreparedStatement uploadArticle;
+    PreparedStatement getFollowersArticle;
+    PreparedStatement getFriendsArticles;
+
+    @PostConstruct
+    public void init() {
+
+
+    }
+
 
     public ArrayList<Article> getArticles(String userEmail, int from ,int to) {
 
