@@ -7,6 +7,7 @@ import com.chen.blogbackend.entities.Article;
 
 import com.chen.blogbackend.services.ArticleService;
 import com.chen.blogbackend.services.PictureService;
+import com.datastax.oss.driver.api.core.cql.PagingState;
 import jakarta.servlet.http.HttpServletRequest;
 import okhttp3.Response;
 import org.apache.juli.logging.Log;
@@ -33,7 +34,8 @@ public class ArticleController {
 
     @Autowired
     ArticleService articleService;
-    const int page_size = 10;
+
+    private final static int page_size = 10;
 
     @PostMapping(value = "/uploadArticlePics")
     public LoginMessage uploadArticlePics(MultipartFile multipartFile, String articleID){
@@ -79,15 +81,14 @@ public class ArticleController {
     }
 
     @PostMapping("get_articles_range")
-    public LoginMessage getRangeArticle(String userID,) {
-
+    public LoginMessage getPagingArticles(String userID, PagingState state) {
 
 
         return new LoginMessage(-1, "Error");
     }
 
     @PostMapping("get_recommend_articles")
-    public LoginMessage getRecommendArticles(String userID, int from, int to) {
+    public LoginMessage getPagingRecommendArticles(String userID, int from, int to) {
         return new LoginMessage(-1, "error");
     }
 

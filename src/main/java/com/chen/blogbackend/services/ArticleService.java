@@ -1,12 +1,15 @@
 package com.chen.blogbackend.services;
 
+import com.chen.blogbackend.controllers.ArticleController;
 import com.chen.blogbackend.entities.Article;
+import com.chen.blogbackend.entities.Friends;
 import com.datastax.driver.mapping.DefaultPropertyMapper;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
 
 import com.datastax.driver.mapping.PropertyMapper;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.*;
 import jakarta.annotation.PostConstruct;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,33 +23,55 @@ public class ArticleService {
     @Autowired
     SqlSessionFactory sqlSessionFactory;
 
+    @Autowired
+    CommentService commentService;
+
+    @Autowired
+    FriendsService friendsService;
+
+    @Autowired
+    CqlSession session;
+
+
+
+
     PreparedStatement getRangeArticles;
     PreparedStatement getArticleById;
     PreparedStatement uploadArticle;
     PreparedStatement getFollowersArticle;
     PreparedStatement getFriendsArticles;
 
+    public int pageSize = 10;
+
     @PostConstruct
     public void init() {
-
-
+        getRangeArticles = session.prepare("select * from ");
+        getArticleById = session.prepare("");
+        uploadArticle = session.prepare("");
+        getFollowersArticle = session.prepare("");
+        getFriendsArticles = session.prepare("");
+        pageSize = 10;
     }
 
 
-    public ArrayList<Article> getArticles(String userEmail, int from ,int to) {
+    public ArrayList<Article> getArticlesByUserID(String userEmail, PagingState state) {
+        ResultSet result = session.execute(getRangeArticles.bind("").setPageSize(pageSize).setPagingState(state));
+        ArrayList<Article> articles = new ArrayList<>();
 
-        Mapper<Article> articleMapper = manager.mapper(Article.class);
-        articleMapper.get();
-        return new ArrayList<>();
+        for (Row row : result) {
+            articles.add(new Article());
+
+        }
+        return articles;
     }
 
-    public int  uploadArticle(String userEmail, Article article){
+    public int uploadArticle(String userId, Article article){
+        session.execute(uploadArticle.bind());
         return 1;
-
     }
 
     public Article getArticleByArticleID(String articleID) {
-
+        ResultSet result = session.execute(getArticleById.bind());
         return new Article();
     }
 
@@ -57,12 +82,19 @@ public class ArticleService {
         return new ArrayList<>();
     }
 
+    public ArrayList<Article> getArticlesByGroup(String groupId) {
+        ArrayList<Article> result = new ArrayList<>();
+        return result;
+    }
+
     public ArrayList<Article> getArticlesFollowing(String userEmail, int from, int to) {
         return new ArrayList<>();
     }
 
     public ArrayList<Article> getArticlesOfFriends(String userEmail, int from, int to) {
-        return new ArrayList<>();
+        ArrayList<Friends> friendsByUserId = friendsService.getFriendsByUserId(userEmail);
+        ArrayList<Article> result = new ArrayList<>();
+        return result;
     }
 
 }
