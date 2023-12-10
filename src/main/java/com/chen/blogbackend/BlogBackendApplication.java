@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -64,5 +65,17 @@ public class BlogBackendApplication {
                 .withLocalDatacenter("datacenter1")
                 .build();
 
+    }
+
+
+    @Bean
+    public static Jedis configRedis() {
+        Jedis jedis = new Jedis("121.x.x.x", 6379);
+        // 如果设置 Redis 服务的密码，需要进行验证，若没有则可以省去
+        jedis.auth("123456");
+        System.out.println("链接成功！");
+        //查看服务是否运行
+        System.out.println("服务正在运行！"+jedis.ping());
+        return jedis;
     }
 }

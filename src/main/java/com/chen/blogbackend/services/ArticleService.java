@@ -68,6 +68,9 @@ public class ArticleService {
 
     public Article getArticleByArticleID(String articleID) {
         ResultSet result = session.execute(getArticleById.bind());
+
+
+
         return new Article();
     }
 
