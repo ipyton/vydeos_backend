@@ -1,11 +1,20 @@
 package com.chen.blogbackend.services;
 
-import com.chen.blogbackend.entities.Comment.Comment;
+import com.chen.blogbackend.DAO.ApplicationCommentDao;
+import com.chen.blogbackend.DAO.CommentDao;
+import com.chen.blogbackend.entities.ApplicationComment;
+import com.chen.blogbackend.entities.Comment;
+import com.chen.blogbackend.mappers.ApplicationCommentMapper;
+import com.chen.blogbackend.mappers.ApplicationCommentMapperBuilder;
+import com.chen.blogbackend.mappers.CommentMapper;
+import com.chen.blogbackend.mappers.CommentMapperBuilder;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 
 @Service
 public class CommentService {
@@ -13,16 +22,23 @@ public class CommentService {
     CqlSession session;
 
     PreparedStatement getCommentsByObjectId;
-    PreparedStatement setCommentByCommentId;
     PreparedStatement getCommentsByUserId;
-    PreparedStatement setCommentByObjectId;
+    PreparedStatement getApplicationComments;
+
+
+
+    ApplicationCommentDao applicationCommentDao;
+    CommentDao commentDao;
 
     @PostConstruct
     public void init(){
+        ApplicationCommentMapper build = new ApplicationCommentMapperBuilder(session).build();
+        applicationCommentDao = build.getDao();
+        CommentMapper commentMapper = new CommentMapperBuilder(session).build();
+        commentDao = commentMapper.getDao();
+
         getCommentsByObjectId = session.prepare("");
-        setCommentByCommentId = session.prepare("");
         getCommentsByUserId = session.prepare("");
-        setCommentByObjectId = session.prepare("");
     }
 
     public Comment getCommentByObjectId(String objectId) {
@@ -41,7 +57,6 @@ public class CommentService {
         return false;
     }
 
-
     public boolean deleteComment(String commentID) {
         return true;
     }
@@ -49,5 +64,17 @@ public class CommentService {
     public boolean like(String commentID) {
         return true;
     }
+
+    public boolean addApplicationComment() {
+        return false;
+    }
+
+
+    public ArrayList<ApplicationComment> getApplicationComment(String applicationId){
+        session.execute(getApplicationComments.bind());
+
+
+    }
+
 
 }

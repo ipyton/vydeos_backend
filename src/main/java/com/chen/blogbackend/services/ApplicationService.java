@@ -2,23 +2,14 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.AppDao;
 import com.chen.blogbackend.DAO.ApplicationCommentDao;
-import com.chen.blogbackend.ResponseMessage.PagingMessage;
+import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.entities.App;
-import com.chen.blogbackend.entities.ApplicationComment;
-import com.chen.blogbackend.entities.Comment.Comment;
-import com.chen.blogbackend.entities.Setting;
+import com.chen.blogbackend.entities.Comment;
 import com.chen.blogbackend.mappers.AppMapper;
 import com.chen.blogbackend.mappers.AppMapperBuilder;
-import com.chen.blogbackend.mappers.ApplicationCommentMapper;
-import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.PagingIterable;
-import com.datastax.oss.driver.api.core.cql.PagingState;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import com.datastax.oss.driver.api.core.cql.ResultSet;
-import com.datastax.oss.driver.api.core.cql.Row;
 import jakarta.annotation.PostConstruct;
-import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +29,7 @@ public class ApplicationService {
     CqlSession session;
 
     AppDao appDao;
-    ApplicationCommentDao commentDao;
+
 
     PreparedStatement getApplications;
     PreparedStatement getComments;
@@ -51,16 +42,11 @@ public class ApplicationService {
     public void init(){
         AppMapper appMapper = new AppMapperBuilder(session).build();
         appDao = appMapper.appDao();
-        //generates here
 
 
         getApplications = session.prepare("");
         getComments = session.prepare("");
         getSimpleIntroduction = session.prepare("");
-        setComment = session.prepare("");
-        setApplication = session.prepare("");
-
-
 
 
     }

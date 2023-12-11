@@ -1,4 +1,4 @@
-package com.chen.blogbackend.Util;
+package com.chen.blogbackend.util;
 
 import com.chen.blogbackend.entities.Account;
 

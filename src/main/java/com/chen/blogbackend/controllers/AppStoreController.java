@@ -1,10 +1,9 @@
 package com.chen.blogbackend.controllers;
 
-import com.chen.blogbackend.ResponseMessage.LoginMessage;
+import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.ApplicationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller("app")

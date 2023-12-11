@@ -1,4 +1,4 @@
-package com.chen.blogbackend.ResponseMessage;
+package com.chen.blogbackend.responseMessage;
 
 public class LoginMessage {
     int code = 0;

@@ -15,5 +15,5 @@ public interface SettingDao {
     PagingIterable<App> convert(ResultSet set);
 
     @Insert
-    void save(Setting article);
+    void save(Setting setting);
 }

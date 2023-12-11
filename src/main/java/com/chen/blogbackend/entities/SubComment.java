@@ -1,5 +1,8 @@
-package com.chen.blogbackend.entities.Comment;
+package com.chen.blogbackend.entities;
 
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+
+@Entity
 public class SubComment {
     String commentId;
     String commentIdToComment;

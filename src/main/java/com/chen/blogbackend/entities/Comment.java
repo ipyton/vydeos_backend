@@ -1,14 +1,55 @@
-package com.chen.blogbackend.entities.Comment;
+package com.chen.blogbackend.entities;
+
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
 import java.util.ArrayList;
 
+@Entity
 public class Comment {
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getCommentDateTime() {
+        return commentDateTime;
+    }
+
+    public void setCommentDateTime(String commentDateTime) {
+        this.commentDateTime = commentDateTime;
+    }
+
+    String userId;
+
+    public Comment() {
+    }
+
+    public Comment(String userId, String objectId, String commentId, String comment, int numberOfLikes, String commentDateTime) {
+        this.userId = userId;
+        this.objectId = objectId;
+        this.commentId = commentId;
+        this.comment = comment;
+        this.numberOfLikes = numberOfLikes;
+        this.commentDateTime = commentDateTime;
+    }
+
     String objectId;
     String commentId;
     String comment;
     int numberOfLikes;
-    String commentDateAndTime;
-    ArrayList<SubComment> subComments;
+    String commentDateTime;
+
+
+    public String getCommentId() {
+        return commentId;
+    }
+
+    public void setCommentId(String commentId) {
+        this.commentId = commentId;
+    }
 
     public String getComment() {
         return comment;
@@ -16,14 +57,6 @@ public class Comment {
 
     public void setComment(String comment) {
         this.comment = comment;
-    }
-
-    public ArrayList<SubComment> getSubComments() {
-        return subComments;
-    }
-
-    public void setSubComments(ArrayList<SubComment> subComments) {
-        this.subComments = subComments;
     }
 
     public String getObjectId() {
@@ -51,11 +84,11 @@ public class Comment {
     }
 
     public String getCommentDateAndTime() {
-        return commentDateAndTime;
+        return commentDateTime;
     }
 
     public void setCommentDateAndTime(String commentDateAndTime) {
-        this.commentDateAndTime = commentDateAndTime;
+        this.commentDateTime = commentDateAndTime;
     }
 
 

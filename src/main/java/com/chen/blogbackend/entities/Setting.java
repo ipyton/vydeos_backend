@@ -1,7 +1,10 @@
 package com.chen.blogbackend.entities;
 
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+
 import java.util.HashMap;
 
+@Entity
 public class Setting {
     String name = "null";
     String applicationID = "3wjdikf";

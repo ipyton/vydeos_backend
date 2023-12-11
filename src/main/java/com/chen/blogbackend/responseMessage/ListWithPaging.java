@@ -1,4 +1,4 @@
-package com.chen.blogbackend.ResponseMessage;
+package com.chen.blogbackend.responseMessage;
 
 import com.datastax.oss.driver.api.core.cql.PagingState;
 

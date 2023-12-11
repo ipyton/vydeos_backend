@@ -2,6 +2,7 @@ package com.chen.blogbackend.entities;
 
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
+@Entity
 public class ApplicationComment {
     String applicationId;
     String userId;

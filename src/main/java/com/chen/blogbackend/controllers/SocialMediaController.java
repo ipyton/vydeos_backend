@@ -1,7 +1,6 @@
 package com.chen.blogbackend.controllers;
 
-import com.chen.blogbackend.ResponseMessage.LoginMessage;
-import com.chen.blogbackend.services.CommentService;
+import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.SocialMediaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

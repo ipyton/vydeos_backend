@@ -1,4 +1,4 @@
-package com.chen.blogbackend.ResponseMessage;
+package com.chen.blogbackend.responseMessage;
 
 //this is a class for step manipulation.
 //for example reset the password have several steps;

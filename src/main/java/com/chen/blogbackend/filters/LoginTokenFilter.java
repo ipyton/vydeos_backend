@@ -1,8 +1,5 @@
 package com.chen.blogbackend.filters;
 
-import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.ResponseMessage.LoginMessage;
-import com.chen.blogbackend.Util.TokenUtil;
 import com.chen.blogbackend.services.AccountService;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
@@ -10,11 +7,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.catalina.Globals;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 
 @WebFilter(filterName = "tokenChecker")
 public class LoginTokenFilter implements Filter {

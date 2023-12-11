@@ -1,4 +1,4 @@
-package com.chen.blogbackend.Util;
+package com.chen.blogbackend.util;
 
 //PBKDF2
 public class PasswordEncryption {

@@ -2,9 +2,9 @@ package com.chen.blogbackend.controllers;
 
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.ResponseMessage.LoginMessage;
-import com.chen.blogbackend.Util.AccountInfoValidator;
-import com.chen.blogbackend.Util.TokenUtil;
+import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.util.AccountInfoValidator;
+import com.chen.blogbackend.util.TokenUtil;
 import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Token;
 import com.chen.blogbackend.services.AccountService;
@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import java.io.InputStream;
 import java.util.Calendar;
 
 @Controller

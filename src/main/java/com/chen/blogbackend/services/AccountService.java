@@ -1,7 +1,7 @@
 package com.chen.blogbackend.services;
 
-import com.chen.blogbackend.Util.PasswordEncryption;
-import com.chen.blogbackend.Util.TokenUtil;
+import com.chen.blogbackend.util.PasswordEncryption;
+import com.chen.blogbackend.util.TokenUtil;
 import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Token;
 import com.chen.blogbackend.mappers.AccountMapper;
