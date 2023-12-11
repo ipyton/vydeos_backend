@@ -20,37 +20,37 @@ public class MessageController {
         return new LoginMessage(-1, "");
     }
 
-    @RequestMapping("")
+    @RequestMapping("join")
     public LoginMessage joinGroup(){
         return new LoginMessage(-1, "");
     }
 
-    @RequestMapping("")
+    @RequestMapping("quit")
     public LoginMessage quitGroup() {
         return new LoginMessage(-1, "");
     }
 
-    @RequestMapping("")
+    @RequestMapping("remove")
     public LoginMessage removeUserFromGroup() {
         return new LoginMessage(-1, "");
     }
 
-    @RequestMapping("")
+    @RequestMapping("invite")
     public LoginMessage makeInvitation() {
         return new LoginMessage(-1, "");
     }
 
-    @RequestMapping("")
+    @RequestMapping("dismiss")
     public LoginMessage dismissGroup() {
         return new LoginMessage(-1, "");
     }
 
-    @RequestMapping("")
+    @RequestMapping("join_by_invitation")
     public LoginMessage joinGroupByInvitation() {
         return new LoginMessage(-1, "");
     }
 
-    @RequestMapping("")
+    @RequestMapping("get_members")
     public LoginMessage getMembers() {
         return new LoginMessage(-1, "");
     }

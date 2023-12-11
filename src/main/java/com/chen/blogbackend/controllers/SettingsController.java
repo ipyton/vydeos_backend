@@ -20,15 +20,13 @@ public class SettingsController {
 
     @PostMapping("get")
     public LoginMessage getSettings(String userEmail) {
-        System.out.println();
-
+        System.out.println("");
         return new LoginMessage(-1, "");
     }
 
     @PostMapping("set")
     public LoginMessage setSettings(ArrayList<Setting> setting){
-
-
+        System.out.println("");
         return new LoginMessage(-1, "setttings");
     }
 

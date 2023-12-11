@@ -1,8 +1,13 @@
 package com.chen.blogbackend.entities;
 
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
+
 import java.util.Date;
 
+@Entity
 public class Article {
+
     private String userID = "";
     private String articleID = "";
     private Date lastEdit = null;

@@ -76,4 +76,8 @@ public class AccountService {
         return true;
     }
 
+    public boolean addApplication() {
+        return true;
+    }
+
 }

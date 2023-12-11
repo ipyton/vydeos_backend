@@ -8,15 +8,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 public class SearchController {
 
 
-    @PostMapping("set")
+    @PostMapping("get")
     public LoginMessage getSearchResult(String keyword) {
         return new LoginMessage(-1, "");
     }
 
-    @PostMapping("search")
+    @PostMapping("set")
     public LoginMessage setSearch() {
         return new LoginMessage(-1, "");
     }
 
+    @PostMapping("suggestion")
+    public LoginMessage getSuggestions() {
+        return new LoginMessage(-1, "");
+    }
 
 }

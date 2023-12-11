@@ -13,6 +13,9 @@ public class PagingMessage<T> {
         this.code = code;
     }
 
+    public PagingMessage() {
+    }
+
     public ArrayList<T> getItems() {
         return items;
     }

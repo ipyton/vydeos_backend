@@ -3,13 +3,12 @@ package com.chen.blogbackend.filters;
 import com.datastax.oss.driver.shaded.guava.common.base.Charsets;
 import com.datastax.oss.driver.shaded.guava.common.hash.BloomFilter;
 
+import com.datastax.oss.driver.shaded.guava.common.hash.Funnel;
 import com.datastax.oss.driver.shaded.guava.common.hash.Funnels;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
+import java.io.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class PostRecognizer {
@@ -59,7 +58,7 @@ public class PostRecognizer {
 
     }
 
-    public PostRecognizer(String path) {
+    public PostRecognizer(String path) throws IOException {
         list = deSerialize("");
     }
 
@@ -92,10 +91,11 @@ public class PostRecognizer {
     }
 
     public ArrayList<String> get(ArrayList<String> userIds,Long start, Long timeSlices){
-        Set<String> set = new HashSet<>();
         if(outOfBoundary()) {
             createSlice();
         }
+
+        Set<String> set = new HashSet<>();
         for (int i = 1; i <= timeSlices; i ++) {
             if (list.size() - i >= 0) {
                 DecoratedBloomFilter<String> filter = list.get(list.size() - i);
@@ -109,13 +109,43 @@ public class PostRecognizer {
         return new ArrayList<>(set);
     }
 
-    public void serialize(String path) {
+    public boolean serialize(String path) throws IOException {
+        File file = new File(path);
+        if (!file.isFile()) {
+                 return false;
+        }
 
+        OutputStream outputStream = new FileOutputStream(path);
+        FileWriter fileWriter = new FileWriter(path + "_meta");
 
+        fileWriter.write(previousTime + "_" + timeSlice + "\n");
+        for (DecoratedBloomFilter<String> filter : list) {
+            filter.getContent().writeTo(outputStream);
+            fileWriter.write(filter.from + "_" + filter.to + "\n");
+        }
+
+        outputStream.close();
+        fileWriter.close();
+        return true;
     }
 
-    public ArrayList<DecoratedBloomFilter<String>> deSerialize(String path){
-        return null;
+    public ArrayList<DecoratedBloomFilter<String>> deSerialize(String path) throws IOException {
+        Scanner sc = new Scanner(new FileInputStream(path+"_meta"));
+        InputStream inputStream = new FileInputStream("path");
+        list = new ArrayList<>();
+
+        if(sc.hasNext()) {
+            String[] s = sc.nextLine().split("_");
+            previousTime = Long.getLong(s[0]);
+            timeSlice = Long.getLong(s[1]);
+        }
+        while(0 != inputStream.available() && sc.hasNext()) {
+            BloomFilter<String> bloomFilter = BloomFilter.readFrom(inputStream, Funnels.stringFunnel(Charsets.UTF_8));
+            String[] metaLine = sc.nextLine().split("_");
+            list.add(new DecoratedBloomFilter<String>(Long.getLong(metaLine[0]), Long.getLong(metaLine[1]), bloomFilter));
+        }
+
+        return list;
     }
 
 

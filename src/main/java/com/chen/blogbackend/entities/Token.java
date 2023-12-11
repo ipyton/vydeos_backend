@@ -21,8 +21,6 @@ public class Token {
         return userEmail;
     }
 
-
-
     public Token(String userEmail, Date expireDatetime, String tokenString) {
         this.userEmail = userEmail;
         this.tokenString = tokenString;

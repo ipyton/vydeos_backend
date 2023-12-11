@@ -31,6 +31,9 @@ public class SettingsService {
         selectItemsByUserId = session.prepare("select applicationId where user_id=?");
     }
 
+    public Setting getSettingTemplate(String applicationID){
+        return new Setting();
+    }
 
     public Setting getSettingByUserAndAppId(String userId, String applicationId) {
         ResultSet execute = session.execute(selectByUserIdAndApplication.bind(userId, applicationId));

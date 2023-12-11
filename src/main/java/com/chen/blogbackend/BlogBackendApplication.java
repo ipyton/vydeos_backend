@@ -78,4 +78,7 @@ public class BlogBackendApplication {
         System.out.println("服务正在运行！"+jedis.ping());
         return jedis;
     }
+
+
+
 }
