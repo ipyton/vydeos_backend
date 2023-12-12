@@ -13,7 +13,7 @@ import com.datastax.oss.driver.api.mapper.annotations.Insert;
 public interface ApplicationCommentDao {
 
     @GetEntity
-    PagingIterable<App> convert(ResultSet set);
+    PagingIterable<ApplicationComment> convert(ResultSet set);
 
     @Insert
     void save(ApplicationComment comment);

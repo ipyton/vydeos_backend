@@ -90,7 +90,7 @@ public class PostRecognizer {
         current.getContent().put(userId);
     }
 
-    public ArrayList<String> get(ArrayList<String> userIds,Long start, Long timeSlices){
+    public ArrayList<String> get(List<String> userIds,Long start, Long timeSlices){
         if(outOfBoundary()) {
             createSlice();
         }

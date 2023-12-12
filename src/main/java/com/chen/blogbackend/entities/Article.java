@@ -4,6 +4,7 @@ import com.datastax.oss.driver.api.mapper.annotations.Entity;
 import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
 import java.util.Date;
+import java.util.Set;
 
 @Entity
 public class Article {
@@ -14,6 +15,38 @@ public class Article {
     private String content = "";
     private int likes = 0;
     private int pictureAmount = 0;
+    private Set<String> users;
+    private String accessType;
+
+    public Article(String userID, String articleID, Date lastEdit, String content, int likes, int pictureAmount, Set<String> users, String accessType) {
+        this.userID = userID;
+        this.articleID = articleID;
+        this.lastEdit = lastEdit;
+        this.content = content;
+        this.likes = likes;
+        this.pictureAmount = pictureAmount;
+        this.users = users;
+        this.accessType = accessType;
+    }
+
+    public Set<String> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<String> users) {
+        this.users = users;
+    }
+
+    public String getAccessType() {
+        return accessType;
+    }
+
+    public void setAccessType(String accessType) {
+        this.accessType = accessType;
+    }
+
+    public Article() {
+    }
 
     public String getArticleID() {
         return articleID;

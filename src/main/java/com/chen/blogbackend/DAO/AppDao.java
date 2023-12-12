@@ -19,4 +19,7 @@ public interface AppDao {
     @Insert
     void insert(App app);
 
+    @Select
+    App getAppDetails(String applicationId);
+
 }

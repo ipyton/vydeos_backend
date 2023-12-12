@@ -1,5 +1,8 @@
 package com.chen.blogbackend.entities;
 
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+
+@Entity
 public class Friend {
     String userId = "";
     String avatar = "";
@@ -8,6 +11,9 @@ public class Friend {
 
     public String getUserId() {
         return userId;
+    }
+
+    public Friend() {
     }
 
     public void setUserId(String userId) {

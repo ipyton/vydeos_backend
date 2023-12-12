@@ -2,6 +2,7 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.ApplicationCommentDao;
 import com.chen.blogbackend.DAO.CommentDao;
+import com.chen.blogbackend.entities.App;
 import com.chen.blogbackend.entities.ApplicationComment;
 import com.chen.blogbackend.entities.Comment;
 import com.chen.blogbackend.mappers.ApplicationCommentMapper;
@@ -9,12 +10,15 @@ import com.chen.blogbackend.mappers.ApplicationCommentMapperBuilder;
 import com.chen.blogbackend.mappers.CommentMapper;
 import com.chen.blogbackend.mappers.CommentMapperBuilder;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class CommentService {
@@ -24,7 +28,6 @@ public class CommentService {
     PreparedStatement getCommentsByObjectId;
     PreparedStatement getCommentsByUserId;
     PreparedStatement getApplicationComments;
-
 
 
     ApplicationCommentDao applicationCommentDao;
@@ -62,18 +65,20 @@ public class CommentService {
     }
 
     public boolean like(String commentID) {
+
         return true;
     }
 
-    public boolean addApplicationComment() {
+    public boolean addApplicationComment(ApplicationComment comment) {
+        applicationCommentDao.save(comment);
         return false;
     }
 
 
-    public ArrayList<ApplicationComment> getApplicationComment(String applicationId){
-        session.execute(getApplicationComments.bind());
-
-
+    public List<ApplicationComment> getApplicationComment(String applicationId){
+        ResultSet execute = session.execute(getApplicationComments.bind());
+        PagingIterable<ApplicationComment> convert = applicationCommentDao.convert(execute);
+        return convert.all();
     }
 
 

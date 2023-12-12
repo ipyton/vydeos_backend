@@ -1,13 +1,36 @@
 package com.chen.blogbackend.responseMessage;
 
+import com.datastax.oss.driver.api.core.cql.PagingState;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class PagingMessage<T> {
-    public ArrayList<T> items;
-    public String pagingInformation;
+    public List<T> items;
+    public PagingState pagingInformation;
     public int code;
+    public String ext="";
 
-    public PagingMessage(ArrayList<T> items, String pagingInformation, int code) {
+    public PagingMessage(List<T> items, PagingState pagingInformation, int code, String ext) {
+        this.items = items;
+        this.pagingInformation = pagingInformation;
+        this.code = code;
+        this.ext = ext;
+    }
+
+    public void setItems(List<T> items) {
+        this.items = items;
+    }
+
+    public void setExt(String ext) {
+        this.ext = ext;
+    }
+
+    public String getExt() {
+        return ext;
+    }
+
+    public PagingMessage(List<T> items, PagingState pagingInformation, int code) {
         this.items = items;
         this.pagingInformation = pagingInformation;
         this.code = code;
@@ -16,7 +39,7 @@ public class PagingMessage<T> {
     public PagingMessage() {
     }
 
-    public ArrayList<T> getItems() {
+    public List<T> getItems() {
         return items;
     }
 
@@ -24,11 +47,11 @@ public class PagingMessage<T> {
         this.items = items;
     }
 
-    public String getPagingInformation() {
+    public PagingState getPagingInformation() {
         return pagingInformation;
     }
 
-    public void setPagingInformation(String pagingInformation) {
+    public void setPagingInformation(PagingState pagingInformation) {
         this.pagingInformation = pagingInformation;
     }
 

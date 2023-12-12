@@ -7,8 +7,12 @@ import com.chen.blogbackend.entities.App;
 import com.chen.blogbackend.entities.Comment;
 import com.chen.blogbackend.mappers.AppMapper;
 import com.chen.blogbackend.mappers.AppMapperBuilder;
+import com.chen.blogbackend.util.RequirementCheck;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.PagingIterable;
+import com.datastax.oss.driver.api.core.cql.PagingState;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,56 +34,51 @@ public class ApplicationService {
 
     AppDao appDao;
 
-
     PreparedStatement getApplications;
-    PreparedStatement getComments;
     PreparedStatement getSimpleIntroduction;
-    PreparedStatement setComment;
     PreparedStatement setApplication;
-
 
     @PostConstruct
     public void init(){
         AppMapper appMapper = new AppMapperBuilder(session).build();
         appDao = appMapper.appDao();
-
-
         getApplications = session.prepare("");
-        getComments = session.prepare("");
         getSimpleIntroduction = session.prepare("");
 
-
     }
 
+    public PagingMessage<App> getPagingApplications(String userId, PagingState pagingState) {
+        ResultSet execute = null;
+        if (null != pagingState) {
+            execute = session.execute(getApplications.bind(userId).setPagingState(pagingState));
+        }
+        else {
+            execute = session.execute(getApplications.bind(userId));
+        }
+        PagingIterable<App> convert = appDao.convert(execute);
 
-    public PagingMessage<App> getPagingApplications(String userId, String pagingState) {
-
+        PagingMessage<App> message = new PagingMessage<>();
+        message.items = convert.all();
+        message.pagingInformation = execute.getExecutionInfo().getSafePagingState();
         return new PagingMessage<>();
-
     }
 
-    public ArrayList<Comment> getPagingComments(String userId, String applicationId) {
-        return new ArrayList<>();
-    }
 
     public App getApplicationDetailById(String applicationId ){
-        return new App();
-
+        return appDao.getAppDetails(applicationId);
     }
 
-
-    public boolean installApplication(String userId, String applicationID) {
-
-        return true;
+    public boolean installApplication(String userId, String applicationID, HashMap<String, String> environment) {
+        App applicationDetailById = getApplicationDetailById(applicationID);
+        if (RequirementCheck.check(applicationDetailById.getSystemRequirements(), environment)) {
+            return true;
+        }
+        return false;
     }
 
-    public boolean comment(String userId, String applicationId,String comment, int rate) {
+    public boolean uploadApplication(App app){
+        appDao.insert(app);
         return true;
-    }
-
-    public boolean uploadApplication(){
-        return true;
-
     }
     public boolean meetRequirements(HashMap<String, String> requirements, HashMap<String, String> environment) {
         return true;
