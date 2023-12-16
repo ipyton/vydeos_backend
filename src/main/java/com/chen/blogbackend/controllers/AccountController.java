@@ -36,15 +36,14 @@ public class AccountController {
     PictureService pictureService;
 
     @PostMapping("/login")
-    public LoginMessage login(@Param("email") String email, @Param("password") String password)
-    {
+    public LoginMessage login(@Param("email") String email, @Param("password") String password) {
         System.out.println(email);
         System.out.println(password);
-        if(accountService.validatePassword(email, password)) {
+        if (accountService.validatePassword(email, password)) {
             Calendar instance = Calendar.getInstance();
             instance.add(Calendar.SECOND, 30 * 3600 * 24);
-            Token token = TokenUtil.createToken(new Token(email,instance.getTime(),null));
-            if(0 != accountService.setToken(token)) {
+            Token token = TokenUtil.createToken(new Token(email, instance.getTime(), null));
+            if (0 != accountService.setToken(token)) {
                 return new LoginMessage(1, token.getTokenString());
             }
         }
@@ -69,10 +68,10 @@ public class AccountController {
 
 
     @PostMapping(value = "/uploadAvatar")
-    public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile, HttpServletRequest request){
+    public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile, HttpServletRequest request) {
         System.out.println(request);
         boolean result = pictureService.uploadAvatarPicture(request.getHeader("userEmail"), multipartFile);
-        if(!result) return new LoginMessage(-1, "hello");
+        if (!result) return new LoginMessage(-1, "hello");
         else return new LoginMessage(1, "success");
     }
 
@@ -101,8 +100,8 @@ public class AccountController {
     public LoginMessage verifyToken(@Param("token") String token) {
         System.out.println(token);
         if (null != token) {
-            if(accountService.haveValidLogin(token)){
-                return new LoginMessage(1,"valid token!");
+            if (accountService.haveValidLogin(token)) {
+                return new LoginMessage(1, "valid token!");
             }
         }
         return new LoginMessage(-1, "invalid token");
