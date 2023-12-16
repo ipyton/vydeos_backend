@@ -12,13 +12,13 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.DefaultConsistencyLevel;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.BoundStatementBuilder;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.protocol.internal.request.Prepare;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.FileReader;
-import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -32,13 +32,19 @@ public class FriendsService {
     FriendDao friendDao;
     UserGroupDao userGroupDao;
 
+    PreparedStatement addFriendUserId;
+    PreparedStatement addFriendByIdol;
+
+
     @PostConstruct
     public void init(){
         friendDao = new FriendMapperBuilder(session).build().getDao();
         userGroupDao = new UserGroupMapperBuilder(session).build().getDao();
+        addFriendByIdol = session.prepare("");
+        addFriendUserId = session.prepare("");
+
 
     }
-
 
     public List<Friend> getFollowersByUserId(String userId) {
         PagingIterable<Friend> friends = friendDao.selectUserFollowers(userId);
@@ -56,28 +62,28 @@ public class FriendsService {
     }
 
 
-    public List<UserGroup> getFriendsByGroupId(String userId, String groupId) {
-        PagingIterable<UserGroup> userGroups = userGroupDao.selectGroupByGroupID(groupId);
+    public List<Friend> getFriendsByGroupId(String userId, String groupId) {
+        PagingIterable<Friend> userGroups = userGroupDao.selectFriendsByGroupId(userId, groupId);
+
         return userGroups.all();
     }
 
     public List<String> getFriendIdsByGroupId(String userId, String groupId) {
         PagingIterable<String> strings = userGroupDao.selectUserIdByGroupID(groupId);
-
         return strings.all();
     }
 
-
-
     public List<UserGroup> getGroupById(String userId) {
         PagingIterable<UserGroup> userGroups = userGroupDao.selectGroupByGroupID(userId);
-
         return userGroups.all();
     }
 
-    public void setFriends() {
+    public boolean follow(String from, String to) {
 
+
+        return false;
     }
+
 
 
 }

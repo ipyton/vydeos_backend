@@ -118,4 +118,9 @@ public class AccountController {
 
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(avatar);
     }
+
+
+
+
+
 }

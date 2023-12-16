@@ -1,6 +1,7 @@
 package com.chen.blogbackend.DAO;
 
 import com.chen.blogbackend.entities.App;
+import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.entities.Setting;
 import com.chen.blogbackend.entities.UserGroup;
 import com.datastax.oss.driver.api.core.PagingIterable;
@@ -30,6 +31,9 @@ public interface UserGroupDao {
 
     @Query("insert into group_users values(:groupId, :userId, :avatar, :introduction)")
     void userJoinForUser(String userId, String groupId,String avatar, String introduction);
+
+    @Query("select * from userGroups where userId=:userId and groupId=:groupId ")
+    PagingIterable<Friend> selectFriendsByGroupId(String userId, String groupId);
 
 
 
