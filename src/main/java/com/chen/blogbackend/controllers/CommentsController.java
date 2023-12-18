@@ -17,33 +17,33 @@ public class CommentsController {
     CommentService commentService;
 
     @RequestMapping("get_by_object")
-    public PagingMessage<Comment> getCommentsByObject(String objectId) {
-        commentService.getCommentByObjectId(objectId);
+    public PagingMessage<Comment> getCommentsByObject(String objectId, String pagingState) {
+        commentService.getCommentByObjectId(objectId, pagingState);
         return new PagingMessage<>();
     }
 
     @RequestMapping("get_by_comment")
-    public PagingMessage<Comment> getCommentByCommentId(String commentId) {
-        commentService.getCommentByCommentId(commentId);
+    public PagingMessage<Comment> getCommentByCommentId(String commentId, String pagingState) {
+        commentService.getCommentByCommentId(commentId, pagingState);
         return new PagingMessage<>();
     }
 
     @RequestMapping("get_user_comments")
-    public PagingMessage<Comment> getUserComments(String userId){
-        commentService.getCommentByUserId(userId);
+    public PagingMessage<Comment> getUserComments(String userId,String pagingState){
+        commentService.getCommentByUserId(userId, pagingState);
         return new PagingMessage<>();
     }
 
 
     @RequestMapping("get_app_comment")
-    public PagingMessage<ApplicationComment> getAppComment(String applicationId){
-        commentService.getApplicationComment(applicationId);
+    public PagingMessage<ApplicationComment> getAppComment(String applicationId, String pagingState){
+        commentService.getApplicationComment(applicationId, pagingState);
         return new PagingMessage<>();
     }
 
     @RequestMapping("set")
-    public LoginMessage setCommentByObject(Comment comment) {
-        commentService.addCommentForContent(comment);
+    public LoginMessage setCommentByObject(String objectId, Comment comment) {
+        commentService.addCommentForContent(objectId, comment);
         return new LoginMessage(-1, "");
     }
 

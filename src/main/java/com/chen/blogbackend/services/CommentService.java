@@ -36,7 +36,7 @@ public class CommentService {
     PreparedStatement getCommentsByUserId;
     PreparedStatement getApplicationComments;
 
-    PreparedStatement addCommentForComment;
+    PreparedStatement addComment;
     PreparedStatement addCommentForApp;
 
     PreparedStatement deleteComment;
@@ -57,7 +57,7 @@ public class CommentService {
 
         getCommentsByObjectId = session.prepare("select * from comment_by_object_id where object_id=?");
         getCommentsByUserId = session.prepare("select * from comment_by_user_id where user_id=?");
-        addCommentForComment = session.prepare("");
+        addComment = session.prepare("");
         addCommentForApp = session.prepare("insert into app_comment values(?,?,?,?)");
         like = session.prepare("update comments_by_comment set likes = likes + 1 where object_id=?");
         likeSub = session.prepare("update comments_by_object_id set likes = likes + 1 where comment_refer=?");
@@ -81,15 +81,20 @@ public class CommentService {
         assert newPagingState != null;
         return new PagingMessage<>(convert.all(), newPagingState.toString(), 0);
     }
-    public boolean addSubComment(Comment comment) {
+    public boolean addSubComment(String objectId, Comment comment) {
+        return addComment(objectId, comment, true);
 
-
-        return true;
     }
 
-    public boolean addCommentForContent(Comment comment) {
-        session.execute(addCommentForComment.bind())
-        return true;
+    public boolean addCommentForContent(String objectId, Comment comment) {
+        return addComment(objectId, comment, false);
+    }
+
+    public boolean addComment(String objectID, Comment comment, boolean refer) {
+        ResultSet execute = session.execute(addComment.bind(objectID, comment.getCommentId(), comment.getCommentDateAndTime(),
+                comment.getComment(), refer ? "true" : "false", comment.getUserName(), comment.getUserId(), comment.getAvatar()));
+        return execute.getExecutionInfo().getErrors().size() == 0;
+
     }
 
 
