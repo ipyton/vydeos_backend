@@ -4,7 +4,10 @@ import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.entities.UserGroup;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.mapper.annotations.*;
+
+import java.util.List;
 
 @Dao
 public interface FriendDao {
@@ -14,6 +17,9 @@ public interface FriendDao {
 
     @SetEntity(lenient = true)
     BoundStatement setEntity(Friend friend, BoundStatement boundStatement);
+
+    @Query("select * from user_information where user_id = :id;")
+    Friend selectUserInformation(String id);
 
     @Query("select * from group_users where group_id = :id;")
     PagingIterable<Friend> selectGroupByID(String id);
@@ -34,10 +40,10 @@ public interface FriendDao {
     @Query("delete from followers_by_user_id where user_id = :from;")
     void deleteForFan(String from, String to);
 
-    @Query("delete from followers_by_idol_id whrer idol_id = :to;")
+    @Query("delete from followers_by_idol_id where idol_id = :to;")
     void deleteForIdol(String from, String to);
 
-
-
+    @GetEntity
+    List<Friend> getEntity(ResultSet resultSet);
 
 }

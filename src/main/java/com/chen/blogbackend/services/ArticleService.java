@@ -97,7 +97,7 @@ public class ArticleService {
     }
 
     public PagingMessage<Article> getArticlesByGroup(String userId, String groupId, Long startIndex) {
-        List<String> friendIdsByGroupId = friendsService.getFriendIdsByGroupId(userId, groupId);
+        List<String> friendIdsByGroupId = friendsService.getFriendIdsByGroupId(groupId);
         ArrayList<String> strings = recognizer.get(friendIdsByGroupId, startIndex, timeSlice);
         List<Article> res = getBatchArticles(strings, userId);
         return new PagingMessage<>(res, null, 1, Long.toString(timeSlice));

@@ -2,14 +2,33 @@ package com.chen.blogbackend.entities;
 
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
+import java.util.List;
+
 @Entity
 public class ApplicationComment {
     String applicationId;
     String userId;
     String comment;
     float rate;
+    List<String> picture;
+
+    public List<String> getPicture() {
+        return picture;
+    }
+
+    public void setPicture(List<String> picture) {
+        this.picture = picture;
+    }
 
     public ApplicationComment() {
+    }
+
+    public ApplicationComment(String applicationId, String userId, String comment, float rate, List<String> picture) {
+        this.applicationId = applicationId;
+        this.userId = userId;
+        this.comment = comment;
+        this.rate = rate;
+        this.picture = picture;
     }
 
     public ApplicationComment(String applicationId, String userId, String comment, float rate) {

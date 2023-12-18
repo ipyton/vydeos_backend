@@ -7,7 +7,6 @@ import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.services.FriendsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
@@ -25,17 +24,19 @@ public class FriendsController {
     }
 
     @RequestMapping("unfollow")
-    public LoginMessage unfollow(String userId) {
-
+    public LoginMessage unfollow(String fanId, String userId) {
+        boolean result = service.unfollow(fanId, userId);
+        return new LoginMessage(-1, "" + result);
     }
 
     @RequestMapping("get_followers")
-    public LoginMessage getFollowers(String userId) {
-
+    public PagingMessage<Friend> getFollowers(String userId, String pagingState) {
+        return service.getFollowersByUserId(userId, pagingState);
     }
 
     @RequestMapping("get_idols")
-    public LoginMessage getIdols(String userId) {
+    public PagingMessage<Friend> getIdols(String userId, String pagingState) {
+        return service.getIdolsByUserId(userId,pagingState);
     }
 
     @RequestMapping("get_groups")
@@ -56,18 +57,35 @@ public class FriendsController {
 
 
     @RequestMapping("move_to_group")
-    public LoginMessage moveTo(String userId, String groupId) {
+    public LoginMessage moveTo(String userId, String friendId,String groupId) {
+        boolean b = service.moveToGroup(userId, friendId, groupId);
 
+        return new LoginMessage(-1, "");
     }
 
     @RequestMapping("create_group")
     public LoginMessage createGroup(String userId, String group) {
-
+        return new LoginMessage(-1, "");
     }
 
 
-    @RequestMapping("")
-    public LoginMessage c
+    @RequestMapping("remove_group")
+    public LoginMessage removeGroup(String userId, String group) {
+        boolean result = service.removeGroup(group);
+        if (result) {
+            return new LoginMessage(1, "");
+        }
+        else {
+            return new LoginMessage(-1, " ");
+        }
+    }
+
+    @RequestMapping("delete_from_group")
+    public LoginMessage deleteFromGroup(String user, String usrToRemove, String groupFrom) {
+        boolean result = service.deleteFromGroup(user, usrToRemove, groupFrom);
+        return new LoginMessage(-1, "");
+    }
+
 
 
 

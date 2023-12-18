@@ -7,7 +7,43 @@ public class Friend {
     String userId = "";
     String avatar = "";
     String introduction = "";
-    String[] apps;
+    String name = "";
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    String groupId = "";
+    boolean biDirection = false;
+
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public Friend(String userId, String avatar, String introduction, String groupId, boolean biDirection) {
+        this.userId = userId;
+        this.avatar = avatar;
+        this.introduction = introduction;
+        this.groupId = groupId;
+        this.biDirection = biDirection;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
+
+    public boolean isBiDirection() {
+        return biDirection;
+    }
+
+    public void setBiDirection(boolean biDirection) {
+        this.biDirection = biDirection;
+    }
 
     public String getUserId() {
         return userId;
@@ -36,19 +72,11 @@ public class Friend {
         this.introduction = introduction;
     }
 
-    public String[] getApps() {
-        return apps;
-    }
-
-    public void setApps(String[] apps) {
-        this.apps = apps;
-    }
 
     public Friend(String userId, String avatar, String introduction, String[] apps) {
         this.userId = userId;
         this.avatar = avatar;
         this.introduction = introduction;
-        this.apps = apps;
     }
 
 

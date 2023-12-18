@@ -10,6 +10,10 @@ public class MessageService {
 
     }
 
+    public void saveMedia(){
+
+    }
+
     public void recallMessage() {
 
     }
@@ -17,5 +21,18 @@ public class MessageService {
     public void inferMessage() {
 
     }
+
+    public void joinGroup(){}
+
+    public void quitGroup() {
+
+    }
+
+    public void getMessageForGroup(){}
+
+    public void getMessageForSingle() {
+
+    }
+
 
 }

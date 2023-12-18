@@ -7,11 +7,11 @@ import java.util.List;
 
 public class PagingMessage<T> {
     public List<T> items;
-    public PagingState pagingInformation;
+    public String pagingInformation;
     public int code;
     public String ext="";
 
-    public PagingMessage(List<T> items, PagingState pagingInformation, int code, String ext) {
+    public PagingMessage(List<T> items, String pagingInformation, int code, String ext) {
         this.items = items;
         this.pagingInformation = pagingInformation;
         this.code = code;
@@ -30,7 +30,7 @@ public class PagingMessage<T> {
         return ext;
     }
 
-    public PagingMessage(List<T> items, PagingState pagingInformation, int code) {
+    public PagingMessage(List<T> items, String pagingInformation, int code) {
         this.items = items;
         this.pagingInformation = pagingInformation;
         this.code = code;
@@ -47,11 +47,11 @@ public class PagingMessage<T> {
         this.items = items;
     }
 
-    public PagingState getPagingInformation() {
+    public String getPagingInformation() {
         return pagingInformation;
     }
 
-    public void setPagingInformation(PagingState pagingInformation) {
+    public void setPagingInformation(String pagingInformation) {
         this.pagingInformation = pagingInformation;
     }
 

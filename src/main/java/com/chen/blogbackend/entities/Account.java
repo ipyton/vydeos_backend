@@ -15,6 +15,8 @@ public class Account {
     private String introduction="";
     private String avatar="";
     private Date dateOfBirth = null;
+    String[] apps;
+
 
     public String getUserEmail() {
         return userEmail;

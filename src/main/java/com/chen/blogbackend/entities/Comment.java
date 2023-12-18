@@ -24,6 +24,21 @@ public class Comment {
 
     String userId;
 
+    String objectId;
+    String commentId;
+    String comment;
+    int numberOfLikes;
+    String commentDateTime;
+    String type="";
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public Comment() {
     }
 
@@ -36,11 +51,7 @@ public class Comment {
         this.commentDateTime = commentDateTime;
     }
 
-    String objectId;
-    String commentId;
-    String comment;
-    int numberOfLikes;
-    String commentDateTime;
+
 
 
     public String getCommentId() {
