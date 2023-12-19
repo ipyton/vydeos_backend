@@ -43,7 +43,13 @@ public class CommentsController {
 
     @RequestMapping("set")
     public LoginMessage setCommentByObject(String objectId, Comment comment) {
-        commentService.addCommentForContent(objectId, comment);
+        commentService.addComment(objectId, comment, false);
+        return new LoginMessage(-1, "");
+    }
+
+    @RequestMapping("set_sub_comment")
+    public LoginMessage setCommentForComment(String objectId, Comment comment) {
+        commentService.addComment(objectId, comment, true);
         return new LoginMessage(-1, "");
     }
 
@@ -52,6 +58,21 @@ public class CommentsController {
         commentService.addApplicationComment(comment);
         return new LoginMessage(-1, "");
     }
+
+    @RequestMapping("like")
+    public LoginMessage likeComment(String objectId, String commentId) {
+        commentService.like(objectId, commentId);
+        return new LoginMessage(-1, "");
+    }
+
+
+    @RequestMapping("dislike")
+    public LoginMessage dislikeComment(String objectId, String commentId) {
+        commentService.dislike(objectId, commentId);
+        return new LoginMessage(-1, "");
+    }
+
+
 
 
 

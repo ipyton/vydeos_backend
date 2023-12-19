@@ -121,4 +121,15 @@ public class PictureService {
         }
         return result;
     }
+
+    public void uploadSocialMediaPics(){
+
+    }
+
+    public void downloadSocialMediaPics() {
+
+
+    }
+
+
 }

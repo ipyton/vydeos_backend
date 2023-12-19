@@ -28,7 +28,9 @@ public class MessageService {
 
     }
 
-    public void getMessageForGroup(){}
+    public void getMessageForGroup(){
+
+    }
 
     public void getMessageForSingle() {
 

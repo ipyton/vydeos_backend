@@ -2,7 +2,6 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.ApplicationCommentDao;
 import com.chen.blogbackend.DAO.CommentDao;
-import com.chen.blogbackend.entities.App;
 import com.chen.blogbackend.entities.ApplicationComment;
 import com.chen.blogbackend.entities.Comment;
 import com.chen.blogbackend.mappers.ApplicationCommentMapper;
@@ -10,7 +9,6 @@ import com.chen.blogbackend.mappers.ApplicationCommentMapperBuilder;
 import com.chen.blogbackend.mappers.CommentMapper;
 import com.chen.blogbackend.mappers.CommentMapperBuilder;
 import com.chen.blogbackend.responseMessage.PagingMessage;
-import com.chen.blogbackend.util.PagingStateConverter;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.PagingState;
@@ -23,8 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class CommentService {
@@ -43,7 +39,7 @@ public class CommentService {
     PreparedStatement deleteSubComment;
 
     PreparedStatement like;
-    PreparedStatement likeSub;
+    PreparedStatement dislike;
 
     ApplicationCommentDao applicationCommentDao;
     CommentDao commentDao;
@@ -57,10 +53,9 @@ public class CommentService {
 
         getCommentsByObjectId = session.prepare("select * from comment_by_object_id where object_id=?");
         getCommentsByUserId = session.prepare("select * from comment_by_user_id where user_id=?");
-        addComment = session.prepare("");
+        addComment = session.prepare("insert into comment_by_content values(?,?,?,?,?,?,?,?)");
         addCommentForApp = session.prepare("insert into app_comment values(?,?,?,?)");
-        like = session.prepare("update comments_by_comment set likes = likes + 1 where object_id=?");
-        likeSub = session.prepare("update comments_by_object_id set likes = likes + 1 where comment_refer=?");
+        like = session.prepare("update comments_by_content set likes = likes + 1 where object_id=?");
         deleteSubComment = session.prepare("delete from comment_by_comment where comment_refer=?");
         deleteComment = session.prepare("delete from comment_by_object_id where object_id=? and comment_id=?");
     }
@@ -81,11 +76,14 @@ public class CommentService {
         assert newPagingState != null;
         return new PagingMessage<>(convert.all(), newPagingState.toString(), 0);
     }
+
+    @Deprecated
     public boolean addSubComment(String objectId, Comment comment) {
         return addComment(objectId, comment, true);
 
     }
 
+    @Deprecated
     public boolean addCommentForContent(String objectId, Comment comment) {
         return addComment(objectId, comment, false);
     }
@@ -109,17 +107,11 @@ public class CommentService {
         return result.getExecutionInfo().getErrors().size() == 0;
     }
 
-    public boolean like(String commentID, boolean refer) {
+    public boolean like(String objectId, String commentID) {
         ResultSet execute = session.execute(getCommentsByCommentId.bind(commentID));
         Row one = execute.one();
-        ResultSet result = null;
-        if (refer) {
-            assert one != null;
-            result = session.execute(likeSub.bind(one.get("comment_refer", String.class)));
-        }
-        else {
-            result = session.execute(like.bind(one.get("object_id", String.class)));
-        }
+        ResultSet result = session.execute(like.bind(objectId, commentID));
+
         return result.getExecutionInfo().getErrors().size() == 0;
     }
 
@@ -143,5 +135,11 @@ public class CommentService {
         PagingIterable<Comment> convert = commentDao.convert(execute);
         return new PagingMessage<>(convert.all(), execute.getExecutionInfo().getPagingState().toString(),-1);
 
+    }
+
+    public boolean dislike(String objectId, String commentID) {
+        ResultSet result = session.execute(like.bind(objectId, commentID));
+
+        return result.getExecutionInfo().getErrors().size() == 0;
     }
 }
