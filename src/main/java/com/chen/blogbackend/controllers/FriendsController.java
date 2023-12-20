@@ -64,7 +64,8 @@ public class FriendsController {
     }
 
     @RequestMapping("create_group")
-    public LoginMessage createGroup(String userId, String group) {
+    public LoginMessage createGroup(String userId, UserGroup group) {
+        service.createGroup(group);
         return new LoginMessage(-1, "");
     }
 

@@ -1,6 +1,7 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.ChatGroupDao;
+import com.chen.blogbackend.DAO.ChatGroupMemberDao;
 import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.ChatGroup;
@@ -40,37 +41,34 @@ public class ChatGroupService {
     PreparedStatement getMembersId;
 
 
-    PreparedStatement delChatRecordByID;
     PreparedStatement delChatGroupById;
     PreparedStatement delChatGroupByUser;
     PreparedStatement delAllChatGroupById;
 
     PreparedStatement truncateChatGroupById;
-    PreparedStatement truncateChatGroupByUser;
     PreparedStatement getRecord;
-
+    PreparedStatement getGroupDetails;
     PreparedStatement recall;
     //generate here.
     InvitationDao invitationDao;
     ChatGroupDao chatGroupDao;
     FriendDao friendDao;
-
+    ChatGroupMemberDao chatGroupMemberDao;
 
     @PostConstruct
     public void init() {
 
-        insertChatGroupById = session.prepare("");
-        insertChatGroupByUser = session.prepare("");
-        insertChatRecordById = session.prepare("");
-
-
-        delChatRecordByID = session.prepare("");
-        delChatGroupById = session.prepare("");
-        delChatGroupByUser = session.prepare("");
-        truncateChatGroupById = session.prepare("");
-        getGroups = session.prepare("");
-        getMembers = session.prepare("");
-        recall = session.prepare("");
+        insertChatGroupById = session.prepare("insert into chat_group_by_id values(?,?,?)");
+        insertChatGroupByUser = session.prepare("insert into chat_group_by_user values(?,?,?)");
+        insertChatRecordById = session.prepare("insert into chat_record_by_id values(?,?,?,?,?,?,?,?)");
+        getGroupDetails = session.prepare("select * from chat_group_details where group_id = ?");
+        delChatGroupById = session.prepare("delete from chat_group_by_id where group_id = ? and group_id = ?");
+        delChatGroupByUser = session.prepare("delete from chat_group_by_user where user_id = ? and group_id = ?");
+        truncateChatGroupById = session.prepare("delete from chat_group_by_id where group_id = ?");
+        getGroups = session.prepare("select * from chat_group_by_user where user_id = ?");
+        getMembers = session.prepare("select * from chat_group_by_id where group_id = ?");
+        getRecord = session.prepare("select * from chat_record_by_id where group_id = ? and message_id = ?");
+        recall = session.prepare("delete from chat_record_by_id where group_id = ?");
         chatGroupDao = null;
     }
 
@@ -84,8 +82,8 @@ public class ChatGroupService {
 
     public boolean quitGroup(String userId, String groupId) {
         BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-        builder.addStatements(delChatGroupById.bind(userId, groupId),
-                delChatGroupByUser.bind(groupId, userId));
+        builder.addStatements(delChatGroupById.bind(groupId, userId),
+                delChatGroupByUser.bind(userId, groupId));
         ResultSet execute = session.execute(builder.build());
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
@@ -113,16 +111,13 @@ public class ChatGroupService {
         Invitation select = invitationDao.select(invitationID);
         BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
         builder.addStatements(insertChatGroupById.bind(groupId, userId, userId),insertChatGroupByUser.bind(userId, groupId));
-        if (select.getGroupId().equals(groupId) && System.currentTimeMillis() < select.getExpire_time().getTime()) {
-
-            return true;
-        }
-    return false;
+        return select.getGroupId().equals(groupId) && System.currentTimeMillis() < select.getExpire_time().getTime();
     }
 
-    public PagingMessage<ChatGroupMember> getMembers(String userId, String groupId) {
+    public PagingMessage<ChatGroupMember> getMembers(String userId, String groupId, String pagingState) {
         ResultSet execute = session.execute(getMembers.bind(groupId));
-
+        PagingIterable<ChatGroupMember> convert = chatGroupMemberDao.convert(execute);
+        return new PagingMessage<>(convert.all(), pagingState, -1);
     }
 
     public boolean sendMessage(String userId, String groupId, String message, String referId, List<String> objects) {
@@ -131,14 +126,20 @@ public class ChatGroupService {
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
-    public boolean permitted(String operatorId, String groupId, Stru) {
-
-    }
 
     public boolean recall(String operatorId, String groupID, String messageId) {
-        ResultSet execute = session.execute(getRecord.bind(groupID, messageId));
-        if (execute.getColumnDefinitions().get("name") == operatorId) {
-            ResultSet execute1 = session.execute(delChatRecordByID.bind(messageId));
+        BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.LOGGED);
+
+        BatchStatementBuilder batchStatementBuilder = builder.addStatements(getRecord.bind(groupID, messageId), getGroupDetails.bind(groupID));
+
+        ResultSet execute = session.execute(batchStatementBuilder.build());
+        String userId = execute.all().get(0).get("user_id", String.class);
+        String ownerId = execute.all().get(1).get("owner_id", String.class);
+        if (null == userId || null == ownerId) {
+            return false;
+        }
+        if (userId.equals(operatorId) || ownerId.equals(operatorId)) {
+            ResultSet execute1 = session.execute(recall.bind(messageId));
             return true;
         }
         return false;

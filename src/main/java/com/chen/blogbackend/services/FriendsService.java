@@ -46,7 +46,8 @@ public class FriendsService {
     PreparedStatement getUsersIntro;
     PreparedStatement updateFriendDirectionByIdolId;
     PreparedStatement updateFriendDirectionByUserId;
-
+    PreparedStatement block;
+    PreparedStatement unBlock;
 
 
     @PostConstruct

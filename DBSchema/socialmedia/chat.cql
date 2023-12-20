@@ -1,3 +1,4 @@
-create table chat_record_by_id(message_id int primary key, group_id text, user_id text ,message text, send_time timestamp, object_id text);
+create table chat_record_by_id(user_id text primary key, receiver_id text primary key, message_id text primary key ,group_id text ,message text, send_time timestamp, object_id text);
+create table blacklist()
 create table chat_record_by_group(message_id int, group_id text primary key , user_id text ,message text, send_time timestamp, object_id text);
 

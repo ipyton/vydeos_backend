@@ -63,8 +63,8 @@ public class ChatGroupController {
     }
 
     @RequestMapping("get_members")
-    public LoginMessage getMembers(String userId, String groupId) {
-        PagingMessage<ChatGroupMember> result = service.getMembers(userId, groupId);
+    public LoginMessage getMembers(String userId, String groupId, String pagingState) {
+        PagingMessage<ChatGroupMember> result = service.getMembers(userId, groupId, pagingState);
         return new LoginMessage(-1, "");
     }
 
