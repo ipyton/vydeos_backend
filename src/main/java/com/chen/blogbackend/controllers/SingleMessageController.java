@@ -32,15 +32,21 @@ public class SingleMessageController {
 
     @RequestMapping("block")
     public LoginMessage blockUser(String userId, String receiverId) {
-        service.block(userId,receiverId);
+        service.blockUser(userId,receiverId);
         return new LoginMessage(-1, "");
     }
 
     @RequestMapping("unblock")
     public LoginMessage unblock(String userId, String receiverId) {
-        service.unblock(userId, receiverId);
+        service.unblockUser(userId, receiverId);
         return new LoginMessage(-1, "");
 
+    }
+
+    @RequestMapping("recall")
+    public LoginMessage recall(String userId, String messageId) {
+        service.recall();
+        return new LoginMessage(-1, "");
     }
 
 }

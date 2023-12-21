@@ -27,10 +27,10 @@ public class SingleMessageService {
 
     @PostConstruct
     public void init(){
-        setRecordById = session.prepare("");
-        getRecord = session.prepare("");
-        block = session.prepare("");
-        unBlock = session.prepare("");
+        setRecordById = session.prepare("insert into chat_record_by_id values(?,?,?,?,?,?,?);");
+        getRecord = session.prepare("select * from chat_record_by_id where user_id = ? and receiver_id = ?");
+        block = session.prepare("insert into black_list values(?, ?, ?, ?)");
+        unBlock = session.prepare("delete from black_list where user_id = ? and black_id = ?");
     }
 
     public boolean blockUser(String userId, String blockUser) {
@@ -38,21 +38,27 @@ public class SingleMessageService {
         return true;
     }
 
-    public boolean unblockUser(String userId, String unBlobkUser) {
-        session.execute(unBlock.bind(userId, unBlobkUser));
-
+    public boolean unblockUser(String userId, String unBlockUser) {
+        session.execute(unBlock.bind(userId, unBlockUser));
+        return true;
     }
 
 
     public PagingMessage<Message> getMessageByUserId(String userId, String receiverId, String pageState) {
         ResultSet execute = session.execute(getRecord.bind(userId, receiverId).setPagingState(PagingState.fromString(pageState)));
-
+        return new PagingMessage<>();
     }
 
     public boolean sendMessage(String userId, String to, Message message) {
         session.execute(setRecordById.bind(userId,to,message));
-
+        return true;
     }
+
+    public boolean recall(){
+        return true;
+    }
+
+
 
 
 
