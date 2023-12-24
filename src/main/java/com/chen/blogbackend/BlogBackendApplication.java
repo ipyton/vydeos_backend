@@ -1,14 +1,22 @@
 package com.chen.blogbackend;
 
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.mongodb.MongoClient;
 import io.minio.MinioClient;
+import org.apache.http.Header;
+import org.apache.http.HttpHost;
+import org.apache.http.message.BasicHeader;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
+import org.elasticsearch.client.RestClient;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -77,6 +85,26 @@ public class BlogBackendApplication {
         //查看服务是否运行
         System.out.println("服务正在运行！"+jedis.ping());
         return jedis;
+    }
+
+    @Bean
+    public static ElasticsearchClient configElasticSearch() {
+        String serverUrl = "https://localhost:9200";
+        String apiKey = "VnVhQ2ZHY0JDZGJrU...";
+        RestClient restClient = RestClient
+                .builder(HttpHost.create(serverUrl))
+                .setDefaultHeaders(new Header[]{
+                        new BasicHeader("Authorization", "ApiKey " + apiKey)
+                })
+                .build();
+
+// Create the transport with a Jackson mapper
+        RestClientTransport transport = new RestClientTransport(
+                restClient, new JacksonJsonpMapper());
+
+// And create the API client
+
+        return new ElasticsearchClient(transport);
     }
 
 

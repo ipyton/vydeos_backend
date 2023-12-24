@@ -15,6 +15,8 @@ public class SearchService {
     SqlSessionFactory sqlSessionFactory;
 
 
+
+
     public ArrayList<App> searchApplicationByName(String name){
 
         return new ArrayList<>();
