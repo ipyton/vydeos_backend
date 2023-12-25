@@ -1,8 +1,9 @@
 package com.chen.blogbackend.controllers;
 
-import com.chen.blogbackend.entities.Message;
+import com.chen.blogbackend.entities.GroupMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.FriendsService;
+import com.chen.blogbackend.services.SearchService;
 import com.chen.blogbackend.services.SingleMessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,9 @@ public class SingleMessageController {
     @Autowired
     FriendsService friendsService;
 
+    @Autowired
+    SearchService searchService;
+
     @RequestMapping("get_messages")
     public LoginMessage getMessagesByUserId(HttpServletRequest request, String userId, String receiverId, String pageState){
         service.getMessageByUserId(userId, receiverId,pageState);
@@ -25,8 +29,8 @@ public class SingleMessageController {
     }
 
     @RequestMapping("send_message")
-    public LoginMessage sendMessage(HttpServletRequest request, String userId, String to, Message message) {
-        service.sendMessage(userId, to, message);
+    public LoginMessage sendMessage(HttpServletRequest request, String userId, String to, GroupMessage groupMessage) {
+        service.sendMessage(userId, to, groupMessage);
         return new LoginMessage(-1, "");
     }
 
@@ -44,9 +48,8 @@ public class SingleMessageController {
     }
 
     @RequestMapping("recall")
-    public LoginMessage recall(String userId, String messageId) {
-        service.recall();
+    public LoginMessage recall(String userId, String receiverId, String messageId) {
+        service.recall(userId, receiverId, messageId);
         return new LoginMessage(-1, "");
     }
-
 }

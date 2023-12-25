@@ -2,13 +2,52 @@ package com.chen.blogbackend.entities;
 
 import java.util.Date;
 
-public class Message {
+public class GroupMessage {
     private String messageId;
     private String userId;
+    private String groupId;
     private String type;
     private Date timestamp;
     private String content;
     private String media;
+    private String referUserId;
+    private String referMessageId;
+
+    public GroupMessage(String messageId, String userId, String groupId, String type, Date timestamp, String content, String media, String referUserId, String referMessageId) {
+        this.messageId = messageId;
+        this.userId = userId;
+        this.groupId = groupId;
+        this.type = type;
+        this.timestamp = timestamp;
+        this.content = content;
+        this.media = media;
+        this.referUserId = referUserId;
+        this.referMessageId = referMessageId;
+    }
+
+    public String getReferUserId() {
+        return referUserId;
+    }
+
+    public void setReferUserId(String referUserId) {
+        this.referUserId = referUserId;
+    }
+
+    public String getReferMessageId() {
+        return referMessageId;
+    }
+
+    public void setReferMessageId(String referMessageId) {
+        this.referMessageId = referMessageId;
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
 
     public String getMessageId() {
         return messageId;
@@ -58,7 +97,7 @@ public class Message {
         this.media = media;
     }
 
-    public Message(String messageId, String userId, String type, Date timestamp, String content, String media) {
+    public GroupMessage(String messageId, String userId, String type, Date timestamp, String content, String media) {
         this.messageId = messageId;
         this.userId = userId;
         this.type = type;
@@ -67,6 +106,6 @@ public class Message {
         this.media = media;
     }
 
-    public Message() {
+    public GroupMessage() {
     }
 }

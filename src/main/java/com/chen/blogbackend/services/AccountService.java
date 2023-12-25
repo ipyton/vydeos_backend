@@ -1,5 +1,6 @@
 package com.chen.blogbackend.services;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.chen.blogbackend.util.PasswordEncryption;
 import com.chen.blogbackend.util.TokenUtil;
 import com.chen.blogbackend.entities.Account;
@@ -17,6 +18,11 @@ public class AccountService {
 
     @Autowired
     SqlSessionFactory sqlSessionFactory;
+
+    @Autowired
+    SearchService searchService;
+
+
 
     public boolean insert(Account account) {
         SqlSession session = sqlSessionFactory.openSession();
@@ -73,10 +79,14 @@ public class AccountService {
     }
 
     public boolean update(Account account) {
+        searchService.setUserIndex(account.getUserEmail());
+
         return true;
     }
 
     public boolean addApplication() {
+
+
         return true;
     }
 

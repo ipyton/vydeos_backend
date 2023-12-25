@@ -1,10 +1,12 @@
 package com.chen.blogbackend.services;
 
-import com.chen.blogbackend.entities.Message;
-import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.DAO.SingleMessageDao;
+import com.chen.blogbackend.entities.GroupMessage;
+import com.chen.blogbackend.entities.SingleMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.datastax.oss.driver.api.core.CqlSession;
 
+import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.PagingState;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
@@ -22,8 +24,9 @@ public class SingleMessageService {
     PreparedStatement setRecordById;
     PreparedStatement block;
     PreparedStatement unBlock;
+    PreparedStatement recall;
 
-
+    SingleMessageDao messageDao;
 
     @PostConstruct
     public void init(){
@@ -31,31 +34,41 @@ public class SingleMessageService {
         getRecord = session.prepare("select * from chat_record_by_id where user_id = ? and receiver_id = ?");
         block = session.prepare("insert into black_list values(?, ?, ?, ?)");
         unBlock = session.prepare("delete from black_list where user_id = ? and black_id = ?");
+        recall = session.prepare("delete from chat_record_by_id where user_id = ? and receiver_id=? and message_id=?");
+
+
     }
 
     public boolean blockUser(String userId, String blockUser) {
-        session.execute(block.bind(userId, blockUser));
-        return true;
+        ResultSet execute = session.execute(block.bind(userId, blockUser));
+        return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
     public boolean unblockUser(String userId, String unBlockUser) {
-        session.execute(unBlock.bind(userId, unBlockUser));
-        return true;
+        ResultSet execute = session.execute(unBlock.bind(userId, unBlockUser));
+        return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
 
-    public PagingMessage<Message> getMessageByUserId(String userId, String receiverId, String pageState) {
+    public PagingMessage<SingleMessage> getMessageByUserId(String userId, String receiverId, String pageState) {
         ResultSet execute = session.execute(getRecord.bind(userId, receiverId).setPagingState(PagingState.fromString(pageState)));
-        return new PagingMessage<>();
+        PagingState state = execute.getExecutionInfo().getSafePagingState();
+        PagingIterable<SingleMessage> convert = messageDao.convert(execute);
+
+        assert state != null;
+        return new PagingMessage<>(convert.all(), state.toString(), 1);
     }
 
-    public boolean sendMessage(String userId, String to, Message message) {
-        session.execute(setRecordById.bind(userId,to,message));
-        return true;
+    public boolean sendMessage(String userId, String to, GroupMessage groupMessage) {
+        ResultSet execute = session.execute(setRecordById.bind(userId, to, groupMessage));
+        return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
-    public boolean recall(){
-        return true;
+    public boolean recall(String userId, String receiverId, String messageId){
+        ResultSet set = session.execute(recall.bind(userId, receiverId, messageId));
+
+        return set.getExecutionInfo().getErrors().size() == 0;
+
     }
 
 
