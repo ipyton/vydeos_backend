@@ -1,6 +1,7 @@
 package com.chen.blogbackend.services;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.util.PasswordEncryption;
 import com.chen.blogbackend.util.TokenUtil;
 import com.chen.blogbackend.entities.Account;
@@ -11,6 +12,7 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Date;
 
 @Service
@@ -78,8 +80,8 @@ public class AccountService {
         return result;
     }
 
-    public boolean update(Account account) {
-        searchService.setUserIndex(account.getUserEmail());
+    public boolean update(Friend friend) throws IOException, InterruptedException {
+        searchService.setUserIndex(friend);
 
         return true;
     }
