@@ -7,7 +7,6 @@ public class Invitation {
     Date expire_time;
     String userId;
     int limit;
-
     public Invitation() {
     }
 
@@ -17,6 +16,9 @@ public class Invitation {
         this.userId = userId;
         this.limit = limit;
     }
+
+
+
 
     public String getGroupId() {
         return groupId;
@@ -49,4 +51,5 @@ public class Invitation {
     public void setLimit(int limit) {
         this.limit = limit;
     }
+
 }
