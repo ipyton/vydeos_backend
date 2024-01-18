@@ -17,6 +17,10 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
 import org.elasticsearch.client.RestClient;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SchedulerFactory;
+import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -106,6 +110,17 @@ public class BlogBackendApplication {
 
         return new ElasticsearchClient(transport);
     }
+
+
+    @Bean
+    public static Scheduler configScheduler() throws SchedulerException {
+        SchedulerFactory factory = new StdSchedulerFactory();
+        return factory.getScheduler();
+    }
+
+
+
+
 
 
 
