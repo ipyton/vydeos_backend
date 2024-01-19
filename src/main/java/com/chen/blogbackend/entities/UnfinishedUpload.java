@@ -9,6 +9,9 @@ public class UnfinishedUpload {
     private int total;
     private int current;
 
+    public UnfinishedUpload() {
+    }
+
     public UnfinishedUpload(String ownerName, String fileHash, int total, int current, int startTime) {
         this.ownerName = ownerName;
         this.fileHash = fileHash;

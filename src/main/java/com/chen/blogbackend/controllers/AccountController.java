@@ -2,7 +2,9 @@ package com.chen.blogbackend.controllers;
 
 
 import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.util.AccountInfoValidator;
 import com.chen.blogbackend.util.TokenUtil;
 import com.chen.blogbackend.entities.Account;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
 import java.util.Calendar;
 
 @Controller
@@ -87,14 +90,20 @@ public class AccountController {
     }
 
     @PostMapping("/setinfo")
-    public LoginMessage setAccountInformation(Account account) {
-        boolean result = accountService.update(account);
+    public LoginMessage setAccountInformation(Friend friend) throws IOException, InterruptedException {
+        boolean result = accountService.update(friend);
         if (result) {
             return new LoginMessage(1, "Success");
         }
         return new LoginMessage(-1, "setError");
     }
 
+
+
+    @PostMapping("changePassword")
+    public Message changePassword() {
+        return new Message();
+    }
 
     @PostMapping("/verifyToken")
     public LoginMessage verifyToken(@Param("token") String token) {

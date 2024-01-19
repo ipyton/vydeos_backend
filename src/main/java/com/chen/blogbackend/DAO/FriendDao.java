@@ -44,6 +44,6 @@ public interface FriendDao {
     void deleteForIdol(String from, String to);
 
     @GetEntity
-    List<Friend> getEntity(ResultSet resultSet);
+    PagingIterable<Friend> getEntity(ResultSet resultSet);
 
 }

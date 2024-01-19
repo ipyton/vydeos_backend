@@ -80,6 +80,11 @@ public class AccountService {
         return result;
     }
 
+    public boolean updateAccount(Account account) {
+        return true;
+    }
+
+
     public boolean update(Friend friend) throws IOException, InterruptedException {
         searchService.setUserIndex(friend);
 

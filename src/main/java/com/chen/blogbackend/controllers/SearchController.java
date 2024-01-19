@@ -1,10 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.entities.Article;
-import com.chen.blogbackend.entities.Friend;
-import com.chen.blogbackend.entities.GroupMessage;
-import com.chen.blogbackend.entities.SingleMessage;
+import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.AuthorityService;

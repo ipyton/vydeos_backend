@@ -150,7 +150,7 @@ public class FriendsService {
             batchStatementBuilder.addStatement(getUsersIntro.bind(userId));
         }
         ResultSet execute = session.execute(batchStatementBuilder.build());
-        return friendDao.getEntity(execute);
+        return friendDao.getEntity(execute).all();
     }
 
     public boolean moveToGroup(String userId, List<String> friendId, String groupId) {

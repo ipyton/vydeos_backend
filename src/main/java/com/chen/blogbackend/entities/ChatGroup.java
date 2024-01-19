@@ -1,8 +1,11 @@
 package com.chen.blogbackend.entities;
 
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+
 import java.util.Date;
 import java.util.Map;
 
+@Entity
 public class ChatGroup {
     String groupId;
     String userId;

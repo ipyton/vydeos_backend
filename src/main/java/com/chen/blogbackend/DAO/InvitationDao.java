@@ -13,7 +13,7 @@ public interface InvitationDao {
     void insert(Invitation invitation);
 
     @Delete
-    void delete(String invitationId);
+    void delete(Invitation invitationId);
 
 
     @Select

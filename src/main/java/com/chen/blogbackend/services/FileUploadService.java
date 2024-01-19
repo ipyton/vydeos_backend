@@ -32,7 +32,7 @@ import java.util.List;
 public class FileUploadService {
 
     HashMap<String, UnfinishedUpload> uploads;
-
+    static String sourceFilePath = VideoUtil.sourceFilePath;
 
     VideoUploadingDao dao;
 
@@ -68,16 +68,14 @@ public class FileUploadService {
             if (!found) {
                 client.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
             }
-            File indexFile = new File(upload.getFileHash() + ".m3u8");
+            File indexFile = new File(sourceFilePath + upload.getFileHash() + ".m3u8");
             InputStream inputStream1 = new FileInputStream(indexFile);
 
-            client.putObject(PutObjectArgs.builder().bucket(bucket).object(upload.getFileHash() + ".m3u8").stream(inputStream1, indexFile.length(), -1).build());
+            client.putObject(PutObjectArgs.builder().bucket(bucket).object(sourceFilePath + upload.getFileHash() + ".m3u8").stream(inputStream1, indexFile.length(), -1).build());
             for (int i = 0; i < upload.getTotal(); i ++) {
-                File file = new File(upload.getFileHash() + "_" + i);
+                File file = new File(sourceFilePath + upload.getFileHash() + "_" + i);
                 InputStream inputStream = new FileInputStream(file);
-
-                client.putObject(PutObjectArgs.builder().bucket(bucket).object(upload.getFileHash() + "_"+  i).stream(inputStream, file.length(), -1).build());
-
+                client.putObject(PutObjectArgs.builder().bucket(bucket).object(sourceFilePath + upload.getFileHash() + "_"+  i).stream(inputStream, file.length(), -1).build());
             }
 
         } catch(Exception exception) {

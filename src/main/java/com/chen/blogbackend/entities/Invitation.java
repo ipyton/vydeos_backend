@@ -1,7 +1,10 @@
 package com.chen.blogbackend.entities;
 
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+
 import java.util.Date;
 
+@Entity
 public class Invitation {
     String groupId;
     Date expire_time;
