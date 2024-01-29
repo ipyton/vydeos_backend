@@ -16,6 +16,8 @@ import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
+import org.apache.rocketmq.client.ClientConfig;
+import org.apache.rocketmq.client.producer.MQProducer;
 import org.elasticsearch.client.RestClient;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -24,6 +26,7 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +34,8 @@ import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+
+import org.apache.rocketmq.client.apis.producer.SendReceipt;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
 @ServletComponentScan("com.chen.blogbackend.filters")
@@ -118,6 +123,13 @@ public class BlogBackendApplication {
         return factory.getScheduler();
     }
 
+
+    @Bean
+    public static void configMessageQueue() {
+        String endpoint = "localhost:8081";
+        String topic = "TestTopic";
+        ClientServiceProvider
+    }
 
 
 
