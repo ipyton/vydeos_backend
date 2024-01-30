@@ -1,0 +1,7 @@
+version: "3"
+services:
+  scylladb:
+    image: scylladb/scylla
+    command: --authenticator=PasswordAuthenticator
+    ports:
+    - "9042:9042"

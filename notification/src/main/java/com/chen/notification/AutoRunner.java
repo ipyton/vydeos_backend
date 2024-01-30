@@ -2,6 +2,7 @@ package com.chen.notification;
 
 import com.chen.notification.entities.Notification;
 import com.chen.notification.service.SendNotificationService;
+import com.chen.notification.utils.ConfigUtil;
 import jakarta.annotation.PostConstruct;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientException;
@@ -35,7 +36,7 @@ public class AutoRunner {
         ClientConfiguration clientConfiguration = ClientConfiguration.newBuilder()
                 .setEndpoints(endpoints)
                 .build();
-        String tag = "*";
+        String tag = ConfigUtil.getTag();
         FilterExpression filterExpression = new FilterExpression(tag, FilterExpressionType.TAG);
         String consumerGroup = "notificationGroup";
         String topic = "notificationTopic";
@@ -52,6 +53,7 @@ public class AutoRunner {
                     return ConsumeResult.SUCCESS;
                 })
                 .build();
+
 
         Thread.sleep(Long.MAX_VALUE);
     }
