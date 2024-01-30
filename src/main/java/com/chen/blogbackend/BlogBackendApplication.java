@@ -16,13 +16,20 @@ import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 
-import org.apache.rocketmq.client.ClientConfig;
-import org.apache.rocketmq.client.producer.MQProducer;
+
+import org.apache.rocketmq.client.apis.ClientConfiguration;
+import org.apache.rocketmq.client.apis.ClientConfigurationBuilder;
+import org.apache.rocketmq.client.apis.ClientException;
+import org.apache.rocketmq.client.apis.ClientServiceProvider;
+import org.apache.rocketmq.client.apis.producer.Producer;
+
 import org.elasticsearch.client.RestClient;
+
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -125,10 +132,14 @@ public class BlogBackendApplication {
 
 
     @Bean
-    public static void configMessageQueue() {
+    public static Producer configMessageQueue() throws ClientException {
         String endpoint = "localhost:8081";
         String topic = "TestTopic";
-        ClientServiceProvider
+        ClientServiceProvider provider = ClientServiceProvider.loadService();
+        ClientConfigurationBuilder builder = ClientConfiguration.newBuilder().setEndpoints(endpoint);
+
+        ClientConfiguration config = builder.build();
+        return provider.newProducerBuilder().setTopics(topic).setClientConfiguration(config).build();
     }
 
 

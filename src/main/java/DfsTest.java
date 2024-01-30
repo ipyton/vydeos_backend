@@ -3,6 +3,7 @@ import org.csource.fastdfs.*;
 
 import java.io.IOException;
 
+@Deprecated
 public class DfsTest {
     public static void main(String[] args) {
         try{
@@ -17,9 +18,9 @@ public class DfsTest {
             //最终需要的对象，即storage客户端对象
             StorageClient storageClient=new StorageClient(trackerServer,storageServer);
             System.out.println("storageClient:"+storageClient);
-        }catch(IOException e){
+        } catch(IOException e) {
             e.printStackTrace();
-        }catch(MyException e){
+        } catch(MyException e) {
             e.printStackTrace();
         }
 
