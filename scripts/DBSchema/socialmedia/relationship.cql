@@ -1,3 +1,10 @@
+CREATE KEYSPACE relationship
+    WITH REPLICATION = {
+        'class' : 'SimpleStrategy',
+        'replication_factor' : 1
+        };
+
+use relationship;
 //user -> followers
 create table followers_by_user_id(user_id text primary key , friend_id text primary key , avatar text, group_id text, bi_direction int);
 
