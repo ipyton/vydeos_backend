@@ -4,6 +4,6 @@ CREATE KEYSPACE trends
         'replication_factor' : 1
         };
 use trends;
-create table hot_video(time timestamp primary key, top int primary key, videoId text);
-create table hot_article(time timestamp primary key, top int primary key, articleId text);
-create table hot_application(time timestamp primary key, top int primary key, applicationId text);
+create table hot_video(time timestamp, top int, videoId text, primary key ((time, top)));
+create table hot_article(time timestamp, top int, articleId text, primary key ( time, top ));
+create table hot_application(time timestamp , top int, applicationId text, primary key ( time, top ));

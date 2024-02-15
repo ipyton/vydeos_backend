@@ -1,0 +1,86 @@
+PUT books
+{
+      "mappings" : {
+      "properties" : {
+        "author" : {"type" : "keyword"},
+        "cover_url" : {"type" : "keyword","index": false},
+        "description" : {"type" : "text"},
+        "public_date" : {"type" : "date"},
+        "title" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 100
+            }
+          }
+        }
+      }
+    }
+}
+
+
+PUT books
+{
+      "mappings" : {
+      "properties" : {
+        "author" : {"type" : "keyword"},
+        "cover_url" : {"type" : "keyword","index": false},
+        "description" : {"type" : "text"},
+        "public_date" : {"type" : "date"},
+        "title" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 100
+            }
+          }
+        }
+      }
+    }
+}
+
+
+PUT books
+{
+      "mappings" : {
+      "properties" : {
+        "author" : {"type" : "keyword"},
+        "cover_url" : {"type" : "keyword","index": false},
+        "description" : {"type" : "text"},
+        "public_date" : {"type" : "date"},
+        "title" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 100
+            }
+          }
+        }
+      }
+    }
+}
+
+
+PUT books
+{
+      "mappings" : {
+      "properties" : {
+        "author" : {"type" : "keyword"},
+        "cover_url" : {"type" : "keyword","index": false},
+        "description" : {"type" : "text"},
+        "public_date" : {"type" : "date"},
+        "title" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 100
+            }
+          }
+        }
+      }
+    }
+}
