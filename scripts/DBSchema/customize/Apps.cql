@@ -6,12 +6,12 @@ CREATE KEYSPACE apps
 
 use apps;
 
-create table application(applicationId text, name text, version text, author text,
+create table application(applicationId text, name text, version text not null, author text not null,
 introduction text, lastModified timestamp, ratings float, type text, system_requirements map<text, text>,
 history_versions list<text>, pictures list<text>, hot_comments list<text>, primary key((applicationId,version)));
 
 
-create table simple_application_intro(applicationId text , name text, introduction text, pictures list<text>
+//create table simple_application_intro(applicationId text , name text, introduction text, pictures list<text>
     ,primary key(applicationId));
 
 
