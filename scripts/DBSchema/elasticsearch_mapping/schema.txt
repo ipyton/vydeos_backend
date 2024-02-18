@@ -1,4 +1,4 @@
-PUT books
+PUT userInfo
 {
       "mappings" : {
       "properties" : {
@@ -20,7 +20,7 @@ PUT books
 }
 
 
-PUT books
+PUT videos
 {
       "mappings" : {
       "properties" : {
@@ -42,7 +42,7 @@ PUT books
 }
 
 
-PUT books
+PUT articles
 {
       "mappings" : {
       "properties" : {
@@ -64,23 +64,3 @@ PUT books
 }
 
 
-PUT books
-{
-      "mappings" : {
-      "properties" : {
-        "author" : {"type" : "keyword"},
-        "cover_url" : {"type" : "keyword","index": false},
-        "description" : {"type" : "text"},
-        "public_date" : {"type" : "date"},
-        "title" : {
-          "type" : "text",
-          "fields" : {
-            "keyword" : {
-              "type" : "keyword",
-              "ignore_above" : 100
-            }
-          }
-        }
-      }
-    }
-}
