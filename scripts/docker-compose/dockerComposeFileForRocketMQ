@@ -11,7 +11,7 @@ services:
     privileged: true
     volumes:
       - /usr/local/rocketmq/nameserver/logs:/home/rocketmq/logs
-      - /usr/local/rocketmq/nameserver/bin/runserver.sh:/home/rocketmq/rocketmq-5.1.0/bin/runserver.sh
+
     environment:
       - MAX_HEAP_SIZE=256M
       - HEAP_NEWSIZE=128M
@@ -28,14 +28,13 @@ services:
       - /usr/local/rocketmq/broker/logs:/home/rocketmq/logs
       - /usr/local/rocketmq/broker/store:/home/rocketmq/logs
       - /usr/local/rocketmq/broker/conf/broker.conf:/home/rocketmq/broker.conf
-      - /usr/local/rocketmq/broker/bin/runbroker.sh:/home/rocketmq/rocketmq-5.1.0/bin/runbroker.sh
     depends_on:
       - 'rmqnamesrv'
     environment:
       - NAMESRV_ADDR=rmqnamesrv:9876
       - MAX_HEAP_SIZE=512M
       - HEAP_NEWSIZE=256M
-    command: ["sh","mqbroker","-c","/home/rocketmq/broker.conf"]
+    command: ["sh","mqbroker","-c","/home/rocketmq/broker.conf", "--enable-proxy"]
   rmqdashboard:
     image: apacherocketmq/rocketmq-dashboard:latest
     container_name: rocketmq-dashboard

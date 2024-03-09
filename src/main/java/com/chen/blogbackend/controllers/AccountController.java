@@ -29,7 +29,7 @@ import java.util.Calendar;
 
 @Controller
 @ResponseBody
-@RequestMapping("account")
+@RequestMapping("/account")
 public class AccountController {
 
     @Autowired
@@ -96,13 +96,6 @@ public class AccountController {
             return new LoginMessage(1, "Success");
         }
         return new LoginMessage(-1, "setError");
-    }
-
-
-
-    @PostMapping("changePassword")
-    public Message changePassword() {
-        return new Message();
     }
 
     @PostMapping("/verifyToken")

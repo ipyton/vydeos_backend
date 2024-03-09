@@ -95,9 +95,9 @@ public class BlogBackendApplication {
 
     @Bean
     public static Jedis configRedis() {
-        Jedis jedis = new Jedis("121.x.x.x", 6379);
+        Jedis jedis = new Jedis("192.168.23.129", 6379);
         // 如果设置 Redis 服务的密码，需要进行验证，若没有则可以省去
-        jedis.auth("123456");
+//        jedis.auth("123456");
         System.out.println("链接成功！");
         //查看服务是否运行
         System.out.println("服务正在运行！"+jedis.ping());
@@ -134,13 +134,13 @@ public class BlogBackendApplication {
 
     @Bean
     public static Producer configMessageQueue() throws ClientException {
-        String endpoint = "localhost:8081";
-        String topic = "TestTopic";
+        String endpoint = "192.168.23.129:9876";
+//        String topic = "TestTopic";
         ClientServiceProvider provider = ClientServiceProvider.loadService();
         ClientConfigurationBuilder builder = ClientConfiguration.newBuilder().setEndpoints(endpoint);
-
+        //builder.enableSsl(false);
         ClientConfiguration config = builder.build();
-        return provider.newProducerBuilder().setTopics(topic).setClientConfiguration(config).build();
+        return provider.newProducerBuilder().setClientConfiguration(config).build();
     }
 
 

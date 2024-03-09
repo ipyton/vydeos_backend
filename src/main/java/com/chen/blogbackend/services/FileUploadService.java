@@ -28,7 +28,7 @@ import java.util.List;
 //                                              \/
 // small files -> fully uploaded                 -> assemble -> convert -> store -> write information to db
 
-@Service
+
 public class FileUploadService {
 
     HashMap<String, UnfinishedUpload> uploads;
