@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
-@Controller("chat_group")
+@RequestMapping("group_chat")
+@Controller()
 public class ChatGroupController {
 
     @Autowired

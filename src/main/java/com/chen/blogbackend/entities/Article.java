@@ -10,7 +10,7 @@ import java.util.Set;
 public class Article {
 
     private String userID = "";
-    private String articleID = "";
+    private String postID = "";
     private Date lastEdit = null;
     private String content = "";
     private int likes = 0;
@@ -18,9 +18,9 @@ public class Article {
     private Set<String> users;
     private String accessType;
 
-    public Article(String userID, String articleID, Date lastEdit, String content, int likes, int pictureAmount, Set<String> users, String accessType) {
+    public Article(String userID, String postID, Date lastEdit, String content, int likes, int pictureAmount, Set<String> users, String accessType) {
         this.userID = userID;
-        this.articleID = articleID;
+        this.postID = postID;
         this.lastEdit = lastEdit;
         this.content = content;
         this.likes = likes;
@@ -49,7 +49,7 @@ public class Article {
     }
 
     public String getArticleID() {
-        return articleID;
+        return postID;
     }
 
     public String getUserID() {
@@ -61,7 +61,7 @@ public class Article {
     }
 
     public void setArticleID(String articleID) {
-        this.articleID = articleID;
+        this.postID = articleID;
     }
 
     public Date getLastEdit() {

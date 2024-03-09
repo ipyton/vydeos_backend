@@ -7,6 +7,7 @@ import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.filters.PostRecognizer;
 import com.chen.blogbackend.mappers.ArticleMapperBuilder;
 import com.chen.blogbackend.responseMessage.PagingMessage;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
@@ -15,12 +16,13 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 @Service
-public class ArticleService {
+public class PostService {
     @Autowired
     SqlSessionFactory sqlSessionFactory;
 
@@ -31,10 +33,11 @@ public class ArticleService {
     FriendsService friendsService;
 
     @Autowired
-    CqlSession session;
+    PostRecognizer recognizer;
 
     @Autowired
-    PostRecognizer recognizer;
+    CqlSession session;
+
 
     PreparedStatement getRangeArticlesByUserId;
     PreparedStatement getIdolsArticles;
@@ -45,8 +48,15 @@ public class ArticleService {
 
     @PostConstruct
     public void init() {
-        articleDao = new ArticleMapperBuilder(session).build().getArticleDao();
-        getRangeArticlesByUserId = session.prepare("select * from articles_by_user_id where article_id = ?");
+//        articleDao = new ArticleMapperBuilder(session).build().getArticleDao();
+
+//        session = CqlSession.builder()
+//                .addContactPoint(new InetSocketAddress("192.168.23.129",9042))
+//                .withAuthCredentials("cassandra", "cassandra")
+//                .withKeyspace(CqlIdentifier.fromCql("post"))
+//                .build();
+
+        getRangeArticlesByUserId = session.prepare("select * from posts.posts_by_user_id where author_id = ?");
         pageSize = 10;
     }
 

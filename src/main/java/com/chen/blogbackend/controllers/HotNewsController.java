@@ -4,7 +4,8 @@ import com.chen.blogbackend.responseMessage.LoginMessage;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Controller("hot")
+@RequestMapping("hot")
+@Controller()
 public class HotNewsController {
 
     @RequestMapping("get")

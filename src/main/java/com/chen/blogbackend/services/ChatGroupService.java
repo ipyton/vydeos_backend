@@ -58,17 +58,17 @@ public class ChatGroupService {
     @PostConstruct
     public void init() {
 
-        insertChatGroupById = session.prepare("insert into chat_group_by_id values(?,?,?)");
-        insertChatGroupByUser = session.prepare("insert into chat_group_by_user values(?,?,?)");
-        insertChatRecordById = session.prepare("insert into chat_record_by_id values(?,?,?,?,?,?,?,?)");
-        getGroupDetails = session.prepare("select * from chat_group_details where group_id = ?");
-        delChatGroupById = session.prepare("delete from chat_group_by_id where group_id = ? and group_id = ?");
-        delChatGroupByUser = session.prepare("delete from chat_group_by_user where user_id = ? and group_id = ?");
-        truncateChatGroupById = session.prepare("delete from chat_group_by_id where group_id = ?");
-        getGroups = session.prepare("select * from chat_group_by_user where user_id = ?");
-        getMembers = session.prepare("select * from chat_group_by_id where group_id = ?");
-        getRecord = session.prepare("select * from chat_record_by_id where group_id = ? and message_id = ?");
-        recall = session.prepare("delete from chat_record_by_id where group_id = ?");
+        insertChatGroupById = session.prepare("insert into group_chat.chat_group_by_id (group_id, user_id, user_name) values(?,?,?)");
+        insertChatGroupByUser = session.prepare("insert into group_chat.chat_group_by_user (user_id, group_id, group_name) values(?,?,?)");
+        insertChatRecordById = session.prepare("insert into group_chat.group_chat_record_by_id (group_id, message_id, user_id, groupMessage, refer, send_time, object_id, recall) values(?,?,?,?,?,?,?,?)");
+        getGroupDetails = session.prepare("select * from group_chat.chat_group_details where group_id = ?");
+        delChatGroupById = session.prepare("delete from group_chat.chat_group_by_id where group_id = ? and user_id = ?");
+        delChatGroupByUser = session.prepare("delete from group_chat.chat_group_by_user where user_id = ? and group_id = ?");
+        truncateChatGroupById = session.prepare("delete from group_chat.chat_group_by_id where group_id = ? and user_id = ?");
+        getGroups = session.prepare("select * from group_chat.chat_group_by_user where user_id = ?");
+        getMembers = session.prepare("select * from group_chat.chat_group_by_id where group_id = ? and user_id = ?");
+        getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
+        recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         chatGroupDao = null;
     }
 

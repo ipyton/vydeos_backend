@@ -52,22 +52,27 @@ public class FriendsService {
 
     @PostConstruct
     public void init(){
-        friendDao = new FriendMapperBuilder(session).build().getDao();
-        userGroupDao = new UserGroupMapperBuilder(session).build().getDao();
-        addFriendByIdol = session.prepare("insert into followers_by_user_id values(?,?,?,?,?);");
-        addFriendUserId = session.prepare("insert into followers_by_idol_id values(?,?,?,?,?);");
-        addUsersInGroups = session.prepare("insert into users_in_groups values(?,?,?,?);");
-        addUserOwnedGroups = session.prepare("insert into user_own_groups values(?,?,?,?);");
-        delFriendByIdolId = session.prepare("delete from followers_by_idol_id where idol_id=?;");
-        delFriendByUserId = session.prepare("delete from followers_by_user_id where user_id=?;");
-        getFollowersByUserId = session.prepare("select * from followers_by_user_id where user_id=?;");
-        getUsersIntro = session.prepare("select * from user_information where user_id=?;");
-        delUsersInGroups = session.prepare("delete from users_in_groups where group_id = ? and user_id = ?");
-        delOwnGroups = session.prepare("delete from user_owned_groups where user_id=? and group_id = ?");
-        delUserGroup = session.prepare("delete from user_group where group_id = ?");
-        updateFriendDirectionByIdolId = session.prepare("update followers_by_user_id set bi_direction=?;");
-        updateFriendDirectionByUserId = session.prepare("update followers_by_idol_id set bi_direction=?;");
-        //getFollowersByIdolId = session.prepare("select * from followers_by_idol_id where idol_id=?;");
+        try {
+            friendDao = new FriendMapperBuilder(session).build().getDao();
+            userGroupDao = new UserGroupMapperBuilder(session).build().getDao();
+            addFriendByIdol = session.prepare("insert into followers_by_user_id values(?,?,?,?,?);");
+            addFriendUserId = session.prepare("insert into followers_by_idol_id values(?,?,?,?,?);");
+            addUsersInGroups = session.prepare("insert into users_in_groups values(?,?,?,?);");
+            addUserOwnedGroups = session.prepare("insert into user_own_groups values(?,?,?,?);");
+            delFriendByIdolId = session.prepare("delete from followers_by_idol_id where idol_id=?;");
+            delFriendByUserId = session.prepare("delete from followers_by_user_id where user_id=?;");
+            getFollowersByUserId = session.prepare("select * from followers_by_user_id where user_id=?;");
+            getUsersIntro = session.prepare("select * from user_information where user_id=?;");
+            delUsersInGroups = session.prepare("delete from users_in_groups where group_id = ? and user_id = ?");
+            delOwnGroups = session.prepare("delete from user_owned_groups where user_id=? and group_id = ?");
+            delUserGroup = session.prepare("delete from user_group where group_id = ?");
+            updateFriendDirectionByIdolId = session.prepare("update followers_by_user_id set bi_direction=?;");
+            updateFriendDirectionByUserId = session.prepare("update followers_by_idol_id set bi_direction=?;");
+            //getFollowersByIdolId = session.prepare("select * from followers_by_idol_id where idol_id=?;");
+        }
+        catch (Exception e) {
+            System.out.println(e);
+        }
     }
 
     public PagingMessage<Friend> getFollowersByUserId(String userId, String pagingState) {

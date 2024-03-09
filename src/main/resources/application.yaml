@@ -15,3 +15,14 @@ mybatis:
       maximumPoolSize: 20
       idleTimeout: 300000
       connectionTimeout: 30000
+logging:
+  level:
+    org:
+      springframework:
+        web:
+          debug
+#spring:
+#  cassandra:
+#    password: cassandra
+#    username: cassandra
+#    contact-points: 192.168.23.129

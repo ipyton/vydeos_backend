@@ -85,7 +85,8 @@ public class BlogBackendApplication {
     public static CqlSession setScyllaSession(){
 
         return CqlSession.builder()
-                .addContactPoint(new InetSocketAddress("101.132.222.131", 9042))
+                .addContactPoint(new InetSocketAddress("192.168.23.129",9042))
+                .withAuthCredentials("cassandra", "cassandra")
                 .withLocalDatacenter("datacenter1")
                 .build();
 

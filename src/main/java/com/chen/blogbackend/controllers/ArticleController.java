@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.entities.Article;
 
-import com.chen.blogbackend.services.ArticleService;
+import com.chen.blogbackend.services.PostService;
 import com.chen.blogbackend.services.PictureService;
 import com.datastax.oss.driver.api.core.cql.PagingState;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,17 +13,19 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-@Controller("article")
+@RequestMapping("article")
+@Controller()
 public class ArticleController {
 
     @Autowired
     PictureService pictureService;
 
     @Autowired
-    ArticleService articleService;
+    PostService postService;
 
     private final static int page_size = 10;
 
@@ -52,7 +54,7 @@ public class ArticleController {
     @PostMapping("upload_article")
     public LoginMessage uploadArticle(HttpServletRequest request, Article article) {
         String userEmail = request.getHeader("userEmail");
-        int result = articleService.uploadArticle(userEmail, article);
+        int result = postService.uploadArticle(userEmail, article);
         if (-1 != result) {
             return new LoginMessage(1, Integer.toString(result));
         } else {
@@ -62,8 +64,8 @@ public class ArticleController {
 
     @PostMapping("get_article")
     public LoginMessage getArticle(String articleID) {
-        Article article = articleService.getArticleByArticleID(articleID);
-        if(null != articleService.getArticleByArticleID(articleID)) {
+        Article article = postService.getArticleByArticleID(articleID);
+        if(null != postService.getArticleByArticleID(articleID)) {
             return new LoginMessage(1, JSON.toJSONString(article));
         }
         return new LoginMessage(-1, "Error");

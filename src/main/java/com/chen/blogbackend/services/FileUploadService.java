@@ -86,7 +86,6 @@ public class FileUploadService {
 
     }
 
-    @PostConstruct
     public boolean upload(UnfinishedUpload upload, String fragmentHash) throws Exception {
         // the file hash of the while file
         uploads.putIfAbsent(upload.getFileHash(), upload);

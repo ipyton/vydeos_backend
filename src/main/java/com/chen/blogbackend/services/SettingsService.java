@@ -20,8 +20,6 @@ public class SettingsService {
     @Autowired
     CqlSession session;
 
-    @Autowired
-    SettingsService service;
 
 
     PreparedStatement selectByUserIdAndApplication;
@@ -32,9 +30,10 @@ public class SettingsService {
 
     @PostConstruct
     public void init(){
-        selectByUserIdAndApplication =  session.prepare("select * from setting_by_user where user_id = ? and applicationId = ?");
-        selectSettingsByUserId = session.prepare("select * from setting_by_user where user_id=?");
-        selectItemsByUserId = session.prepare("select applicationId where user_id=?");
+//        session.execute("use")
+//        selectByUserIdAndApplication =  session.prepare("select * from setting_by_user where user_id = ? and applicationId = ?");
+//        selectSettingsByUserId = session.prepare("select * from setting_by_user where user_id=?");
+//        selectItemsByUserId = session.prepare("select applicationId where user_id=?");
 
     }
 

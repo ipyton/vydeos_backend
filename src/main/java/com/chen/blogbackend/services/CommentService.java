@@ -46,18 +46,23 @@ public class CommentService {
 
     @PostConstruct
     public void init(){
-        ApplicationCommentMapper build = new ApplicationCommentMapperBuilder(session).build();
-        applicationCommentDao = build.getDao();
-        CommentMapper commentMapper = new CommentMapperBuilder(session).build();
-        commentDao = commentMapper.getDao();
+        try {
+            ApplicationCommentMapper build = new ApplicationCommentMapperBuilder(session).build();
+            applicationCommentDao = build.getDao();
+            CommentMapper commentMapper = new CommentMapperBuilder(session).build();
+            commentDao = commentMapper.getDao();
 
-        getCommentsByObjectId = session.prepare("select * from comment_by_object_id where object_id=?");
-        getCommentsByUserId = session.prepare("select * from comment_by_user_id where user_id=?");
-        addComment = session.prepare("insert into comment_by_content values(?,?,?,?,?,?,?,?)");
-        addCommentForApp = session.prepare("insert into app_comment values(?,?,?,?)");
-        like = session.prepare("update comments_by_content set likes = likes + 1 where object_id=?");
-        deleteSubComment = session.prepare("delete from comment_by_comment where comment_refer=?");
-        deleteComment = session.prepare("delete from comment_by_object_id where object_id=? and comment_id=?");
+            getCommentsByObjectId = session.prepare("select * from comment_by_object_id where object_id=?");
+            getCommentsByUserId = session.prepare("select * from comment_by_user_id where user_id=?");
+            addComment = session.prepare("insert into comment_by_content values(?,?,?,?,?,?,?,?)");
+            addCommentForApp = session.prepare("insert into app_comment values(?,?,?,?)");
+            like = session.prepare("update comments_by_content set likes = likes + 1 where object_id=?");
+            deleteSubComment = session.prepare("delete from comment_by_comment where comment_refer=?");
+            deleteComment = session.prepare("delete from comment_by_object_id where object_id=? and comment_id=?");
+        }
+        catch (Exception e) {
+            System.out.println(e.toString());
+        }
     }
 
     public PagingMessage<Comment> getCommentByObjectId(String objectId, String pagingState) {

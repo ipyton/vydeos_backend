@@ -30,11 +30,11 @@ public class SingleMessageService {
 
     @PostConstruct
     public void init(){
-        setRecordById = session.prepare("insert into chat_record_by_id values(?,?,?,?,?,?,?);");
-        getRecord = session.prepare("select * from chat_record_by_id where user_id = ? and receiver_id = ?");
-        block = session.prepare("insert into black_list values(?, ?, ?, ?)");
-        unBlock = session.prepare("delete from black_list where user_id = ? and black_id = ?");
-        recall = session.prepare("delete from chat_record_by_id where user_id = ? and receiver_id=? and message_id=?");
+        setRecordById = session.prepare("insert into chat.chat_record_by_id (user_id, receiver_id, message_id, content, send_time, object_id) values(?,?,?,?,?,?);");
+        getRecord = session.prepare("select * from chat.chat_record_by_id where user_id = ? and receiver_id = ?");
+        block = session.prepare("insert into userinfo.black_list (user_id, black_user_id, black_user_name, black_user_avatar) values(?, ?, ?, ?)");
+        unBlock = session.prepare("delete from userInfo.black_list where user_id = ? and black_user_id = ?");
+        recall = session.prepare("delete from chat.chat_record_by_id where user_id = ? and receiver_id= ? and message_id= ?");
 
 
     }

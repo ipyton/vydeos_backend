@@ -43,12 +43,13 @@ public class ApplicationService {
 
     @PostConstruct
     public void init(){
-        AppMapper appMapper = new AppMapperBuilder(session).build();
-        appDao = appMapper.appDao();
-        getApplications = session.prepare("select * from application;");
-        getSimpleIntroduction = session.prepare("select * from simple_application_intro where applicationId=?;");
-        getInstalledApps = session.prepare("select * from user_apps where userId=?;");
-        deleteApp = session.prepare("delete from user_apps where userId = ? and applicationId = ?");
+        session.execute("use apps");
+//        AppMapper appMapper = new AppMapperBuilder(session).build();
+//        appDao = appMapper.appDao();
+//        getApplications = session.prepare("select * from application;");
+//        getSimpleIntroduction = session.prepare("select * from simple_application_intro where applicationId=?;");
+//        getInstalledApps = session.prepare("select * from user_apps where userId=?;");
+//        deleteApp = session.prepare("delete from user_apps where userId = ? and applicationId = ?");
     }
 
     public PagingMessage<App> getBatchApps(PagingState pagingState, PreparedStatement statement) {
