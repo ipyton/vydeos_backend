@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-@RequestMapping("article")
+@RequestMapping("post")
 @Controller()
 @ResponseBody
-public class ArticleController {
+public class PostController {
 
     @Autowired
     PictureService pictureService;
@@ -31,7 +31,7 @@ public class ArticleController {
 
     private final static int page_size = 10;
 
-    @PostMapping(value = "/uploadArticlePics")
+    @PostMapping(value = "uploadPostPics")
     public LoginMessage uploadArticlePics(MultipartFile multipartFile, String articleID){
         boolean result = pictureService.uploadAvatarPicture(articleID, multipartFile);
         if(!result) return new LoginMessage(-1, "hello");
@@ -53,7 +53,7 @@ public class ArticleController {
     }
 
 
-    @PostMapping("upload_article")
+    @PostMapping("upload_post")
     public LoginMessage uploadArticle(HttpServletRequest request, Article article) {
         String userEmail = request.getHeader("userEmail");
         int result = postService.uploadArticle(userEmail, article);
@@ -64,7 +64,7 @@ public class ArticleController {
         }
     }
 
-    @PostMapping("get_article")
+    @PostMapping("get_post")
     public LoginMessage getArticle(String articleID) {
         Article article = postService.getArticleByArticleID(articleID);
         if(null != postService.getArticleByArticleID(articleID)) {
@@ -74,14 +74,14 @@ public class ArticleController {
 
     }
 
-    @PostMapping("get_articles_range")
+    @PostMapping("get_posts_range")
     public LoginMessage getPagingArticles(String userID, PagingState state) {
 
 
         return new LoginMessage(-1, "Error");
     }
 
-    @PostMapping("get_recommend_articles")
+    @PostMapping("get_recommend_posts")
     public LoginMessage getPagingRecommendArticles(String userID, int from, int to) {
         return new LoginMessage(-1, "error");
     }

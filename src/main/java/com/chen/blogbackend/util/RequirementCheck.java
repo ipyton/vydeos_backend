@@ -12,7 +12,7 @@ public class RequirementCheck {
     }
 
 
-    public static boolean check(HashMap<String,String> requirements, HashMap<String, String> environment) {
+    public static boolean check(Map<String,String> requirements, HashMap<String, String> environment) {
         for (HashMap.Entry<String,String> entry : requirements.entrySet()) {
             String[] split = entry.getKey().split("/?");
             String name = split[0], operator = split[1];

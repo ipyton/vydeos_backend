@@ -125,7 +125,6 @@ public class ApplicationService {
             session.execute(saveComment.bind(comment.getApplicationId(), comment.getCommentId(),
                     comment.getUserId(), comment.getUserName(), comment.getUserAvatar(), comment.getComment(), comment.getRate(), comment.getCommentDateTime()));
         } catch (Exception e) {
-            System.out.println(e);
             return false;
         }
         return true;

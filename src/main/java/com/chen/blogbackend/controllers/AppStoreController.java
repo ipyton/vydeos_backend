@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller()
-@RequestMapping("/app")
+@RequestMapping("app")
 @ResponseBody
 public class AppStoreController {
 

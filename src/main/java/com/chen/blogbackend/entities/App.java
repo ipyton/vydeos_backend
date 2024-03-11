@@ -3,9 +3,7 @@ package com.chen.blogbackend.entities;
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 
 @Entity
 public class App {
@@ -16,12 +14,17 @@ public class App {
     Instant lastModified;
     float ratings;
     String type;
-    HashMap<String, String> systemRequirements;
-    ArrayList<String> historyVersions;
-    ArrayList<String> pictures;
-    ArrayList<String> hotComments;
+    Map<String, String> systemRequirements;
+    List<String> historyVersions;
+    List<String> pictures;
+    List<String> hotComments;
     String author;
     String introduction;
+
+    public App() {
+    }
+
+
 
     public String getAppId() {
         return applicationId;
@@ -55,9 +58,6 @@ public class App {
         this.ratings = ratings;
     }
 
-    public App() {
-    }
-
     public String getType() {
         return type;
     }
@@ -66,11 +66,11 @@ public class App {
         this.type = type;
     }
 
-    public HashMap<String, String> getSystemRequirements() {
+    public Map<String, String> getSystemRequirements() {
         return systemRequirements;
     }
 
-    public App(String appId, String appName, String version, Instant lastModified, float ratings, String type, HashMap<String, String> systemRequirements, ArrayList<String> historyVersions, ArrayList<String> pictures, ArrayList<String> hotComments, String author, String introduction) {
+    public App(String appId, String appName, String version, Instant lastModified, float ratings, String type, Map<String, String> systemRequirements, List<String> historyVersions, List<String> pictures, List<String> hotComments, String author, String introduction) {
         this.applicationId = appId;
         this.appName = appName;
         this.version = version;
@@ -85,11 +85,21 @@ public class App {
         this.introduction = introduction;
     }
 
+
+
+    public App(String applicationId, String appName, float ratings, List<String> pictures, String author) {
+        this.applicationId = applicationId;
+        this.appName = appName;
+        this.ratings = ratings;
+        this.pictures = pictures;
+        this.author = author;
+    }
+
     public void setSystemRequirements(HashMap<String, String> systemRequirements) {
         this.systemRequirements = systemRequirements;
     }
 
-    public ArrayList<String> getHistoryVersions() {
+    public List<String> getHistoryVersions() {
         return historyVersions;
     }
 
@@ -97,7 +107,7 @@ public class App {
         this.historyVersions = historyVersions;
     }
 
-    public ArrayList<String> getPictures() {
+    public List<String> getPictures() {
         return pictures;
     }
 
@@ -105,7 +115,7 @@ public class App {
         this.pictures = pictures;
     }
 
-    public ArrayList<String> getHotComments() {
+    public List<String> getHotComments() {
         return hotComments;
     }
 
