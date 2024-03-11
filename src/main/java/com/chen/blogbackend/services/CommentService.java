@@ -47,21 +47,21 @@ public class CommentService {
     @PostConstruct
     public void init(){
         try {
-            ApplicationCommentMapper build = new ApplicationCommentMapperBuilder(session).build();
-            applicationCommentDao = build.getDao();
-            CommentMapper commentMapper = new CommentMapperBuilder(session).build();
-            commentDao = commentMapper.getDao();
+//            ApplicationCommentMapper build = new ApplicationCommentMapperBuilder(session).build();
+//            applicationCommentDao = build.getDao();
+//            CommentMapper commentMapper = new CommentMapperBuilder(session).build();
+//            commentDao = commentMapper.getDao();
 
             getCommentsByObjectId = session.prepare("select * from comment_by_object_id where object_id=?");
             getCommentsByUserId = session.prepare("select * from comment_by_user_id where user_id=?");
             addComment = session.prepare("insert into comment_by_content values(?,?,?,?,?,?,?,?)");
-            addCommentForApp = session.prepare("insert into app_comment values(?,?,?,?)");
+            addCommentForApp = session.prepare("insert into app_comment values(?, ?, ?, ?, ?, ?, ?, ?)");
             like = session.prepare("update comments_by_content set likes = likes + 1 where object_id=?");
             deleteSubComment = session.prepare("delete from comment_by_comment where comment_refer=?");
             deleteComment = session.prepare("delete from comment_by_object_id where object_id=? and comment_id=?");
         }
         catch (Exception e) {
-            System.out.println(e.toString());
+            System.out.println(e);
         }
     }
 
@@ -122,8 +122,8 @@ public class CommentService {
 
 
     public boolean addApplicationComment(ApplicationComment comment) {
-        ResultSet execute = session.execute(addCommentForApp.bind(comment.getApplicationId(), comment.getUserId(), comment.getComment()
-                , comment.getRate(), comment.getPicture()));
+        ResultSet execute = session.execute(addCommentForApp.bind(comment.getApplicationId(), comment.getCommentId(),
+                comment.getUserId(), comment.getComment(), comment.getCommentDateTime(), comment.getRate(), comment.getUserAvatar(), comment.getUserName()));
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
@@ -144,7 +144,6 @@ public class CommentService {
 
     public boolean dislike(String objectId, String commentID) {
         ResultSet result = session.execute(like.bind(objectId, commentID));
-
         return result.getExecutionInfo().getErrors().size() == 0;
     }
 }

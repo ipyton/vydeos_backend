@@ -1,13 +1,11 @@
 package com.chen.blogbackend.entities;
 
-import com.datastax.oss.driver.api.mapper.annotations.Dao;
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
-import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.UUID;
 
 @Entity
 public class App {
@@ -15,7 +13,7 @@ public class App {
     String applicationId;
     String appName;
     String version;
-    Date lastModified;
+    Instant lastModified;
     float ratings;
     String type;
     HashMap<String, String> systemRequirements;
@@ -41,11 +39,11 @@ public class App {
         this.version = version;
     }
 
-    public Date getLastModified() {
+    public Instant getLastModified() {
         return lastModified;
     }
 
-    public void setLastModified(Date lastModified) {
+    public void setLastModified(Instant lastModified) {
         this.lastModified = lastModified;
     }
 
@@ -72,7 +70,7 @@ public class App {
         return systemRequirements;
     }
 
-    public App(String appId, String appName, String version, Date lastModified, float ratings, String type, HashMap<String, String> systemRequirements, ArrayList<String> historyVersions, ArrayList<String> pictures, ArrayList<String> hotComments, String author, String introduction) {
+    public App(String appId, String appName, String version, Instant lastModified, float ratings, String type, HashMap<String, String> systemRequirements, ArrayList<String> historyVersions, ArrayList<String> pictures, ArrayList<String> hotComments, String author, String introduction) {
         this.applicationId = appId;
         this.appName = appName;
         this.version = version;

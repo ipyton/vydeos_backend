@@ -1,6 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 import com.chen.blogbackend.entities.App;
+import com.chen.blogbackend.entities.ApplicationComment;
 import com.chen.blogbackend.entities.Comment;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
@@ -10,9 +11,11 @@ import com.chen.blogbackend.util.PagingStateConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller()
 @RequestMapping("/app")
+@ResponseBody
 public class AppStoreController {
 
     @Autowired
@@ -21,7 +24,7 @@ public class AppStoreController {
 
     @RequestMapping("getAllApplications")
     public PagingMessage<App> getAllApplications(String index) {
-        return service.getPagingApplications(PagingStateConverter.stringToConverter(index));
+        return service.getPagingIntroductions(PagingStateConverter.stringToConverter(index));
     }
 
 
@@ -42,7 +45,7 @@ public class AppStoreController {
     }
 
     @RequestMapping("rate")
-    public LoginMessage rateApplication(Comment comment) {
+    public LoginMessage rateApplication(ApplicationComment comment) {
         service.comment(comment);
         return new LoginMessage(-1, "");
     }

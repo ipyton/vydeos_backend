@@ -2,11 +2,13 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.AppDao;
 import com.chen.blogbackend.DAO.CommentDao;
+import com.chen.blogbackend.entities.ApplicationComment;
 import com.chen.blogbackend.entities.Comment;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.entities.App;
 import com.chen.blogbackend.mappers.AppMapper;
 import com.chen.blogbackend.mappers.AppMapperBuilder;
+import com.chen.blogbackend.util.DataConverter;
 import com.chen.blogbackend.util.RequirementCheck;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -32,68 +35,79 @@ public class ApplicationService {
     @Autowired
     CqlSession session;
 
-    AppDao appDao;
-    CommentDao commentDao;
+    //AppDao appDao;
+    // CommentDao commentDao;
 
-    PreparedStatement getApplications;
-    PreparedStatement getSimpleIntroduction;
-    PreparedStatement setApplication;
+    PreparedStatement getApplicationsSimple;
+    PreparedStatement getDetailedIntroduction;
+    PreparedStatement saveApplication;
     PreparedStatement getInstalledApps;
     PreparedStatement deleteApp;
+    PreparedStatement saveComment;
 
     @PostConstruct
     public void init(){
-        session.execute("use apps");
-//        AppMapper appMapper = new AppMapperBuilder(session).build();
+//        AppMapper appMapper = new AppMapperBuilder(session).withDefaultKeyspace("apps").build();
 //        appDao = appMapper.appDao();
-//        getApplications = session.prepare("select * from application;");
-//        getSimpleIntroduction = session.prepare("select * from simple_application_intro where applicationId=?;");
-//        getInstalledApps = session.prepare("select * from user_apps where userId=?;");
-//        deleteApp = session.prepare("delete from user_apps where userId = ? and applicationId = ?");
+        getApplicationsSimple = session.prepare("select applicationId, name, ratings, pictures, author from apps.application;");
+        getDetailedIntroduction = session.prepare("select * from apps.application where applicationId=?;");
+        getInstalledApps = session.prepare("select * from apps.user_apps where userId=?;");
+        deleteApp = session.prepare("delete from apps.user_apps where userId = ? and applicationId = ?");
+        saveComment = session.prepare("insert into apps.app_comment (appId, commentId , userId , userName, userAvatar, comment , rate, commentDateTime) values (?,?,?,?,?,?,?,?)");
+        saveApplication = session.prepare("insert into apps.application (applicationid, version," +
+                " author, history_versions, hot_comments,introduction, lastmodified, name, pictures, ratings, system_requirements, type) values (?,?,?,?,?,?,?,?,?,?,?,?)");
+
     }
 
     public PagingMessage<App> getBatchApps(PagingState pagingState, PreparedStatement statement) {
         ResultSet execute;
         if (null != pagingState) {
-            execute = session.execute(getApplications.bind().setPagingState(pagingState));
+            execute = session.execute(statement.bind().setPagingState(pagingState).setPageSize(10));
         }
         else {
-            execute = session.execute(getApplications.bind());
+            execute = session.execute(statement.bind().setPageSize(5));
         }
-        PagingIterable<App> convert = appDao.convert(execute);
+        List<App> convert = DataConverter.convertToApp(execute);
 
         PagingMessage<App> message = new PagingMessage<>();
-        message.items = convert.all();
-        message.pagingInformation = Objects.requireNonNull(execute.getExecutionInfo().getSafePagingState()).toString();
+        message.items = convert;
+        PagingState safePagingState = execute.getExecutionInfo().getSafePagingState();
+        if (safePagingState != null) {
+            message.pagingInformation = safePagingState.toString();
+            System.out.println(message.pagingInformation);
+            return message;
+        }
         return message;
     }
 
     public PagingMessage<App> getPagingApplications(PagingState state) {
-        return getBatchApps(state, getApplications);
+        return getBatchApps(state, getDetailedIntroduction);
     }
 
     public PagingMessage<App> getPagingIntroductions(PagingState state) {
-        return getBatchApps(state, getSimpleIntroduction);
+        return getBatchApps(state, getApplicationsSimple);
     }
 
     public PagingMessage<App> getInstalledApps(String userId) {
         ResultSet execute = session.execute(getInstalledApps.bind(userId));
         PagingMessage<App> message = new PagingMessage<>();
-        message.items = appDao.convert(execute).all();
+        message.items = DataConverter.convertToApp(execute);
         return message;
     }
 
-    public App getApplicationDetailById(String applicationId){
-        return appDao.getAppDetails(applicationId);
+    public List<App> getApplicationDetailById(String applicationId){
+        ResultSet execute = session.execute(getDetailedIntroduction.bind(applicationId));
+        return DataConverter.convertToAppDetail(execute);
     }
 
     public boolean installApplication(String userId, String applicationID, HashMap<String, String> environment) {
-        App applicationDetailById = getApplicationDetailById(applicationID);
-        return RequirementCheck.check(applicationDetailById.getSystemRequirements(), environment);
+        List<App> applicationDetails= getApplicationDetailById(applicationID);
+        App applicationDetail = applicationDetails.get(0);
+        return RequirementCheck.check(applicationDetail.getSystemRequirements(), environment);
     }
 
     public boolean uploadApplication(App app){
-        appDao.insert(app);
+        session.execute(saveApplication.bind(app.getAppId(), app.getAppName(), app.getVersion(), app.getLastModified()));
         return true;
     }
 
@@ -105,8 +119,15 @@ public class ApplicationService {
         return session.execute(deleteApp.bind(userId, applicationId)).getExecutionInfo().getErrors().size() == 0;
     }
 
-    public boolean comment(Comment comment) {
-        commentDao.save(comment);
+    public boolean comment(ApplicationComment comment) {
+        System.out.println(comment.getCommentDateTime());
+        try {
+            session.execute(saveComment.bind(comment.getApplicationId(), comment.getCommentId(),
+                    comment.getUserId(), comment.getUserName(), comment.getUserAvatar(), comment.getComment(), comment.getRate(), comment.getCommentDateTime()));
+        } catch (Exception e) {
+            System.out.println(e);
+            return false;
+        }
         return true;
     }
 

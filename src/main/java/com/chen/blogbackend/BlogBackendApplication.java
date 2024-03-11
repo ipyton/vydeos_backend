@@ -4,10 +4,10 @@ package com.chen.blogbackend;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.datastax.driver.core.QueryOptions;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.mongodb.MongoClient;
 import io.minio.MinioClient;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -87,8 +87,7 @@ public class BlogBackendApplication {
         return CqlSession.builder()
                 .addContactPoint(new InetSocketAddress("192.168.23.129",9042))
                 .withAuthCredentials("cassandra", "cassandra")
-                .withLocalDatacenter("datacenter1")
-                .build();
+                .withLocalDatacenter("datacenter1").build();
 
     }
 
