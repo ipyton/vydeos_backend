@@ -1,5 +1,6 @@
 package com.chen.notification;
 
+import com.alibaba.fastjson.JSON;
 import com.chen.notification.entities.Notification;
 import com.chen.notification.service.SendNotificationService;
 import com.chen.notification.utils.ConfigUtil;
@@ -14,20 +15,18 @@ import org.apache.rocketmq.client.apis.consumer.PushConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 
-@Component
+//@Component
 public class AutoRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(AutoRunner.class);
 
     @Autowired
-    private SendNotificationService service;
-
+    SendNotificationService service;
 
     @PostConstruct
     public void startListening() throws InterruptedException, ClientException {
@@ -48,8 +47,7 @@ public class AutoRunner {
                     logger.info("Consume message successfully, messageId={}", messageView.getMessageId());
                     ByteBuffer body = messageView.getBody();
                     String s = Arrays.toString(body.array());
-                    String[] splits = s.split(",");
-                    service.sendMessageToUser(splits[0],new Notification(splits[1],splits[2],splits[3],splits[4],splits[5]));
+                    JSON.parseObject(s, Notification.class);
                     return ConsumeResult.SUCCESS;
                 })
                 .build();

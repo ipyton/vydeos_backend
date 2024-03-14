@@ -1,10 +1,31 @@
 package com.chen.notification.entities;
 
+import jakarta.websocket.Session;
+
 import java.security.Principal;
 
 public class UserStatus implements Principal {
     private String userID;
     private long lastAck;
+    private Session session;
+
+    public void setLastAck(long lastAck) {
+        this.lastAck = lastAck;
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public void setSession(Session session) {
+        this.session = session;
+    }
+
+    public UserStatus(String userID, long lastAck, Session session) {
+        this.userID = userID;
+        this.lastAck = lastAck;
+        this.session = session;
+    }
 
     public String getUserID() {
         return userID;

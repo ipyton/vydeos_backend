@@ -1,6 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 import com.chen.blogbackend.entities.GroupMessage;
+import com.chen.blogbackend.entities.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.FriendsService;
 import com.chen.blogbackend.services.SearchService;
@@ -32,8 +33,8 @@ public class SingleMessageController {
     }
 
     @RequestMapping("send_message")
-    public LoginMessage sendMessage(HttpServletRequest request, String userId, String to, GroupMessage groupMessage) {
-        service.sendMessage(userId, to, groupMessage);
+    public LoginMessage sendMessage(HttpServletRequest request, String userId, String to, SingleMessage singleMessage) {
+        service.sendMessage(userId, to, singleMessage);
         return new LoginMessage(-1, "");
     }
 

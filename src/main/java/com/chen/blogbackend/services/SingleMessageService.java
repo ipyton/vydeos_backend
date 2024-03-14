@@ -2,6 +2,7 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.SingleMessageDao;
 import com.chen.blogbackend.entities.GroupMessage;
+import com.chen.blogbackend.entities.Notification;
 import com.chen.blogbackend.entities.SingleMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -19,6 +20,9 @@ public class SingleMessageService {
 
     @Autowired
     CqlSession session;
+
+    @Autowired
+    NotificationProducer producer;
 
     PreparedStatement getRecord;
     PreparedStatement setRecordById;
@@ -59,14 +63,16 @@ public class SingleMessageService {
         return new PagingMessage<>(convert.all(), state.toString(), 1);
     }
 
-    public boolean sendMessage(String userId, String to, GroupMessage groupMessage) {
-        ResultSet execute = session.execute(setRecordById.bind(userId, to, groupMessage));
+    public boolean sendMessage(String userId, String to, SingleMessage singleMessage) {
+        ResultSet execute = session.execute(setRecordById.bind(userId, to, singleMessage));
+        String userName = "";
+        String avatar = "";
+        //producer.sendNotification(new Notification(avatar, userName, userId));
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
     public boolean recall(String userId, String receiverId, String messageId){
         ResultSet set = session.execute(recall.bind(userId, receiverId, messageId));
-
         return set.getExecutionInfo().getErrors().size() == 0;
 
     }
