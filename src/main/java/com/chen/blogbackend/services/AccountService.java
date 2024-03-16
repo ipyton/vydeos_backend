@@ -1,99 +1,160 @@
 package com.chen.blogbackend.services;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.chen.blogbackend.entities.Friend;
+import com.chen.blogbackend.mappers.AccountParser;
 import com.chen.blogbackend.util.PasswordEncryption;
 import com.chen.blogbackend.util.TokenUtil;
 import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Token;
-import com.chen.blogbackend.mappers.AccountMapper;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import jakarta.annotation.PostConstruct;
 import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class AccountService {
 
+
     @Autowired
-    SqlSessionFactory sqlSessionFactory;
+    CqlSession session;
+
 
     @Autowired
     SearchService searchService;
 
 
+    PreparedStatement insertAccount;
+    PreparedStatement getAccount;
+    PreparedStatement setToken;
+    PreparedStatement getToken;
 
-    public boolean insert(Account account) {
-        SqlSession session = sqlSessionFactory.openSession();
-        AccountMapper mapper = session.getMapper(AccountMapper.class);
-        int result = mapper.insertAccount(account);
-        session.commit();
-        session.close();
-        return result != 0;
+    PreparedStatement insertUserDetails;
+    PreparedStatement getUserDetails;
+
+    PreparedStatement updateEmail;
+    PreparedStatement updatePassword;
+    PreparedStatement updatePhoneNumber;
+
+
+
+
+    @PostConstruct
+    public void init(){
+//        AppMapper appMapper = new AppMapperBuilder(session).withDefaultKeyspace("apps").build();
+//        appDao = appMapper.appDao();
+//        getApplicationsSimple = session.prepare("select applicationId, name, ratings, pictures, author from apps.application;");
+//        getDetailedIntroduction = session.prepare("select * from apps.application where applicationId=?;");
+//        getInstalledApps = session.prepare("select * from apps.user_apps where userId=?;");
+//        deleteApp = session.prepare("delete from apps.user_apps where userId = ? and applicationId = ?");
+//        saveComment = session.prepare("insert into apps.app_comment (appId, commentId , userId , userName, userAvatar, comment , rate, commentDateTime) values (?,?,?,?,?,?,?,?)");
+//        saveApplication = session.prepare("insert into apps.application (applicationid, version," +
+//                " author, history_versions, hot_comments,introduction, lastmodified, name, pictures, ratings, system_requirements, type) values (?,?,?,?,?,?,?,?,?,?,?,?)");
+        insertAccount = session.prepare("insert into userinfo.user_auth (userid, email, password, telephone) values(?,?,?,?)");
+        getAccount = session.prepare("select * from userinfo.user_auth where userid=?");
+        setToken = session.prepare("insert into userinfo.user_tokens (user_token, userId, invalid_date) values (?,?,?)");
+        getToken = session.prepare("select * from userinfo.user_tokens where user_token=?");
+
+        insertUserDetails = session.prepare("insert into userinfo.user_information (user_id, apps, avatar, birthdate, gender, intro, user_name) values(?,?,?,?,?,?,?);");
+        getUserDetails = session.prepare("select * from userinfo.user_information where user_id = ?");
+
+        updateEmail = session.prepare("update userinfo.user_auth set email = ? where userId = ?");
+        updatePassword = session.prepare("update userinfo.user_auth set password = ? where userId = ?");
+        updatePhoneNumber = session.prepare("update userinfo.user_auth set telephone = ? where userId = ?");
     }
 
-    public Account selectAccount(String accountID) {
-        SqlSession session = sqlSessionFactory.openSession();
-        AccountMapper mapper = session.getMapper(AccountMapper.class);
-        System.out.println(mapper.getAccount(accountID));
-        session.close();
-        return new Account();
-    }
 
 
-    public boolean haveValidLogin(String token) {
-        if (null == token) return false;
-        SqlSession session = sqlSessionFactory.openSession();
-        AccountMapper mapper = session.getMapper(AccountMapper.class);
-        Token tokenGet = mapper.getToken(token);
-        session.close();
-
-        if(null == tokenGet || null == TokenUtil.resolveToken(token).getUserEmail() ||
-                !TokenUtil.resolveToken(token).getUserEmail().equals(tokenGet.getUserEmail())){
-            return false;
-        }
-        return tokenGet.getExpireDatetime().after(new Date());
-    }
-
-    public boolean validatePassword(String email,String password){
-        password = PasswordEncryption.encryption(password);
-        SqlSession session = sqlSessionFactory.openSession();
-        AccountMapper mapper = session.getMapper(AccountMapper.class);
-        Account account = mapper.getAccount(email);
-        session.close();
-        if (null != account && account.getPassword().equals(password)) {
-            return true;
-        }
-        return false;
-    }
-
-    public int setToken(Token token) {
-        SqlSession session = sqlSessionFactory.openSession();
-        AccountMapper mapper = session.getMapper(AccountMapper.class);
-        if (null != mapper.getToken(token.getUserEmail())) return 0;
-        int result = mapper.setToken(token);
-        session.commit();
-        session.close();
-        return result;
-    }
-
-    public boolean updateAccount(Account account) {
+    public boolean insertUserDetails(Account userDetail) {
+        ResultSet execute = session.execute(insertUserDetails.bind());
         return true;
     }
 
+    public Account getUserDetails(String userId) {
+        ResultSet execute = session.execute(getUserDetails.bind());
+        List<Account> accounts = AccountParser.userDetailParser(execute);
+        return accounts.get(0);
+
+    }
+
+    public boolean insert(Account account) {
+        ResultSet execute = session.execute(insertAccount.bind(account.getUserEmail(), account.getUserEmail(), account.getPassword(), account.getTelephone()));
+        if (0 != execute.getExecutionInfo().getErrors().size()) {
+            return false;
+        }
+        return true;
+    }
+
+    public Account selectAccount(String accountID) {
+        ResultSet execute = session.execute(getAccount.bind(accountID));
+        List<Account> tokens = AccountParser.accountParser(execute);
+
+        if (0 != execute.getExecutionInfo().getErrors().size() || tokens.size() != 1) {
+            System.out.println("error!!!");
+            return null;
+        }
+        return tokens.get(0);
+
+    }
+
+
+    public boolean haveValidLogin(String token,String userId) {
+        if (null == token || 0 == token.length()) return false;
+        ResultSet execute = session.execute(insertAccount.bind(token));
+        List<Token> tokens = AccountParser.tokenParser(execute);
+
+        if (0 != execute.getExecutionInfo().getErrors().size() || tokens.size() != 1) {
+            System.out.println("error!!!");
+            return false;
+        }
+        Token tokenGet = tokens.get(0);
+        if( null == TokenUtil.resolveToken(token).getUserId() ||
+                !TokenUtil.resolveToken(token).getUserId().equals(tokenGet.getUserId())){
+            return false;
+        }
+        return tokenGet.getExpireDatetime().isAfter(Instant.now());
+    }
+
+    public boolean validatePassword(String userId,String password){
+        password = PasswordEncryption.encryption(password);
+        ResultSet account = session.execute(getAccount.bind(userId));
+        List<Account> accounts = AccountParser.accountParser(account);
+        return 1 == accounts.size() && accounts.get(0).getPassword().equals(password);
+    }
+
+    public boolean setToken(Token token) {
+        ResultSet set = session.execute(setToken.bind(token.getUserId(), token.getExpireDatetime(), token.getTokenString()));
+        return set.getExecutionInfo().getErrors().size() == 0;
+    }
+
+    public boolean updateEmail(String userId, String email) {
+        ResultSet set = session.execute(setToken.bind(email,userId));
+        return set.getExecutionInfo().getErrors().size() == 0;
+    }
+
+    public boolean updatePhone(String userId, String phone) {
+        ResultSet set = session.execute(setToken.bind(phone, userId));
+        return set.getExecutionInfo().getErrors().size() == 0;
+    }
+
+    public boolean updatePassword(String userId, String password) {
+        ResultSet set = session.execute(setToken.bind(password, userId));
+        return set.getExecutionInfo().getErrors().size() == 0;
+    }
 
     public boolean update(Friend friend) throws IOException, InterruptedException {
         searchService.setUserIndex(friend);
-
         return true;
     }
 
     public boolean addApplication() {
-
-
         return true;
     }
 

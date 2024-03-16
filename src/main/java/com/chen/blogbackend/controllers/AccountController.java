@@ -25,6 +25,9 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Calendar;
 
 @Controller
@@ -43,10 +46,8 @@ public class AccountController {
         System.out.println(email);
         System.out.println(password);
         if (accountService.validatePassword(email, password)) {
-            Calendar instance = Calendar.getInstance();
-            instance.add(Calendar.SECOND, 30 * 3600 * 24);
-            Token token = TokenUtil.createToken(new Token(email, instance.getTime(), null));
-            if (0 != accountService.setToken(token)) {
+            Token token = TokenUtil.createToken(new Token(email, Instant.now().plus(30 * 3600 * 24, ChronoUnit.SECONDS), null));
+            if (accountService.setToken(token)) {
                 return new LoginMessage(1, token.getTokenString());
             }
         }
@@ -102,7 +103,7 @@ public class AccountController {
     public LoginMessage verifyToken(@Param("token") String token) {
         System.out.println(token);
         if (null != token) {
-            if (accountService.haveValidLogin(token)) {
+            if (accountService.haveValidLogin(token, "userId")) {
                 return new LoginMessage(1, "valid token!");
             }
         }

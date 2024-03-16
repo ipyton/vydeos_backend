@@ -15,7 +15,7 @@ public class TokenUtil {
     private static String pubKey = "Asdasd1";
 
     public static Token createToken(Token token){
-        String tokenString = JWT.create().withHeader(new HashMap<>()).withClaim("email", token.getUserEmail())
+        String tokenString = JWT.create().withHeader(new HashMap<>()).withClaim("userId", token.getUserId())
                 .withExpiresAt(token.getExpireDatetime())
                 .sign(Algorithm.HMAC256(pubKey));
         token.setTokenString(tokenString);
@@ -27,9 +27,9 @@ public class TokenUtil {
 //        Calendar cal = Calendar.getInstance();
         JWTVerifier jwtVerifier = JWT.require(Algorithm.HMAC256(pubKey)).build();
         DecodedJWT decodedJWT = jwtVerifier.verify(tokenString);
-        Claim userId = decodedJWT.getClaim("email");
+        Claim userId = decodedJWT.getClaim("userId");
 //        if (decodedJWT.getExpiresAt().before(cal.getTime())) return null;
-        return new Token(userId.asString(),decodedJWT.getExpiresAt(), null);
+        return new Token(userId.asString(),decodedJWT.getExpiresAtAsInstant(), null);
     }
 
 

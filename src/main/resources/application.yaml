@@ -25,4 +25,6 @@ logging:
 #  cassandra:
 #    password: cassandra
 #    username: cassandra
+server:
+  port: 8000
 #    contact-points: 192.168.23.129

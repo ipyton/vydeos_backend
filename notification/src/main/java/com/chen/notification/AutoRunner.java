@@ -15,23 +15,24 @@ import org.apache.rocketmq.client.apis.consumer.PushConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 
-//@Component
+@Component
 public class AutoRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(AutoRunner.class);
 
-    @Autowired
-    SendNotificationService service;
+//    @Autowired
+//    SendNotificationService service;
 
     @PostConstruct
     public void startListening() throws InterruptedException, ClientException {
         final ClientServiceProvider provider = ClientServiceProvider.loadService();
-        String endpoints = "localhost:8081";
+        String endpoints = "192.168.23.129:8081";
         ClientConfiguration clientConfiguration = ClientConfiguration.newBuilder()
                 .setEndpoints(endpoints)
                 .build();

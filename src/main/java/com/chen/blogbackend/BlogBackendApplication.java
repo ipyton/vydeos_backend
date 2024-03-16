@@ -133,7 +133,7 @@ public class BlogBackendApplication {
 
     @Bean
     public static Producer configMessageQueue() throws ClientException {
-        String endpoint = "192.168.23.129:9876";
+        String endpoint = "192.168.23.129:8081";
 //        String topic = "TestTopic";
         ClientServiceProvider provider = ClientServiceProvider.loadService();
         ClientConfigurationBuilder builder = ClientConfiguration.newBuilder().setEndpoints(endpoint);

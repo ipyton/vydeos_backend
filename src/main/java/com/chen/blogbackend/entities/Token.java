@@ -1,10 +1,11 @@
 package com.chen.blogbackend.entities;
 
+import java.time.Instant;
 import java.util.Date;
 
 public class Token {
-    private String userEmail;
-    private Date expireDatetime;
+    private String userId;
+    private Instant expireDatetime;
 
     public String getTokenString() {
         return tokenString;
@@ -17,26 +18,26 @@ public class Token {
     private String tokenString;
 
 
-    public String getUserEmail() {
-        return userEmail;
+    public String getUserId() {
+        return userId;
     }
 
-    public Token(String userEmail, Date expireDatetime, String tokenString) {
-        this.userEmail = userEmail;
+    public Token(String userId, Instant expireDatetime, String tokenString) {
+        this.userId = userId;
         this.tokenString = tokenString;
         this.expireDatetime = expireDatetime;
     }
 
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
+    public void setUserId(String userEmail) {
+        this.userId = userEmail;
     }
 
 
-    public Date getExpireDatetime() {
+    public Instant getExpireDatetime() {
         return expireDatetime;
     }
 
-    public void setExpireDatetime(Date expireDatetime) {
+    public void setExpireDatetime(Instant expireDatetime) {
         this.expireDatetime = expireDatetime;
     }
 }
