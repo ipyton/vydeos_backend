@@ -6,20 +6,16 @@ import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.ChatGroup;
 import com.chen.blogbackend.entities.ChatGroupMember;
-import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.entities.Invitation;
 import com.chen.blogbackend.responseMessage.PagingMessage;
-import com.chen.blogbackend.util.StringUtil;
+import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
 import jakarta.annotation.PostConstruct;
-import jnr.ffi.annotations.In;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.stereotype.Service;
 
-import java.awt.event.TextEvent;
 import java.util.Date;
 import java.util.List;
 
@@ -89,7 +85,7 @@ public class ChatGroupService {
     }
 
     public Invitation generateInvitation(String operator, String userId, String groupId) {
-        String invitationId = userId + System.currentTimeMillis() + StringUtil.generateRandomString(10);
+        String invitationId = userId + System.currentTimeMillis() + RandomUtil.generateRandomString(10);
         Invitation invitation = new Invitation(groupId, (new Date(System.currentTimeMillis() + 360000)), userId, 10);
         invitationDao.insert(invitation);
         return invitation;
@@ -121,7 +117,7 @@ public class ChatGroupService {
     }
 
     public boolean sendMessage(String userId, String groupId, String message, String referId, List<String> objects) {
-        ResultSet execute = session.execute(insertChatRecordById.bind(groupId, StringUtil.generateRandomString(10), userId,
+        ResultSet execute = session.execute(insertChatRecordById.bind(groupId, RandomUtil.generateRandomString(10), userId,
                 message, referId, new Date(System.currentTimeMillis()), objects, false));
         return execute.getExecutionInfo().getErrors().size() == 0;
     }

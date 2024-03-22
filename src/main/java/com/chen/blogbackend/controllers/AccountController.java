@@ -110,6 +110,10 @@ public class AccountController {
         return new LoginMessage(-1, "invalid token");
     }
 
+
+
+
+
     @PostMapping("/getAvatar")
     public ResponseEntity<StreamingResponseBody> getAvatar(HttpServletRequest request) {
         String userEmail = request.getHeader("userEmail");
@@ -121,6 +125,10 @@ public class AccountController {
 
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(avatar);
     }
+
+
+
+
 
 
 

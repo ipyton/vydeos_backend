@@ -1,6 +1,6 @@
 package com.chen.blogbackend.services;
 
-import com.chen.blogbackend.util.StringUtil;
+import com.chen.blogbackend.util.RandomUtil;
 import com.chen.blogbackend.mappers.PictureMapper;
 import io.minio.*;
 import org.apache.ibatis.session.SqlSession;
@@ -22,7 +22,7 @@ public class PictureService {
     MinioClient fileClient;
 
     public boolean uploadAvatarPicture(String userEmail, MultipartFile file) {
-        String hash = StringUtil.getHash(userEmail);
+        String hash = RandomUtil.getHash(userEmail);
         System.out.println(hash);
         String bucket = "avatar";
         try {
@@ -41,7 +41,7 @@ public class PictureService {
     }
 
     public boolean uploadArticlePicture(String articleID, MultipartFile file, int number) {
-        String hash = StringUtil.getHash(articleID);
+        String hash = RandomUtil.getHash(articleID);
         String bucket = "articlePics";
         try {
             boolean found = fileClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
@@ -97,7 +97,7 @@ public class PictureService {
 
     public StreamingResponseBody getAvatar(String userEmail) {
         StreamingResponseBody responseBody;
-        String hash = StringUtil.getHash(userEmail);
+        String hash = RandomUtil.getHash(userEmail);
         try {
             InputStream stream = fileClient.getObject(GetObjectArgs.builder().bucket("avatar").object(userEmail).build());
             responseBody = inputStreamConverter(stream);
@@ -113,7 +113,7 @@ public class PictureService {
         SqlSession session = sqlSessionFactory.openSession();
         PictureMapper mapper = session.getMapper(PictureMapper.class);
         int amount = mapper.getPictureAmountByArticleID(articleId);
-        String hash = StringUtil.getHash(articleId);
+        String hash = RandomUtil.getHash(articleId);
         ArrayList<String> result = new ArrayList<>();
         for (int i = 0; i < amount; i ++) {
             String address = hash + "_" + i;

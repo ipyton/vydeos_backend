@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
 
@@ -43,6 +44,7 @@ public class AccountService {
     PreparedStatement updatePassword;
     PreparedStatement updatePhoneNumber;
 
+    PreparedStatement searchResult;
 
 
 
@@ -61,6 +63,8 @@ public class AccountService {
         getAccount = session.prepare("select * from userinfo.user_auth where userid=?");
         setToken = session.prepare("insert into userinfo.user_tokens (user_token, userId, invalid_date) values (?,?,?)");
         getToken = session.prepare("select * from userinfo.user_tokens where user_token=?");
+        searchResult = session.prepare("select user_id, user_name, intro, avatar where user_token=?");
+
 
         insertUserDetails = session.prepare("insert into userinfo.user_information (user_id, apps, avatar, birthdate, gender, intro, user_name) values(?,?,?,?,?,?,?);");
         getUserDetails = session.prepare("select * from userinfo.user_information where user_id = ?");
@@ -70,6 +74,12 @@ public class AccountService {
         updatePhoneNumber = session.prepare("update userinfo.user_auth set telephone = ? where userId = ?");
     }
 
+
+    public Account searchUserById(String userId) {
+        ResultSet execute = session.execute(searchResult.bind(userId));
+        List<Account> accounts = AccountParser.userDetailParser(execute);
+        return accounts.get(0);
+    }
 
 
     public boolean insertUserDetails(Account userDetail) {
@@ -107,19 +117,12 @@ public class AccountService {
 
     public boolean haveValidLogin(String token,String userId) {
         if (null == token || 0 == token.length()) return false;
-        ResultSet execute = session.execute(insertAccount.bind(token));
-        List<Token> tokens = AccountParser.tokenParser(execute);
-
-        if (0 != execute.getExecutionInfo().getErrors().size() || tokens.size() != 1) {
-            System.out.println("error!!!");
+        Token token1 = TokenUtil.resolveToken(token);
+        if( null == token1.getUserId() ||
+                token1.getUserId().equals(userId)){
             return false;
         }
-        Token tokenGet = tokens.get(0);
-        if( null == TokenUtil.resolveToken(token).getUserId() ||
-                !TokenUtil.resolveToken(token).getUserId().equals(tokenGet.getUserId())){
-            return false;
-        }
-        return tokenGet.getExpireDatetime().isAfter(Instant.now());
+        return token1.getExpireDatetime().isAfter(Instant.now());
     }
 
     public boolean validatePassword(String userId,String password){
@@ -130,7 +133,7 @@ public class AccountService {
     }
 
     public boolean setToken(Token token) {
-        ResultSet set = session.execute(setToken.bind(token.getUserId(), token.getExpireDatetime(), token.getTokenString()));
+        ResultSet set = session.execute(setToken.bind(token.getTokenString(), token.getUserId(), token.getExpireDatetime()));
         return set.getExecutionInfo().getErrors().size() == 0;
     }
 

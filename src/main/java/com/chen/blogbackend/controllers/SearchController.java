@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
+import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.AuthorityService;
 import com.chen.blogbackend.services.FriendsService;
 import com.chen.blogbackend.services.SearchService;
@@ -28,6 +29,15 @@ public class SearchController {
     @Autowired
     AuthorityService authorityService;
 
+    @Autowired
+    AccountService accountService;
+
+
+    @PostMapping("contacts")
+    public LoginMessage searchContents(String userId) {
+        Account userDetails = accountService.getUserDetails(userId);
+        return new LoginMessage(1, JSON.toJSONString(userDetails));
+    }
 
     @PostMapping("getChat")
     public LoginMessage getChatSearchResult(String keyword, int from) throws IOException {

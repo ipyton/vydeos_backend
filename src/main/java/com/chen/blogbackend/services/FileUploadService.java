@@ -3,7 +3,6 @@ package com.chen.blogbackend.services;
 import com.chen.blogbackend.DAO.VideoUploadingDao;
 import com.chen.blogbackend.entities.UnfinishedUpload;
 import com.chen.blogbackend.util.FileUtil;
-import com.chen.blogbackend.util.StringUtil;
 import com.chen.blogbackend.util.UnfinishedUploadCleaner;
 import com.chen.blogbackend.util.VideoUtil;
 import io.minio.BucketExistsArgs;
@@ -13,12 +12,8 @@ import io.minio.PutObjectArgs;
 import jakarta.annotation.PostConstruct;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import java.io.*;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
