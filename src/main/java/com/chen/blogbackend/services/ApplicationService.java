@@ -1,17 +1,11 @@
 package com.chen.blogbackend.services;
 
-import com.chen.blogbackend.DAO.AppDao;
-import com.chen.blogbackend.DAO.CommentDao;
 import com.chen.blogbackend.entities.ApplicationComment;
-import com.chen.blogbackend.entities.Comment;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.entities.App;
-import com.chen.blogbackend.mappers.AppMapper;
-import com.chen.blogbackend.mappers.AppMapperBuilder;
-import com.chen.blogbackend.util.DataConverter;
+import com.chen.blogbackend.util.ApplicationParser;
 import com.chen.blogbackend.util.RequirementCheck;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.PagingState;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
@@ -21,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 public class ApplicationService {
@@ -67,7 +60,7 @@ public class ApplicationService {
         else {
             execute = session.execute(statement.bind().setPageSize(5));
         }
-        List<App> convert = DataConverter.convertToApp(execute);
+        List<App> convert = ApplicationParser.convertToApp(execute);
 
         PagingMessage<App> message = new PagingMessage<>();
         message.items = convert;
@@ -91,13 +84,13 @@ public class ApplicationService {
     public PagingMessage<App> getInstalledApps(String userId) {
         ResultSet execute = session.execute(getInstalledApps.bind(userId));
         PagingMessage<App> message = new PagingMessage<>();
-        message.items = DataConverter.convertToApp(execute);
+        message.items = ApplicationParser.convertToApp(execute);
         return message;
     }
 
     public List<App> getApplicationDetailById(String applicationId){
         ResultSet execute = session.execute(getDetailedIntroduction.bind(applicationId));
-        return DataConverter.convertToAppDetail(execute);
+        return ApplicationParser.convertToAppDetail(execute);
     }
 
     public boolean installApplication(String userId, String applicationID, HashMap<String, String> environment) {

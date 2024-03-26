@@ -1,6 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
@@ -33,10 +34,17 @@ public class SearchController {
     AccountService accountService;
 
 
-    @PostMapping("contacts")
-    public LoginMessage searchContents(String userId) {
-        Account userDetails = accountService.getUserDetails(userId);
-        return new LoginMessage(1, JSON.toJSONString(userDetails));
+    @PostMapping("contactById")
+    public LoginMessage searchContactById(String userId) {
+        List<Account> userDetails = accountService.searchUserById(userId);
+        System.out.println(JSON.toJSONString(userDetails));
+        System.out.println(userId + "serach");
+        return new LoginMessage(1, JSON.toJSONString(userDetails, SerializerFeature.SkipTransientField, SerializerFeature.WriteMapNullValue));
+    }
+
+    @PostMapping("contactByName")
+    public void searchContactByName(String userName) {
+        //using elasticsearch
     }
 
     @PostMapping("getChat")

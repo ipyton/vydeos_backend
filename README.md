@@ -4,3 +4,7 @@ The feature of this project is to support different applications which 3rd party
 Authentication and authorization can be done once using the fundamental abilities provided by this platform. 
 Social media function is also under work. 
 
+future works todo:
+figure out what kind of entity is needed among the account and the friend entity.
+friend entity is used to showed publicly.
+account entity is used to configure self settings.

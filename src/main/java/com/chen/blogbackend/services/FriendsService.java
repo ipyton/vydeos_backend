@@ -4,24 +4,18 @@ import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.UserGroupDao;
 import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.entities.UserGroup;
-import com.chen.blogbackend.mappers.FriendMapper;
 import com.chen.blogbackend.mappers.FriendMapperBuilder;
-import com.chen.blogbackend.mappers.UserGroupMapper;
 import com.chen.blogbackend.mappers.UserGroupMapperBuilder;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.DefaultConsistencyLevel;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
-import com.datastax.oss.protocol.internal.request.Prepare;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 @Service
 public class FriendsService {
@@ -49,6 +43,7 @@ public class FriendsService {
     PreparedStatement block;
     PreparedStatement unBlock;
 
+    PreparedStatement follows;
 
     @PostConstruct
     public void init(){
@@ -69,6 +64,7 @@ public class FriendsService {
             updateFriendDirectionByIdolId = session.prepare("update followers_by_user_id set bi_direction=?;");
             updateFriendDirectionByUserId = session.prepare("update followers_by_idol_id set bi_direction=?;");
             //getFollowersByIdolId = session.prepare("select * from followers_by_idol_id where idol_id=?;");
+            follows = session.prepare("select user_id, friend_id, bidirectional, from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
         }
         catch (Exception e) {
             System.out.println(e);
@@ -80,6 +76,29 @@ public class FriendsService {
         PagingMessage<Friend> message = new PagingMessage<>(friends.all(), pagingState, 0);
         return message;
     }
+
+
+    public int getRelationship(String userid, String userIdToFollow) throws Exception {
+        boolean flag = false;
+        ResultSet reverseFollow = session.execute(follows.bind(userid, userIdToFollow));
+        if (reverseFollow.all().size() > 0) flag = true;
+
+        ResultSet execute = session.execute(follows.bind(userid, userIdToFollow));
+        List<Row> all = execute.all();
+        if (all.size() == 0) {
+            if (flag) return 10;
+            else return 0;
+        }
+        else if (all.size() == 1) {
+            if (all.get(0).getInt("bi_direction") == 1) {
+                return 11;
+            } else if (flag){
+                return 10;
+            }
+        } else throw new Exception("error relationship occurred internal!");
+        return 0;
+    }
+
 
     public PagingMessage<Friend> getIdolsByUserId(String userId, String pagingState){
         PagingIterable<Friend> friends = friendDao.selectUserFollows(userId);

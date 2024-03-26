@@ -1,6 +1,7 @@
 package com.chen.blogbackend.util;
 
 import com.chen.blogbackend.entities.App;
+import com.chen.blogbackend.entities.Friend;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 
@@ -12,7 +13,7 @@ import java.util.Map;
 // Why using this instead of mappers provided by Datax?
 // Nosql database principles require redundant.
 // If using mapper, it will break the integrity of the modeling theory.
-public class DataConverter {
+public class ApplicationParser {
     public static List<App> convertToApp(ResultSet set) {
         List<Row> all = set.all();
         List<App> apps = new ArrayList<>();
@@ -40,6 +41,8 @@ public class DataConverter {
         }
         return apps;
     }
+
+
 
 
 

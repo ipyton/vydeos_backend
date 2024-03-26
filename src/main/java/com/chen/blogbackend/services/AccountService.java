@@ -32,6 +32,11 @@ public class AccountService {
     SearchService searchService;
 
 
+    @Autowired
+    FriendsService friendsService;
+
+
+
     PreparedStatement insertAccount;
     PreparedStatement getAccount;
     PreparedStatement setToken;
@@ -63,7 +68,7 @@ public class AccountService {
         getAccount = session.prepare("select * from userinfo.user_auth where userid=?");
         setToken = session.prepare("insert into userinfo.user_tokens (user_token, userId, invalid_date) values (?,?,?)");
         getToken = session.prepare("select * from userinfo.user_tokens where user_token=?");
-        searchResult = session.prepare("select user_id, user_name, intro, avatar where user_token=?");
+        searchResult = session.prepare("select user_id, user_name, intro, avatar from userinfo.user_information where user_id=?");
 
 
         insertUserDetails = session.prepare("insert into userinfo.user_information (user_id, apps, avatar, birthdate, gender, intro, user_name) values(?,?,?,?,?,?,?);");
@@ -75,10 +80,9 @@ public class AccountService {
     }
 
 
-    public Account searchUserById(String userId) {
+    public List<Account> searchUserById(String userId) {
         ResultSet execute = session.execute(searchResult.bind(userId));
-        List<Account> accounts = AccountParser.userDetailParser(execute);
-        return accounts.get(0);
+        return AccountParser.userDetailParser(execute);
     }
 
 
@@ -87,12 +91,20 @@ public class AccountService {
         return true;
     }
 
-    public Account getUserDetails(String userId) {
-        ResultSet execute = session.execute(getUserDetails.bind());
-        List<Account> accounts = AccountParser.userDetailParser(execute);
-        return accounts.get(0);
-
+    public Account getAccountDetailsById(String userId) {
+        return new Account();
     }
+
+
+    public Friend getFriendDetailsById(String userId, String userIdToFollow) throws Exception {
+        ResultSet execute = session.execute(getUserDetails.bind(userId));
+
+        Friend friend = AccountParser.FriendDetailParser(execute);
+        friend.setRelationship(friendsService.getRelationship(userId, userIdToFollow));
+        return friend;
+    }
+
+
 
     public boolean insert(Account account) {
         ResultSet execute = session.execute(insertAccount.bind(account.getUserEmail(), account.getUserEmail(), account.getPassword(), account.getTelephone()));
@@ -115,11 +127,11 @@ public class AccountService {
     }
 
 
-    public boolean haveValidLogin(String token,String userId) {
+    public boolean haveValidLogin(String token) {
         if (null == token || 0 == token.length()) return false;
         Token token1 = TokenUtil.resolveToken(token);
-        if( null == token1.getUserId() ||
-                token1.getUserId().equals(userId)){
+        //token1.getUserId().equals(userId)
+        if( null == token1.getUserId()){
             return false;
         }
         return token1.getExpireDatetime().isAfter(Instant.now());

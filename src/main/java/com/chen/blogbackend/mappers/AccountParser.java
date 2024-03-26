@@ -1,6 +1,7 @@
 package com.chen.blogbackend.mappers;
 
 import com.chen.blogbackend.entities.Account;
+import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.entities.Token;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
@@ -36,10 +37,16 @@ public class AccountParser {
         for (Row row:
                 set.all()) {
             accounts.add(new Account(row.getString("user_id"), row.getList("apps", String.class),
-                    row.getString("avatar"), row.getInstant("birthdate"), row.getBoolean("gender"),
+                    row.getString("avatar"), row.getLocalDate("birthdate"), row.getBoolean("gender"),
                     row.getString("intro"), row.getString("user_name")));
         }
         return accounts;
+    }
+    public static Friend FriendDetailParser(ResultSet set) {
+        Row row = set.all().get(0);
+        return new Friend(row.getString("user_id"),row.getString("friend_id"),
+                row.getString("avatar"),
+                row.getString("intro"), row.getString("name"),null,0,row.getString("location"), row.getLocalDate("dateOfBirth"));
     }
 
 }

@@ -2,12 +2,53 @@ package com.chen.blogbackend.entities;
 
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
+import java.time.LocalDate;
+
 @Entity
 public class Friend {
     String userId = "";
+    String subjectId="";
     String avatar = "";
     String introduction = "";
     String name = "";
+    String groupId = "";
+    int relationship=0;
+    String location = "";
+    private LocalDate dateOfBirth= null;
+
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public LocalDate getDateOfBirth() {
+        return dateOfBirth;
+    }
+
+    public void setDateOfBirth(LocalDate dateOfBirth) {
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public String getSubjectId() {
+        return subjectId;
+    }
+
+    public void setSubjectId(String subjectId) {
+        this.subjectId = subjectId;
+    }
+
+    public int getRelationship() {
+        return relationship;
+    }
+
+    public void setRelationship(int relationship) {
+        this.relationship = relationship;
+    }
+
 
     public String getName() {
         return name;
@@ -17,33 +58,38 @@ public class Friend {
         this.name = name;
     }
 
-    String groupId = "";
-    boolean biDirection = false;
 
 
     public String getGroupId() {
         return groupId;
     }
 
-    public Friend(String userId, String avatar, String introduction, String groupId, boolean biDirection) {
+    public Friend(String userId, String subjectId, String avatar, String introduction, String name, String groupId, int relationship, String location, LocalDate dateOfBirth) {
+        this.userId = userId;
+        this.subjectId = subjectId;
+        this.avatar = avatar;
+        this.introduction = introduction;
+        this.name = name;
+        this.groupId = groupId;
+        this.relationship = relationship;
+        this.location = location;
+        this.dateOfBirth = dateOfBirth;
+    }
+
+    public Friend(String userId, String avatar, String introduction, String groupId, int relationship) {
         this.userId = userId;
         this.avatar = avatar;
         this.introduction = introduction;
         this.groupId = groupId;
-        this.biDirection = biDirection;
+        this.relationship = relationship;
+
     }
 
     public void setGroupId(String groupId) {
         this.groupId = groupId;
     }
 
-    public boolean isBiDirection() {
-        return biDirection;
-    }
 
-    public void setBiDirection(boolean biDirection) {
-        this.biDirection = biDirection;
-    }
 
     public String getUserId() {
         return userId;

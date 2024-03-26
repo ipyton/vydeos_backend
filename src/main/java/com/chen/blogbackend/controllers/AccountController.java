@@ -103,15 +103,12 @@ public class AccountController {
     public LoginMessage verifyToken(@Param("token") String token) {
         System.out.println(token);
         if (null != token) {
-            if (accountService.haveValidLogin(token, "userId")) {
+            if (accountService.haveValidLogin(token)) {
                 return new LoginMessage(1, "valid token!");
             }
         }
         return new LoginMessage(-1, "invalid token");
     }
-
-
-
 
 
     @PostMapping("/getAvatar")

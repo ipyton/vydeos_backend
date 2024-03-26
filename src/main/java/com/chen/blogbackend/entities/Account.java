@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 import java.sql.Date;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -16,7 +17,7 @@ public class Account {
     private String password="";
     private String introduction="";
     private String avatar="";
-    private Instant dateOfBirth = null;
+    private LocalDate dateOfBirth = null;
     private String telephone="";
     private boolean gender = false;
     List<String> apps;
@@ -44,7 +45,7 @@ public class Account {
 
     }
 
-    public Account(String userId, List<String> apps, String avatar, Instant birthDate,
+    public Account(String userId, List<String> apps, String avatar, LocalDate birthDate,
                    boolean gender, String intro, String userName) {
         this.userId = userId;
         this.apps = apps;
@@ -61,7 +62,7 @@ public class Account {
         this.apps = apps;
     }
 
-    public Account(String userEmail, String userName, String password, String introduction, String avatar, Instant dateOfBirth, String telephone, List<String> apps) {
+    public Account(String userEmail, String userName, String password, String introduction, String avatar, LocalDate dateOfBirth, String telephone, List<String> apps) {
         this.userEmail = userEmail;
         this.userName = userName;
         this.password = password;
@@ -124,11 +125,11 @@ public class Account {
         this.avatar = avatar;
     }
 
-    public Instant getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(Instant dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 }
