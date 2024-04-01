@@ -23,7 +23,7 @@ public class NotificationProducer {
 
     public void sendNotification(Notification notification) throws ClientException {
         MessageBuilder builder = new MessageBuilderImpl();
-        int i = notification.getName().hashCode();
+        int i = notification.getUserId().hashCode();
         Message message = builder.setTopic("notification").setKeys().setTag("" + i)
                 .setBody(JSON.toJSONBytes(notification)).build();
 

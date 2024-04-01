@@ -1,5 +1,6 @@
 package com.chen.blogbackend.controllers;
 
+import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.GroupMessage;
 import com.chen.blogbackend.entities.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
@@ -9,10 +10,13 @@ import com.chen.blogbackend.services.SingleMessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@RequestMapping("message")
+import java.util.List;
+
+@RequestMapping("chat")
 @Controller()
 @ResponseBody
 public class SingleMessageController {
@@ -33,8 +37,9 @@ public class SingleMessageController {
     }
 
     @RequestMapping("send_message")
-    public LoginMessage sendMessage(HttpServletRequest request, String userId, String to, SingleMessage singleMessage) {
-        service.sendMessage(userId, to, singleMessage);
+    public LoginMessage sendMessage(@RequestBody String singleMessage) {
+        SingleMessage singleMessage1 = JSON.parseObject(singleMessage, SingleMessage.class);
+        service.sendMessage(singleMessage1);
         return new LoginMessage(-1, "");
     }
 
@@ -56,4 +61,26 @@ public class SingleMessageController {
         service.recall(userId, receiverId, messageId);
         return new LoginMessage(-1, "");
     }
+
+
+//    /*
+//    * update chat list for a specific pair of users.
+//    * */
+//    @RequestMapping("getChatRecord")
+//    public LoginMessage getChatList(String userId, String friendId) {
+//
+//    }
+
+
+    @RequestMapping("getNewestRecords")
+    public LoginMessage getNewestRecords(String userId, Long timestamp) {
+        List<SingleMessage> newRecords = service.getNewRecords(userId, timestamp);
+        return new LoginMessage(1, JSON.toJSONString(newRecords));
+    }
+
+
+//    @RequestMapping("getRequestCache")
+//    public LoginMessage getRequestCache(String userId) {
+//
+//    }
 }

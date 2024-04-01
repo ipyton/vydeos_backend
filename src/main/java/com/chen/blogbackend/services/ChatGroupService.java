@@ -6,7 +6,9 @@ import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.ChatGroup;
 import com.chen.blogbackend.entities.ChatGroupMember;
+import com.chen.blogbackend.entities.GroupMessage;
 import com.chen.blogbackend.entities.Invitation;
+import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -15,6 +17,7 @@ import com.datastax.oss.driver.api.core.cql.*;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Date;
 import java.util.List;
@@ -45,11 +48,16 @@ public class ChatGroupService {
     PreparedStatement getRecord;
     PreparedStatement getGroupDetails;
     PreparedStatement recall;
+    //PreparedStatement setChatRecordCache;
+
     //generate here.
     InvitationDao invitationDao;
     ChatGroupDao chatGroupDao;
     FriendDao friendDao;
     ChatGroupMemberDao chatGroupMemberDao;
+
+
+
 
     @PostConstruct
     public void init() {
@@ -66,6 +74,8 @@ public class ChatGroupService {
         getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         chatGroupDao = null;
+
+        //setChatRecordCache = session.prepare("update group_chat.chat_record_cache set ");
     }
 
     public boolean joinGroup(String userId, String groupId) {
@@ -154,4 +164,9 @@ public class ChatGroupService {
         PagingIterable<ChatGroup> groups = chatGroupDao.convert(execute);
         return new PagingMessage<>(groups.all(), execute.getExecutionInfo().getPagingState().toString(), -1);
     }
+
+//    @RequestMapping("setRequestCache")
+//    public LoginMessage setRequestCache(GroupMessage message) {
+//
+//    }
 }

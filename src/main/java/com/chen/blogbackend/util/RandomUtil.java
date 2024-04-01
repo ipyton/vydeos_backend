@@ -7,6 +7,7 @@ public class RandomUtil {
         return Integer.toString(name.hashCode()).substring(0,2);
     }
 
+    int count = 0;
     public static String generateRandomString(int length) {
         String characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder sb = new StringBuilder(length);
@@ -32,4 +33,9 @@ public class RandomUtil {
 
         return sb.toString();
     }
+
+    public static String generateMessageId(String userId) {
+        return String.valueOf(System.currentTimeMillis());
+    }
+
 }

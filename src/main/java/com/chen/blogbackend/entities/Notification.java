@@ -2,10 +2,28 @@ package com.chen.blogbackend.entities;
 
 public class Notification {
     private String avatar;
-    private String name;
+    private String userId;
     private String title;
     private String content;
+    private String type;
     private String time;
+
+    public String getType() {
+        return type;
+    }
+
+    public Notification(String avatar, String userId, String title, String content, String type, String time) {
+        this.avatar = avatar;
+        this.userId = userId;
+        this.title = title;
+        this.content = content;
+        this.type = type;
+        this.time = time;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public String getAvatar() {
         return avatar;
@@ -15,12 +33,12 @@ public class Notification {
         this.avatar = avatar;
     }
 
-    public String getName() {
-        return name;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getTitle() {
@@ -47,9 +65,9 @@ public class Notification {
         this.time = time;
     }
 
-    public Notification(String avatar, String name, String title, String content, String time) {
+    public Notification(String avatar, String userId, String title, String content, String time) {
         this.avatar = avatar;
-        this.name = name;
+        this.userId = userId;
         this.title = title;
         this.content = content;
         this.time = time;
