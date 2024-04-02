@@ -7,6 +7,7 @@ import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.FriendsService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -96,10 +97,13 @@ public class FriendsController {
         return new LoginMessage(-1, "");
     }
 
-    @PostMapping("getContactDetailsById")
-    public LoginMessage getContactDetailsById(String userId, String userIdToFollow) throws Exception {
+    //get user introduction from searching/friend list
+    @PostMapping("getUserIntro")
+    public LoginMessage getIntro(HttpServletRequest request,String userIdToFollow) throws Exception {
+        String userId = (String) request.getAttribute("userEmail");
         Friend friendDetailsById = accountService.getFriendDetailsById(userId, userIdToFollow);
-        return new LoginMessage(-1,JSON.toJSONString(friendDetailsById));
+        System.out.println(JSON.toJSONString(friendDetailsById));
+        return new LoginMessage(1,JSON.toJSONString(friendDetailsById));
     }
 
 

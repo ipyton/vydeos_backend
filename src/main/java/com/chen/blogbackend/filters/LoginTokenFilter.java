@@ -1,6 +1,9 @@
 package com.chen.blogbackend.filters;
 
+import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.AccountService;
+import com.chen.blogbackend.util.TokenUtil;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +12,7 @@ import org.apache.catalina.Globals;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @WebFilter(filterName = "tokenChecker")
 public class LoginTokenFilter implements Filter {
@@ -30,8 +34,18 @@ public class LoginTokenFilter implements Filter {
         response.addHeader("Access-Control-Allow-Headers","*");
         request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR, true);
 
-//
-//        String token = request.getHeader("token");
+        if (request.getRequestURI().equals("/account/login") || request.getRequestURI().equals("/account/register") || request.getRequestURI().equals("/account/verifyToken") ) {
+            System.out.println("login");
+            chain.doFilter(request, response);
+            return;
+        }
+        String token = request.getHeader("token");
+        if (token == null) {
+            System.out.println("unauthorized");
+            servletResponse.setContentType("application/json");
+            servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-2, "please login first")).getBytes(StandardCharsets.UTF_8));
+            return;
+        }
 //        boolean result = accountService.haveValidLogin(request.getHeader("token"));
 //        if(null == token) {
 //            System.out.println(request.getRequestURI());
@@ -51,7 +65,8 @@ public class LoginTokenFilter implements Filter {
 //                return;
 //            }
 //        }
-//        request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserEmail());
+        System.out.println(TokenUtil.resolveToken(token).getUserId());
+        request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
         chain.doFilter(request, response);
     }
 

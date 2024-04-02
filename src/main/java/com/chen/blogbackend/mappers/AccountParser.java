@@ -3,6 +3,7 @@ package com.chen.blogbackend.mappers;
 import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.entities.Token;
+import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 
@@ -36,17 +37,44 @@ public class AccountParser {
         ArrayList<Account> accounts = new ArrayList<>();
         for (Row row:
                 set.all()) {
-            accounts.add(new Account(row.getString("user_id"), row.getList("apps", String.class),
-                    row.getString("avatar"), row.getLocalDate("birthdate"), row.getBoolean("gender"),
-                    row.getString("intro"), row.getString("user_name")));
+            ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
+            accounts.add(new Account(!columnDefinitions.contains("user_id")?null:row.getString("user_id"),  !columnDefinitions.contains("apps")?null:row.getList("apps", String.class),
+                    !columnDefinitions.contains("avatar")?null:row.getString("avatar"),  !columnDefinitions.contains("birthdate")?null:row.getLocalDate("birthdate"), !columnDefinitions.contains("gender") || row.getBoolean("gender"),
+                    !columnDefinitions.contains("intro")?null:row.getString("intro"),  !columnDefinitions.contains("user_name")?null:row.getString("user_name")));
         }
         return accounts;
     }
+
+    public static List<Account> userSearchParser(ResultSet set) {
+        ArrayList<Account> accounts = new ArrayList<>();
+
+        for (Row row:
+                set.all()) {
+            ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
+
+            accounts.add(new Account(columnDefinitions.contains("user_id")?null:row.getString("user_id"),  columnDefinitions.contains("apps")?null:row.getList("apps", String.class),
+                    columnDefinitions.contains("avatar")?null:row.getString("avatar"),  columnDefinitions.contains("birthdate")?null:row.getLocalDate("birthdate"),  columnDefinitions.contains("gender")?null:row.getBoolean("gender"),
+                    columnDefinitions.contains("intro")?null:row.getString("intro"),  columnDefinitions.contains("user_name")?null:row.getString("user_name")));
+        }
+        return accounts;
+    }
+
     public static Friend FriendDetailParser(ResultSet set) {
-        Row row = set.all().get(0);
-        return new Friend(row.getString("user_id"),row.getString("friend_id"),
-                row.getString("avatar"),
-                row.getString("intro"), row.getString("name"),null,0,row.getString("location"), row.getLocalDate("dateOfBirth"));
+        //return for friends page
+//        System.out.println(set.all().size());
+//        if(set.all().size() == 0) return null;
+//        Row row = set.one();
+//        assert row != null;
+//        System.out.println(row.getFormattedContents());
+
+        for (Row row:
+                set.all()) {
+            return new Friend(null, row.getString("user_id"),
+                    row.getString("avatar"),
+                    row.getString("intro"), row.getString("user_name"),null,0,row.getString("location"),
+                    row.getLocalDate("birthdate"));
+        }
+        return null;
     }
 
 }

@@ -97,10 +97,12 @@ public class AccountService {
 
 
     public Friend getFriendDetailsById(String userId, String userIdToFollow) throws Exception {
-        ResultSet execute = session.execute(getUserDetails.bind(userId));
+        System.out.println("friend details " + userIdToFollow) ;
+        ResultSet execute = session.execute(getUserDetails.bind(userIdToFollow));
 
         Friend friend = AccountParser.FriendDetailParser(execute);
-        friend.setRelationship(friendsService.getRelationship(userId, userIdToFollow));
+        System.out.println("find friend" + friend);
+        if (friend != null)  friend.setRelationship(friendsService.getRelationship(userId, userIdToFollow));
         return friend;
     }
 

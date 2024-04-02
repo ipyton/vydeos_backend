@@ -38,7 +38,7 @@ public class SearchController {
     public LoginMessage searchContactById(String userId) {
         List<Account> userDetails = accountService.searchUserById(userId);
         System.out.println(JSON.toJSONString(userDetails));
-        System.out.println(userId + "serach");
+
         return new LoginMessage(1, JSON.toJSONString(userDetails, SerializerFeature.SkipTransientField, SerializerFeature.WriteMapNullValue));
     }
 

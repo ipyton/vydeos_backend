@@ -64,6 +64,21 @@ public class Friend {
         return groupId;
     }
 
+    @Override
+    public String toString() {
+        return "Friend{" +
+                "userId='" + userId + '\'' +
+                ", subjectId='" + subjectId + '\'' +
+                ", avatar='" + avatar + '\'' +
+                ", introduction='" + introduction + '\'' +
+                ", name='" + name + '\'' +
+                ", groupId='" + groupId + '\'' +
+                ", relationship=" + relationship +
+                ", location='" + location + '\'' +
+                ", dateOfBirth=" + dateOfBirth +
+                '}';
+    }
+
     public Friend(String userId, String subjectId, String avatar, String introduction, String name, String groupId, int relationship, String location, LocalDate dateOfBirth) {
         this.userId = userId;
         this.subjectId = subjectId;

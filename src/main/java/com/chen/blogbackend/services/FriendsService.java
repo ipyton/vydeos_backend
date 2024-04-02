@@ -27,19 +27,17 @@ public class FriendsService {
     UserGroupDao userGroupDao;
 
     PreparedStatement addFriendUserId;
-    PreparedStatement addFriendByIdol;
     PreparedStatement addUsersInGroups;
     PreparedStatement addUserOwnedGroups;
     PreparedStatement delFriendByUserId;
-    PreparedStatement delFriendByIdolId;
     PreparedStatement delUsersInGroups;
     PreparedStatement delOwnGroups;
     PreparedStatement delUserGroup;
     PreparedStatement getFollowersByUserId;
     PreparedStatement getFollowersByIdolId;
     PreparedStatement getUsersIntro;
-    PreparedStatement updateFriendDirectionByIdolId;
-    PreparedStatement updateFriendDirectionByUserId;
+//    PreparedStatement updateFriendDirectionByIdolId;
+//    PreparedStatement updateFriendDirectionByUserId;
     PreparedStatement block;
     PreparedStatement unBlock;
 
@@ -47,28 +45,25 @@ public class FriendsService {
 
     @PostConstruct
     public void init(){
-        try {
-            friendDao = new FriendMapperBuilder(session).build().getDao();
-            userGroupDao = new UserGroupMapperBuilder(session).build().getDao();
-            addFriendByIdol = session.prepare("insert into followers_by_user_id values(?,?,?,?,?);");
-            addFriendUserId = session.prepare("insert into followers_by_idol_id values(?,?,?,?,?);");
-            addUsersInGroups = session.prepare("insert into users_in_groups values(?,?,?,?);");
-            addUserOwnedGroups = session.prepare("insert into user_own_groups values(?,?,?,?);");
-            delFriendByIdolId = session.prepare("delete from followers_by_idol_id where idol_id=?;");
-            delFriendByUserId = session.prepare("delete from followers_by_user_id where user_id=?;");
-            getFollowersByUserId = session.prepare("select * from followers_by_user_id where user_id=?;");
-            getUsersIntro = session.prepare("select * from user_information where user_id=?;");
-            delUsersInGroups = session.prepare("delete from users_in_groups where group_id = ? and user_id = ?");
-            delOwnGroups = session.prepare("delete from user_owned_groups where user_id=? and group_id = ?");
-            delUserGroup = session.prepare("delete from user_group where group_id = ?");
-            updateFriendDirectionByIdolId = session.prepare("update followers_by_user_id set bi_direction=?;");
-            updateFriendDirectionByUserId = session.prepare("update followers_by_idol_id set bi_direction=?;");
+
+            //friendDao = new FriendMapperBuilder(session).build().getDao();
+            //userGroupDao = new UserGroupMapperBuilder(session).build().getDao();
+            addFriendUserId = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id, avatar, group_id, name) values(?,?,?,?,?);");
+            // addUsersInGroups = session.prepare("insert into relationship.users_in_groups () values(?,?,?,?);");
+            // addUserOwnedGroups = session.prepare("insert into relationship.user_own_groups values(?,?,?,?);");
+            delFriendByUserId = session.prepare("delete from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
+            getFollowersByUserId = session.prepare("select * from relationship.followers_by_user_id where user_id=?;");
+            getUsersIntro = session.prepare("select * from userInfo.user_information where user_id=?;");
+//            delUsersInGroups = session.prepare("delete from relationship.users_in_groups where owner_id = ? and group_id = ? and user_id = ?");
+//            delOwnGroups = session.prepare("delete from relationship.user_owned_groups where user_id=? and group_id = ?");
+//            delUserGroup = session.prepare("delete from relationship.user_group where group_id = ?");
+//            updateFriendDirectionByIdolId = session.prepare("update relationship.followers_by_user_id set bi_direction=?;");
+//            updateFriendDirectionByUserId = session.prepare("update relationship.followers_by_idol_id set bi_direction=?;");
             //getFollowersByIdolId = session.prepare("select * from followers_by_idol_id where idol_id=?;");
-            follows = session.prepare("select user_id, friend_id, bidirectional, from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
-        }
-        catch (Exception e) {
-            System.out.println(e);
-        }
+            follows = session.prepare("select * from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
+
+
+
     }
 
     public PagingMessage<Friend> getFollowersByUserId(String userId, String pagingState) {
@@ -80,10 +75,11 @@ public class FriendsService {
 
     public int getRelationship(String userid, String userIdToFollow) throws Exception {
         boolean flag = false;
+        System.out.println(follows);
         ResultSet reverseFollow = session.execute(follows.bind(userid, userIdToFollow));
         if (reverseFollow.all().size() > 0) flag = true;
 
-        ResultSet execute = session.execute(follows.bind(userid, userIdToFollow));
+        ResultSet execute = session.execute(follows.bind(userIdToFollow, userid));
         List<Row> all = execute.all();
         if (all.size() == 0) {
             if (flag) return 10;
@@ -134,18 +130,17 @@ public class FriendsService {
         boolean isBidirectional = execute2.getExecutionInfos().size() != 0;
 
         ResultSet execute = session.execute(addFriendUserId.bind(fanId, idolId, idol.getAvatar(), idol.getGroupId(), isBidirectional));
-        ResultSet execute1 = session.execute(addFriendByIdol.bind(idolId, fanId, fan.getAvatar(), fan.getGroupId(), isBidirectional));
+        ResultSet execute1 = session.execute(addFriendUserId.bind(idolId, fanId, idol.getAvatar(), idol.getGroupId(), isBidirectional));
         return execute1.getExecutionInfos().get(0).getErrors().size() == 0 && execute.getExecutionInfos().get(0).getErrors().size() == 0;
     }
 
 
     public boolean unfollow(String fanId, String idolId) {
         BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
-        batchStatementBuilder.addStatement(delFriendByIdolId.bind(idolId));
-        batchStatementBuilder.addStatement(delFriendByUserId.bind(fanId));
+        batchStatementBuilder.addStatement(delFriendByUserId.bind(fanId,idolId));
+        batchStatementBuilder.addStatement(delFriendByUserId.bind(idolId,fanId));
         // reduce
-        batchStatementBuilder.addStatements(updateFriendDirectionByIdolId.bind(0),
-                updateFriendDirectionByUserId.bind(0));
+
         ResultSet execute = session.execute(batchStatementBuilder.build());
         // modify
         return execute.getExecutionInfos().get(0).getErrors().size() == 0;
