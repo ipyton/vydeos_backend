@@ -1,5 +1,6 @@
 package com.chen.blogbackend.services;
 
+import com.chen.blogbackend.entities.Auth;
 import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.mappers.AccountParser;
 import com.chen.blogbackend.util.PasswordEncryption;
@@ -51,6 +52,9 @@ public class AccountService {
 
     PreparedStatement searchResult;
 
+    PreparedStatement insertUserName;
+    PreparedStatement insertPassword;
+
 
 
     @PostConstruct
@@ -77,6 +81,8 @@ public class AccountService {
         updateEmail = session.prepare("update userinfo.user_auth set email = ? where userId = ?");
         updatePassword = session.prepare("update userinfo.user_auth set password = ? where userId = ?");
         updatePhoneNumber = session.prepare("update userinfo.user_auth set telephone = ? where userId = ?");
+        insertUserName = session.prepare("insert into userinfo.user_auth (user_id, email) values(?,?)");
+        insertPassword = session.prepare("update userinfo.user_auth set password=? where user_id=?");
     }
 
 
@@ -96,11 +102,12 @@ public class AccountService {
     }
 
 
-    public Friend getFriendDetailsById(String userId, String userIdToFollow) throws Exception {
+    public Account getFriendDetailsById(String userId, String userIdToFollow) throws Exception {
         System.out.println("friend details " + userIdToFollow) ;
         ResultSet execute = session.execute(getUserDetails.bind(userIdToFollow));
 
-        Friend friend = AccountParser.FriendDetailParser(execute);
+        List<Account> friendSet = AccountParser.userDetailParser(execute);
+        Account friend = friendSet.get(0);
         System.out.println("find friend" + friend);
         if (friend != null)  friend.setRelationship(friendsService.getRelationship(userId, userIdToFollow));
         return friend;
@@ -108,8 +115,8 @@ public class AccountService {
 
 
 
-    public boolean insert(Account account) {
-        ResultSet execute = session.execute(insertAccount.bind(account.getUserEmail(), account.getUserEmail(), account.getPassword(), account.getTelephone()));
+    public boolean insert(Auth account) {
+        ResultSet execute = session.execute(insertAccount.bind(account.getEmail(), account.getEmail(), account.getPassword(), account.getTelephone()));
         if (0 != execute.getExecutionInfo().getErrors().size()) {
             return false;
         }
@@ -118,7 +125,7 @@ public class AccountService {
 
     public Account selectAccount(String accountID) {
         ResultSet execute = session.execute(getAccount.bind(accountID));
-        List<Account> tokens = AccountParser.accountParser(execute);
+        List<Account> tokens = AccountParser.userDetailParser(execute);
 
         if (0 != execute.getExecutionInfo().getErrors().size() || tokens.size() != 1) {
             System.out.println("error!!!!");
@@ -142,7 +149,9 @@ public class AccountService {
     public boolean validatePassword(String userId,String password){
         password = PasswordEncryption.encryption(password);
         ResultSet account = session.execute(getAccount.bind(userId));
-        List<Account> accounts = AccountParser.accountParser(account);
+        List<Auth> accounts = AccountParser.accountParser(account);
+        if (accounts.size() != 1) return false;
+        System.out.println(accounts.get(0).getPassword());
         return 1 == accounts.size() && accounts.get(0).getPassword().equals(password);
     }
 
@@ -175,4 +184,13 @@ public class AccountService {
         return true;
     }
 
+    public boolean insertStep1(String username) {
+        ResultSet execute = session.execute(insertUserName.bind(username, username));
+        return execute.getExecutionInfo().getErrors().size()==0;
+    }
+
+    public boolean insertStep3(String password,String userId) {
+        ResultSet execute = session.execute(insertPassword.bind(password, userId));
+        return execute.getExecutionInfo().getErrors().size()==0;
+    }
 }

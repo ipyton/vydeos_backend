@@ -1,6 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.entities.UserGroup;
 import com.chen.blogbackend.responseMessage.LoginMessage;
@@ -101,7 +102,7 @@ public class FriendsController {
     @PostMapping("getUserIntro")
     public LoginMessage getIntro(HttpServletRequest request,String userIdToFollow) throws Exception {
         String userId = (String) request.getAttribute("userEmail");
-        Friend friendDetailsById = accountService.getFriendDetailsById(userId, userIdToFollow);
+        Account friendDetailsById = accountService.getFriendDetailsById(userId, userIdToFollow);
         System.out.println(JSON.toJSONString(friendDetailsById));
         return new LoginMessage(1,JSON.toJSONString(friendDetailsById));
     }

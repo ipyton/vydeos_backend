@@ -1,6 +1,7 @@
 package com.chen.blogbackend.util;
 
 import com.chen.blogbackend.entities.Account;
+import com.chen.blogbackend.entities.Auth;
 
 public class AccountInfoValidator {
 
@@ -22,9 +23,10 @@ public class AccountInfoValidator {
         return uppercase && lowercase && numbers;
     }
 
-    public static boolean validateAccount(Account account){
+    public static boolean validateAccount(Auth account){
         //System.out.println(validateUserName(account.getUserName()));
         //System.out.println(validateUserPassword(account.getPassword()));
-        return validateUserName(account.getUserName()) && validateUserPassword(account.getPassword());
+        return validateUserName(account.getUserId()) && validateUserPassword(account.getPassword());
     }
+
 }

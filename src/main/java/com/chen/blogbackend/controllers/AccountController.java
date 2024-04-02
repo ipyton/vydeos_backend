@@ -2,6 +2,7 @@ package com.chen.blogbackend.controllers;
 
 
 import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.entities.Auth;
 import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
@@ -43,10 +44,10 @@ public class AccountController {
 
     @PostMapping("/login")
     public LoginMessage login(@Param("email") String email, @Param("password") String password) {
-        System.out.println(email);
-        System.out.println(password);
+
         if (accountService.validatePassword(email, password)) {
             Token token = TokenUtil.createToken(new Token(email, Instant.now().plus(30 * 3600 * 24, ChronoUnit.SECONDS), null));
+            System.out.println("account service");
             if (accountService.setToken(token)) {
                 return new LoginMessage(1, token.getTokenString());
             }
@@ -54,12 +55,24 @@ public class AccountController {
         return new LoginMessage(-1, "Check your user name and password!");
     }
 
-    @PostMapping("/register")
-    public LoginMessage register(Account accountInfo) {
-        System.out.println(accountInfo);
-        if (AccountInfoValidator.validateAccount(accountInfo)) {
-            System.out.println("sdgfisiodf");
-            if (accountService.insert(accountInfo)) return new LoginMessage(1, "Registered Successfully");
+    @PostMapping("/registerStep1")
+    public LoginMessage registerStep1(String username) {
+        System.out.println(username);
+        if (AccountInfoValidator.validateUserName(username)) {
+            if (accountService.insertStep1(username)) return new LoginMessage(1, "Registered Successfully");
+        }
+        return new LoginMessage(-1, "register error");
+    }
+
+    @PostMapping("/registerStep2")
+    public LoginMessage registerStep2(Auth accountInfo) {
+        return new LoginMessage(1, "register error");
+    }
+
+    @PostMapping("/registerStep3")
+    public LoginMessage registerStep3(String password, String userName) {
+        if (AccountInfoValidator.validateUserPassword(password)) {
+            if (accountService.insertStep3(password, userName)) return new LoginMessage(1, "Registered Successfully");
         }
         return new LoginMessage(-1, "register error");
     }

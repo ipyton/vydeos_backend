@@ -1,31 +1,49 @@
 package com.chen.blogbackend.entities;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-
-import java.sql.Date;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
 
+// This is a universal entity to transport user(friend details, owner detail)
 public class Account {
 
     private String userId = "";
     private String userEmail ="";
     private String userName="";
-    private String password="";
     private String introduction="";
     private String avatar="";
     private LocalDate dateOfBirth = null;
     private String telephone="";
     private boolean gender = false;
+    private int relationship = 20;
+    private String group = "";
+
     List<String> apps;
 
-    public Account(String userId, String userEmail, String password, String telephone) {
+    public int getRelationship() {
+        return relationship;
+    }
+
+    public void setRelationship(int relationship) {
+        this.relationship = relationship;
+    }
+
+    public Account(String userId, String userEmail, String userName, String introduction, String avatar, LocalDate dateOfBirth, String telephone, boolean gender, int relationship, List<String> apps) {
         this.userId = userId;
         this.userEmail = userEmail;
-        this.password = password;
+        this.userName = userName;
+        this.introduction = introduction;
+        this.avatar = avatar;
+        this.dateOfBirth = dateOfBirth;
+        this.telephone = telephone;
+        this.gender = gender;
+        this.relationship = relationship;
+        this.apps = apps;
+    }
+
+    public Account(String userId, String userEmail, String telephone) {
+        this.userId = userId;
+        this.userEmail = userEmail;
         this.telephone = telephone;
     }
 
@@ -77,16 +95,7 @@ public class Account {
         this.apps = apps;
     }
 
-    public Account(String userEmail, String userName, String password, String introduction, String avatar, LocalDate dateOfBirth, String telephone, List<String> apps) {
-        this.userEmail = userEmail;
-        this.userName = userName;
-        this.password = password;
-        this.introduction = introduction;
-        this.avatar = avatar;
-        this.dateOfBirth = dateOfBirth;
-        this.telephone = telephone;
-        this.apps = apps;
-    }
+
 
     public String getUserEmail() {
         return userEmail;
@@ -102,14 +111,6 @@ public class Account {
 
     public void setUserName(String userName) {
         this.userName = userName;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getIntroduction() {
@@ -129,7 +130,6 @@ public class Account {
         return "Account{" +
                 "userID='" + userEmail + '\'' +
                 ", userName='" + userName + '\'' +
-                ", password='" + password + '\'' +
                 ", introduction='" + introduction + '\'' +
                 ", avatar='" + avatar + '\'' +
                 ", dateOfBirth=" + dateOfBirth +
