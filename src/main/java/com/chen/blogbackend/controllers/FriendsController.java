@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
-@RequestMapping("friends")
+
 @Controller()
 @ResponseBody
+@RequestMapping("friends")
 public class FriendsController {
 
     @Autowired
@@ -28,16 +29,26 @@ public class FriendsController {
     @Autowired
     AccountService accountService;
 
+
+    @RequestMapping("getFollowState")
+    public LoginMessage getFollowState(String sender, String receiver) throws Exception {
+        System.out.println(sender + receiver);
+        return new LoginMessage(1, Integer.toString(service.getRelationship(sender, receiver)));
+    }
+
+
     @RequestMapping("follow")
-    public LoginMessage follow(String fanId, String idolId){
-        boolean follow = service.follow(fanId, idolId);
+    public LoginMessage follow(String sender, String receiver){
+        System.out.println(sender + receiver);
+        boolean follow = service.follow(sender, receiver);
         return new LoginMessage(follow?1:-1,"");
     }
 
     @RequestMapping("unfollow")
-    public LoginMessage unfollow(String fanId, String userId) {
-        boolean result = service.unfollow(fanId, userId);
-        return new LoginMessage(-1, "" + result);
+    public LoginMessage unfollow(String sender, String receiver) {
+        System.out.println(sender + receiver);
+        boolean result = service.unfollow(sender, receiver);
+        return new LoginMessage(result?1:-1, "" );
     }
 
     @RequestMapping("get_followers")
@@ -106,8 +117,4 @@ public class FriendsController {
         System.out.println(JSON.toJSONString(friendDetailsById));
         return new LoginMessage(1,JSON.toJSONString(friendDetailsById));
     }
-
-
-
-
 }

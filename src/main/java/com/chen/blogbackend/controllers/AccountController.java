@@ -117,7 +117,7 @@ public class AccountController {
         System.out.println(token);
         if (null != token) {
             if (accountService.haveValidLogin(token)) {
-                return new LoginMessage(1, "valid token!");
+                return new LoginMessage(1, TokenUtil.resolveToken(token).getUserId());
             }
         }
         return new LoginMessage(-1, "invalid token");
@@ -135,13 +135,5 @@ public class AccountController {
 
         return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(avatar);
     }
-
-
-
-
-
-
-
-
 
 }

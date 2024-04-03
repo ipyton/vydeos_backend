@@ -27,7 +27,6 @@ public class FriendsService {
     FriendDao friendDao;
     UserGroupDao userGroupDao;
 
-    PreparedStatement addFriendUserId;
     PreparedStatement addUsersInGroups;
     PreparedStatement addUserOwnedGroups;
     PreparedStatement delFriendByUserId;
@@ -44,13 +43,14 @@ public class FriendsService {
     PreparedStatement unBlock;
 
     PreparedStatement follows;
+    PreparedStatement insertFollowRelationship;
+    PreparedStatement deleteFollowRelationship;
 
     @PostConstruct
     public void init(){
 
             //friendDao = new FriendMapperBuilder(session).build().getDao();
             //userGroupDao = new UserGroupMapperBuilder(session).build().getDao();
-            addFriendUserId = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id, avatar, group_id, name) values(?,?,?,?,?);");
             // addUsersInGroups = session.prepare("insert into relationship.users_in_groups () values(?,?,?,?);");
             // addUserOwnedGroups = session.prepare("insert into relationship.user_own_groups values(?,?,?,?);");
             delFriendByUserId = session.prepare("delete from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
@@ -63,9 +63,11 @@ public class FriendsService {
 //            updateFriendDirectionByIdolId = session.prepare("update relationship.followers_by_user_id set bi_direction=?;");
 //            updateFriendDirectionByUserId = session.prepare("update relationship.followers_by_idol_id set bi_direction=?;");
             //getFollowersByIdolId = session.prepare("select * from followers_by_idol_id where idol_id=?;");
+
+
             follows = session.prepare("select * from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
-
-
+            insertFollowRelationship = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?)");
+            deleteFollowRelationship = session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");
 
     }
 
@@ -79,23 +81,23 @@ public class FriendsService {
     public int getRelationship(String userid, String userIdToFollow) throws Exception {
         boolean flag = false;
         System.out.println(follows);
-        ResultSet reverseFollow = session.execute(follows.bind(userid, userIdToFollow));
-        if (reverseFollow.all().size() > 0) flag = true;
+        ResultSet follow = session.execute(follows.bind(userid, userIdToFollow));
+        if (follow.all().size() > 0) flag = true;
 
-        ResultSet execute = session.execute(follows.bind(userIdToFollow, userid));
-        List<Row> all = execute.all();
+        ResultSet reverseFollow = session.execute(follows.bind(userIdToFollow, userid));
+        List<Row> all = reverseFollow.all();
         if (all.size() == 0) {
             if (flag) return 10;
             else return 0;
         }
         else if (all.size() == 1) {
-            if (all.get(0).getInt("bi_direction") == 1) {
+            if (flag) {
                 return 11;
-            } else if (flag){
-                return 10;
+            }
+            else {
+                return 1;
             }
         } else throw new Exception("error relationship occurred internal!");
-        return 0;
     }
 
 
@@ -127,25 +129,22 @@ public class FriendsService {
     }
 
     public boolean follow(String fanId, String idolId) {
-        Friend fan = friendDao.selectUserInformation(fanId);
-        Friend idol = friendDao.selectUserInformation(idolId);
-        ResultSet execute2 = session.execute(getFollowersByIdolId.bind(fanId));
-        boolean isBidirectional = execute2.getExecutionInfos().size() != 0;
-
-        ResultSet execute = session.execute(addFriendUserId.bind(fanId, idolId, idol.getAvatar(), idol.getGroupId(), isBidirectional));
-        ResultSet execute1 = session.execute(addFriendUserId.bind(idolId, fanId, idol.getAvatar(), idol.getGroupId(), isBidirectional));
-        return execute1.getExecutionInfos().get(0).getErrors().size() == 0 && execute.getExecutionInfos().get(0).getErrors().size() == 0;
+        if (fanId == null || idolId == null) return false;
+        ResultSet execute = session.execute(insertFollowRelationship.bind(fanId,idolId));
+        return execute.getExecutionInfos().get(0).getErrors().size() == 0;
     }
 
 
     public boolean unfollow(String fanId, String idolId) {
-        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
-        batchStatementBuilder.addStatement(delFriendByUserId.bind(fanId,idolId));
-        batchStatementBuilder.addStatement(delFriendByUserId.bind(idolId,fanId));
-        // reduce
+//        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
+//        batchStatementBuilder.addStatement(delFriendByUserId.bind(fanId,idolId));
+//        batchStatementBuilder.addStatement(delFriendByUserId.bind(idolId,fanId));
+//        // reduce
+//
+//        ResultSet execute = session.execute(batchStatementBuilder.build());
+//         modify
 
-        ResultSet execute = session.execute(batchStatementBuilder.build());
-        // modify
+        ResultSet execute = session.execute(deleteFollowRelationship.bind(fanId, idolId));
         return execute.getExecutionInfos().get(0).getErrors().size() == 0;
     }
 

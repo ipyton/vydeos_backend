@@ -37,6 +37,8 @@ import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
@@ -141,6 +143,7 @@ public class BlogBackendApplication {
         ClientConfiguration config = builder.build();
         return provider.newProducerBuilder().setClientConfiguration(config).build();
     }
+
 
 
 

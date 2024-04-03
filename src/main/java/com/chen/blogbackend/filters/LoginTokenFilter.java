@@ -35,15 +35,17 @@ public class LoginTokenFilter implements Filter {
         request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR, true);
 
         if (request.getRequestURI().startsWith("/account") ) {
-            System.out.println("login");
             chain.doFilter(request, response);
             return;
         }
+
         String token = request.getHeader("token");
+//        request.getHeaderNames().asIterator().forEachRemaining(System.out::println);
+//        System.out.println(request.getHeader("token"));
         if (token == null) {
             System.out.println("unauthorized");
             servletResponse.setContentType("application/json");
-            servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-2, "please login first")).getBytes(StandardCharsets.UTF_8));
+            servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "please login first")).getBytes(StandardCharsets.UTF_8));
             return;
         }
 //        boolean result = accountService.haveValidLogin(request.getHeader("token"));
@@ -65,7 +67,6 @@ public class LoginTokenFilter implements Filter {
 //                return;
 //            }
 //        }
-        System.out.println(TokenUtil.resolveToken(token).getUserId());
         request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
         chain.doFilter(request, response);
     }
