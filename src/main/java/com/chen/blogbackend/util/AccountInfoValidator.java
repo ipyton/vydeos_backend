@@ -3,7 +3,14 @@ package com.chen.blogbackend.util;
 import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Auth;
 
+import java.util.regex.Pattern;
+
 public class AccountInfoValidator {
+
+    public static boolean testRegex(String name, String regex) {
+        return Pattern.compile(regex).matcher(name).matches();
+    }
+
 
     public static boolean validateUserName(String username) {
         if (username.length() < 5) return false;
@@ -12,6 +19,19 @@ public class AccountInfoValidator {
         }
         return true;
     }
+
+
+    public static boolean validateUserEmail(String userId) {
+        if (userId.length() < 5) return false;
+//        for (char c: userId.toCharArray()) {
+//            if (!Character.isLetterOrDigit(c)) return false;
+//        }
+        boolean result =  testRegex(userId,"^(.+)@(\\S+)$");
+        return result;
+    }
+
+
+
 
     public static boolean validateUserPassword(String password) {
         boolean uppercase = false, lowercase = false, numbers = false;

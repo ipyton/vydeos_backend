@@ -5,7 +5,11 @@ Authentication and authorization can be done once using the fundamental abilitie
 Social media function is also under work. 
 
 future works todo:
-figure out what kind of entity is needed among the account and the friend entity.
-friend entity is used to showed publicly.
-account entity is used to configure self settings.
+//figure out what kind of entity is needed among the account and the friend entity.done
+//friend entity is used to showed publicly.
+//account entity is used to configure self settings.
 combine single message with group message function.
+openresty integration(file cache)
+video streaming() on openresty.
+search for contents and others.
+

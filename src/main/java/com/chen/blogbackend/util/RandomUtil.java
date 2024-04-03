@@ -38,4 +38,48 @@ public class RandomUtil {
         return String.valueOf(System.currentTimeMillis());
     }
 
+
+    public static String generateRandomName() {
+        String[] fruits = {
+                "Apple",
+        "Banana" ,
+        "Mango" ,
+        "Orange",
+        "Grapes",
+        "Pineapple",
+        "Watermelon",
+        "Papaya",
+        "Guava",
+        "Pomegranate"};
+
+
+        String[] adjs = {
+                "loving","adoring", "fond",
+                "pleasing",
+                "amiable",
+                "smart",
+                "charming",
+                "creative",
+                "determined",
+                "diligent",
+                "diplomatic",
+                "dynamic",
+                "energetic",
+                "friendly",
+                "generous",
+                "gregarious",
+                "hardworking",
+                "helpful",
+                "kind",
+                "friendly",
+                "loyal",
+                "patient",
+                "polite",
+                "heartfelt",
+        };
+        Random random = new Random();
+        return adjs[(random.nextInt() & Integer.MAX_VALUE) % adjs.length] + " " + fruits[(random.nextInt() & Integer.MAX_VALUE) % fruits.length];
+
+    }
+
 }

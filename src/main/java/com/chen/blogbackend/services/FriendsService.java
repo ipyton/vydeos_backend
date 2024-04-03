@@ -7,6 +7,7 @@ import com.chen.blogbackend.entities.UserGroup;
 import com.chen.blogbackend.mappers.FriendMapperBuilder;
 import com.chen.blogbackend.mappers.UserGroupMapperBuilder;
 import com.chen.blogbackend.responseMessage.PagingMessage;
+import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
@@ -36,6 +37,7 @@ public class FriendsService {
     PreparedStatement getFollowersByUserId;
     PreparedStatement getFollowersByIdolId;
     PreparedStatement getUsersIntro;
+    PreparedStatement initUsersIntro;
 //    PreparedStatement updateFriendDirectionByIdolId;
 //    PreparedStatement updateFriendDirectionByUserId;
     PreparedStatement block;
@@ -53,6 +55,7 @@ public class FriendsService {
             // addUserOwnedGroups = session.prepare("insert into relationship.user_own_groups values(?,?,?,?);");
             delFriendByUserId = session.prepare("delete from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
             getFollowersByUserId = session.prepare("select * from relationship.followers_by_user_id where user_id=?;");
+            initUsersIntro = session.prepare("insert into userInfo.user_information (user_id, user_name)  values (?,?) ");
             getUsersIntro = session.prepare("select * from userInfo.user_information where user_id=?;");
 //            delUsersInGroups = session.prepare("delete from relationship.users_in_groups where owner_id = ? and group_id = ? and user_id = ?");
 //            delOwnGroups = session.prepare("delete from relationship.user_owned_groups where user_id=? and group_id = ?");
@@ -202,6 +205,12 @@ public class FriendsService {
         friends.add(userToRemove);
         return deleteFromGroup(user, friends, groupFrom);
     }
+
+    public boolean initUserIntro(String userId) {
+        ResultSet execute = session.execute(initUsersIntro.bind(userId, RandomUtil.generateRandomName()));
+        return execute.getExecutionInfo().getErrors().size() == 0;
+    }
+
 
 
 }

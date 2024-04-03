@@ -34,7 +34,7 @@ public class LoginTokenFilter implements Filter {
         response.addHeader("Access-Control-Allow-Headers","*");
         request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR, true);
 
-        if (request.getRequestURI().equals("/account/login") || request.getRequestURI().equals("/account/register") || request.getRequestURI().equals("/account/verifyToken") ) {
+        if (request.getRequestURI().startsWith("/account") ) {
             System.out.println("login");
             chain.doFilter(request, response);
             return;

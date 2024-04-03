@@ -56,10 +56,10 @@ public class AccountController {
     }
 
     @PostMapping("/registerStep1")
-    public LoginMessage registerStep1(String username) {
-        System.out.println(username);
-        if (AccountInfoValidator.validateUserName(username)) {
-            if (accountService.insertStep1(username)) return new LoginMessage(1, "Registered Successfully");
+    public LoginMessage registerStep1(String userId) {
+        System.out.println(userId);
+        if (AccountInfoValidator.validateUserEmail(userId)) {
+            if (accountService.insertStep1(userId)) return new LoginMessage(1, "Registered Successfully");
         }
         return new LoginMessage(-1, "register error");
     }
@@ -70,9 +70,9 @@ public class AccountController {
     }
 
     @PostMapping("/registerStep3")
-    public LoginMessage registerStep3(String password, String userName) {
+    public LoginMessage registerStep3(String password, String userId) {
         if (AccountInfoValidator.validateUserPassword(password)) {
-            if (accountService.insertStep3(password, userName)) return new LoginMessage(1, "Registered Successfully");
+            if (accountService.insertStep3(password, userId)) return new LoginMessage(1, "Registered Successfully");
         }
         return new LoginMessage(-1, "register error");
     }

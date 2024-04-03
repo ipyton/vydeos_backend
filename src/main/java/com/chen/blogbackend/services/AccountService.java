@@ -32,10 +32,8 @@ public class AccountService {
     @Autowired
     SearchService searchService;
 
-
     @Autowired
     FriendsService friendsService;
-
 
 
     PreparedStatement insertAccount;
@@ -54,8 +52,8 @@ public class AccountService {
 
     PreparedStatement insertUserName;
     PreparedStatement insertPassword;
-
-
+    PreparedStatement getIsTemp;
+    PreparedStatement revertTempStat;
 
     @PostConstruct
     public void init(){
@@ -81,8 +79,14 @@ public class AccountService {
         updateEmail = session.prepare("update userinfo.user_auth set email = ? where userId = ?");
         updatePassword = session.prepare("update userinfo.user_auth set password = ? where userId = ?");
         updatePhoneNumber = session.prepare("update userinfo.user_auth set telephone = ? where userId = ?");
-        insertUserName = session.prepare("insert into userinfo.user_auth (user_id, email) values(?,?)");
-        insertPassword = session.prepare("update userinfo.user_auth set password=? where user_id=?");
+        insertUserName = session.prepare("insert into userinfo.user_auth (userid, email, temp) values(?,?, true)");
+
+        insertPassword = session.prepare("update userinfo.user_auth set password=?, temp=false where userid=?");
+        getIsTemp = session.prepare("select temp from userinfo.user_auth where userid=?");
+
+
+
+
     }
 
 
@@ -117,10 +121,7 @@ public class AccountService {
 
     public boolean insert(Auth account) {
         ResultSet execute = session.execute(insertAccount.bind(account.getEmail(), account.getEmail(), account.getPassword(), account.getTelephone()));
-        if (0 != execute.getExecutionInfo().getErrors().size()) {
-            return false;
-        }
-        return true;
+        return 0 == execute.getExecutionInfo().getErrors().size();
     }
 
     public Account selectAccount(String accountID) {
@@ -184,13 +185,23 @@ public class AccountService {
         return true;
     }
 
-    public boolean insertStep1(String username) {
-        ResultSet execute = session.execute(insertUserName.bind(username, username));
+    public boolean insertStep1(String userId) {
+        ResultSet judge = session.execute(getIsTemp.bind(userId));
+        System.out.println("------------");
+        System.out.println(judge.all().size());
+
+        if (judge.all().size() != 0) {
+            return judge.all().get(0).getBoolean("temp");
+        }
+        ResultSet execute = session.execute(insertUserName.bind(userId, userId));
         return execute.getExecutionInfo().getErrors().size()==0;
     }
 
     public boolean insertStep3(String password,String userId) {
         ResultSet execute = session.execute(insertPassword.bind(password, userId));
-        return execute.getExecutionInfo().getErrors().size()==0;
+        if (friendsService.initUserIntro(userId)) {
+            return execute.getExecutionInfo().getErrors().size()==0;
+        }
+        return false;
     }
 }
