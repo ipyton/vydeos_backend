@@ -117,4 +117,13 @@ public class FriendsController {
         System.out.println(JSON.toJSONString(friendDetailsById));
         return new LoginMessage(1,JSON.toJSONString(friendDetailsById));
     }
+
+    //This is a method to call if user doesn't have local messages.
+    @PostMapping("getFriendsToken")
+    public LoginMessage getFriendsToken(String user) {
+        //service.getRelationship()
+        return new LoginMessage(1, "success");
+    }
+
+
 }

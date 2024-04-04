@@ -3,7 +3,6 @@ package com.chen.blogbackend.entities;
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -14,18 +13,16 @@ public class SingleMessage {
     private String type;
     private Instant sendTime;
     private String content;
-    private String media;
     private String referMessageId;
     private List<String> referUserIds;
 
-    public SingleMessage(String messageId, String userId, String receiverId, String type, Instant sendTime, String content, String media, String referMessageId, List<String> referUserIds, String messageType) {
+    public SingleMessage(String messageId, String userId, String receiverId, String type, Instant sendTime, String content, String referMessageId, List<String> referUserIds, String messageType) {
         this.messageId = messageId;
         this.userId = userId;
         this.receiverId = receiverId;
         this.type = type;
         this.sendTime = sendTime;
         this.content = content;
-        this.media = media;
         this.referMessageId = referMessageId;
         this.referUserIds = referUserIds;
         this.messageType = messageType;
@@ -47,29 +44,19 @@ public class SingleMessage {
 
     }
 
-    public SingleMessage(String messageId, String userId, String receiverId, String type, Instant timestamp, String content, String media, String referMessageId, List<String> referUserIds) {
+    public SingleMessage(String messageId, String userId, String receiverId, String type, Instant timestamp, String content, String referMessageId, List<String> referUserIds) {
         this.messageId = messageId;
         this.userId = userId;
         this.receiverId = receiverId;
         this.type = type;
         this.sendTime = timestamp;
         this.content = content;
-        this.media = media;
         this.referMessageId = referMessageId;
         this.referUserIds = referUserIds;
     }
 
 
-    public SingleMessage(String messageId, String userId, String receiverId, String type, Instant timestamp, String content, String media, String referMessageId) {
-        this.messageId = messageId;
-        this.userId = userId;
-        this.receiverId = receiverId;
-        this.type = type;
-        this.sendTime = timestamp;
-        this.content = content;
-        this.media = media;
-        this.referMessageId = referMessageId;
-    }
+
 
     public String getMessageId() {
         return messageId;
@@ -117,14 +104,6 @@ public class SingleMessage {
 
     public void setContent(String content) {
         this.content = content;
-    }
-
-    public String getMedia() {
-        return media;
-    }
-
-    public void setMedia(String media) {
-        this.media = media;
     }
 
     public String getReferMessageId() {

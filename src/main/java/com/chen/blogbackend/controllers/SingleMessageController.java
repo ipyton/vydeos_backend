@@ -1,19 +1,19 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.entities.GroupMessage;
 import com.chen.blogbackend.entities.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.FriendsService;
 import com.chen.blogbackend.services.SearchService;
 import com.chen.blogbackend.services.SingleMessageService;
+import com.chen.blogbackend.util.RandomUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.time.Instant;
 import java.util.List;
 
 @RequestMapping("chat")
@@ -31,15 +31,15 @@ public class SingleMessageController {
     SearchService searchService;
 
     @RequestMapping("get_messages")
-    public LoginMessage getMessagesByUserId(HttpServletRequest request, String userId, String receiverId, String pageState){
+    public LoginMessage getMessagesByUserId(String userId, String receiverId, String pageState){
         service.getMessageByUserId(userId, receiverId,pageState);
         return new LoginMessage(-1, "");
     }
 
     @RequestMapping("send_message")
-    public LoginMessage sendMessage(@RequestBody String singleMessage) {
-        SingleMessage singleMessage1 = JSON.parseObject(singleMessage, SingleMessage.class);
-        service.sendMessage(singleMessage1);
+    public LoginMessage sendMessage(String userId, String sendTo, String content, String type) {
+        SingleMessage singleMessage =  new SingleMessage(RandomUtil.generateMessageId(userId), userId, sendTo,type, Instant.now(),content,null,null);
+        service.sendMessage(singleMessage);
         return new LoginMessage(-1, "");
     }
 
@@ -76,6 +76,8 @@ public class SingleMessageController {
     public LoginMessage getNewestRecords(String userId, Long timestamp) {
         List<SingleMessage> newRecords = service.getNewRecords(userId, timestamp);
         return new LoginMessage(1, JSON.toJSONString(newRecords));
+
+
     }
 
 

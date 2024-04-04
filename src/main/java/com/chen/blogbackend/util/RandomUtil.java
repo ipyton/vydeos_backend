@@ -35,7 +35,7 @@ public class RandomUtil {
     }
 
     public static String generateMessageId(String userId) {
-        return String.valueOf(System.currentTimeMillis());
+        return userId + "_" + String.valueOf(System.currentTimeMillis());
     }
 
 
