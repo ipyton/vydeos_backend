@@ -78,7 +78,7 @@ public class SingleMessageService {
         //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
         ResultSet execute = session.execute(setRecordById.bind(singleMessage.getUserId(),
                 singleMessage.getReceiverId(), singleMessage.getMessageId(), singleMessage.getContent(),
-                singleMessage.getSendTime(), "single", singleMessage.getMessageType(), 0,
+                singleMessage.getSendTime(), singleMessage.getType(), singleMessage.getMessageType(), 0,
                 singleMessage.getReferMessageId(), singleMessage.getReferMessageId()));
         //judge if a user can send message
 

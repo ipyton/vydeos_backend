@@ -41,7 +41,7 @@ public class SingleMessageController {
     public LoginMessage sendMessage(String userId, String receiverId, String content, String type) throws Exception {
         Instant instant = Instant.now();
         String messageId = RandomUtil.generateMessageId(userId);
-        SingleMessage singleMessage =  new SingleMessage(messageId, userId, receiverId, type, instant,content,null,null);
+        SingleMessage singleMessage =  new SingleMessage(messageId, userId, receiverId, "single", instant,content,null,null, type);
         service.sendMessage(singleMessage);
         return new LoginMessage(1, JSON.toJSONString(new MessageSendingReceipt(messageId, instant)));
     }
