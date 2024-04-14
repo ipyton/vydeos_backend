@@ -2,6 +2,7 @@ package com.chen.blogbackend.services;
 
 import com.alibaba.fastjson2.JSON;
 import com.chen.blogbackend.entities.Notification;
+import com.chen.blogbackend.entities.SingleMessage;
 import org.apache.rocketmq.client.apis.ClientException;
 import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.apis.message.MessageBuilder;
@@ -21,13 +22,13 @@ public class NotificationProducer {
     @Autowired
     Producer producer;
 
-    public void sendNotification(Notification notification) throws ClientException {
+    public void sendNotification(SingleMessage message ) throws ClientException {
         MessageBuilder builder = new MessageBuilderImpl();
-        int i = notification.getUserId().hashCode();
-        Message message = builder.setTopic("notification").setKeys().setTag("" + i)
-                .setBody(JSON.toJSONBytes(notification)).build();
+        int i = message.getUserId().hashCode();
+        Message messageToSend = builder.setTopic("notification").setKeys().setTag("" + i)
+                .setBody(JSON.toJSONBytes(message)).build();
 
-        SendReceipt send = producer.send(message);
+        SendReceipt send = producer.send(messageToSend);
         MessageId messageId = send.getMessageId();
         System.out.println("message Id" + messageId);
     }

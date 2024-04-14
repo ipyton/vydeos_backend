@@ -1,19 +1,16 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.SingleMessageDao;
-import com.chen.blogbackend.entities.GroupMessage;
 import com.chen.blogbackend.entities.Notification;
 import com.chen.blogbackend.entities.SingleMessage;
 import com.chen.blogbackend.mappers.MessageParser;
 import com.chen.blogbackend.responseMessage.PagingMessage;
-import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
 
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.PagingState;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +26,11 @@ public class SingleMessageService {
 
     @Autowired
     NotificationProducer producer;
+
+
+    @Autowired
+    FriendsService friendsService;
+
 
     PreparedStatement getRecord;
     PreparedStatement setRecordById;
@@ -72,16 +74,30 @@ public class SingleMessageService {
         return new PagingMessage<>(convert.all(), state.toString(), 1);
     }
 
-    public String sendMessage(SingleMessage singleMessage) {
-        String messageId =  RandomUtil.generateMessageId(singleMessage.getUserId());
-        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getUserId(), singleMessage.getReceiverId(), messageId,
-                singleMessage.getType(),singleMessage.getMessageType(), 0, singleMessage.getReferMessageId(), singleMessage.getReferMessageId()));
-        //producer.sendNotification(new Notification(avatar, userName, userId));
+    public boolean sendMessage(SingleMessage singleMessage) throws Exception {
+        //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
+        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getUserId(),
+                singleMessage.getReceiverId(), singleMessage.getMessageId(), singleMessage.getContent(),
+                singleMessage.getSendTime(), "single", singleMessage.getMessageType(), 0,
+                singleMessage.getReferMessageId(), singleMessage.getReferMessageId()));
+        //judge if a user can send message
+
+        if (friendsService.getRelationship(singleMessage.getUserId(), singleMessage.getReceiverId()) != 11) {
+            System.out.println("they are not friends");
+            return false;
+        }
+        //    private String userId;
+        //    private String title;
+        //    private String content;
+        //    private String type;
+        //    private String time;
+        //producer.sendNotification(singleMessage);
         if (execute.getExecutionInfo().getErrors().size()!=0) {
-            return "";
+            System.out.println(execute.getExecutionInfo().getErrors());
+            return false;
         }
         //producer.sendNotification(new Notification());
-        return messageId;
+        return true;
     }
 
     public boolean recall(String userId, String receiverId, String messageId){

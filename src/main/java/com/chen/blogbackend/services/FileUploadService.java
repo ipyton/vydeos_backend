@@ -54,6 +54,42 @@ public class FileUploadService {
         scheduler.start();
     }
 
+    public boolean saveChatPics() {
+        return true;
+    }
+
+    public boolean saveChatVoice() {
+        return true;
+    }
+
+    public boolean saveChatVideos() {
+        return true;
+    }
+
+
+    public boolean saveAvatar() {
+        return true;
+    }
+
+    public boolean savePics() {
+
+        return true;
+    }
+
+
+    public boolean saveShareVideos() {
+
+        return true;
+    }
+
+    public boolean saveSharedPics() {
+
+
+
+        return true;
+    }
+
+
 
 
     private boolean saveToOSS(UnfinishedUpload upload) {

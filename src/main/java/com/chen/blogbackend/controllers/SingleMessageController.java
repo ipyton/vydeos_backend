@@ -1,6 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.entities.MessageSendingReceipt;
 import com.chen.blogbackend.entities.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.FriendsService;
@@ -36,11 +37,13 @@ public class SingleMessageController {
         return new LoginMessage(-1, "");
     }
 
-    @RequestMapping("send_message")
-    public LoginMessage sendMessage(String userId, String sendTo, String content, String type) {
-        SingleMessage singleMessage =  new SingleMessage(RandomUtil.generateMessageId(userId), userId, sendTo,type, Instant.now(),content,null,null);
+    @RequestMapping("sendMessage")
+    public LoginMessage sendMessage(String userId, String receiverId, String content, String type) throws Exception {
+        Instant instant = Instant.now();
+        String messageId = RandomUtil.generateMessageId(userId);
+        SingleMessage singleMessage =  new SingleMessage(messageId, userId, receiverId, type, instant,content,null,null);
         service.sendMessage(singleMessage);
-        return new LoginMessage(-1, "");
+        return new LoginMessage(1, JSON.toJSONString(new MessageSendingReceipt(messageId, instant)));
     }
 
     @RequestMapping("block")
