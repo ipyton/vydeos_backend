@@ -29,7 +29,7 @@ public class AutoRunner {
 //    @Autowired
 //    SendNotificationService service;
 
-    @PostConstruct
+
     public void startListening() throws InterruptedException, ClientException {
         final ClientServiceProvider provider = ClientServiceProvider.loadService();
         String endpoints = "192.168.23.129:8081";

@@ -1,11 +1,51 @@
 package com.chen.notification.entities;
 
+import java.time.Instant;
+
 public class Notification {
     private String avatar;
-    private String name;
-    private String title;
+    private String senderId;
+    private String receiverId;
+    private String senderName;
+    private String type;
+    private String messageType;
     private String content;
-    private String time;
+    private Instant time;
+
+    public String getSenderId() {
+        return senderId;
+    }
+
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
+    }
+
+    public String getReceiverId() {
+        return receiverId;
+    }
+
+    public void setReceiverId(String receiverId) {
+        this.receiverId = receiverId;
+    }
+
+    public String getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
+    }
+
+    public Notification(String avatar, String senderId, String receiverId, String senderName, String messageType, String type, String content, Instant time) {
+        this.avatar = avatar;
+        this.senderId = senderId;
+        this.receiverId = receiverId;
+        this.senderName = senderName;
+        this.type = type;
+        this.content = content;
+        this.time = time;
+        this.messageType = messageType;
+    }
 
     public String getAvatar() {
         return avatar;
@@ -15,20 +55,20 @@ public class Notification {
         this.avatar = avatar;
     }
 
-    public String getName() {
-        return name;
+    public String getSenderName() {
+        return senderName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
     }
 
-    public String getTitle() {
-        return title;
+    public String getType() {
+        return type;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getContent() {
@@ -39,22 +79,24 @@ public class Notification {
         this.content = content;
     }
 
-    public String getTime() {
+    public Instant getTime() {
         return time;
     }
 
-    public void setTime(String time) {
+    public void setTime(Instant time) {
         this.time = time;
     }
 
-    public Notification(String avatar, String name, String title, String content, String time) {
+    public Notification(String avatar, String name, String title, String content, Instant time) {
         this.avatar = avatar;
-        this.name = name;
-        this.title = title;
+        this.senderName = name;
+        this.type = title;
         this.content = content;
         this.time = time;
     }
 
     public Notification() {
+
+
     }
 }
