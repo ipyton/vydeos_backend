@@ -114,6 +114,9 @@ public class FriendsController {
     public LoginMessage getIntro(HttpServletRequest request,String userIdToFollow) throws Exception {
         String userId = (String) request.getAttribute("userEmail");
         Account friendDetailsById = accountService.getFriendDetailsById(userId, userIdToFollow);
+        if (null == friendDetailsById ) {
+            return new LoginMessage(-1, null);
+        }
         System.out.println(JSON.toJSONString(friendDetailsById));
         return new LoginMessage(1,JSON.toJSONString(friendDetailsById));
     }

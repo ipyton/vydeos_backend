@@ -75,7 +75,6 @@ public class NotificationServerEndpoint {
     }
 
     public void updateMessageList(String userId, Notification notification) {
-
         messageList.get(userId).add(notification);
     }
 
@@ -85,7 +84,6 @@ public class NotificationServerEndpoint {
         else {
             sessionPool.remove(userId);
         }
-
     }
 
     // heart beat.

@@ -85,8 +85,6 @@ public class AccountService {
         getIsTemp = session.prepare("select temp from userinfo.user_auth where userid=?");
 
 
-
-
     }
 
 
@@ -97,8 +95,10 @@ public class AccountService {
 
 
     public boolean insertUserDetails(Account userDetail) {
-        ResultSet execute = session.execute(insertUserDetails.bind());
-        return true;
+        ResultSet execute = session.execute(insertUserDetails.bind(userDetail.getUserId(), userDetail.getApps(),
+                userDetail.getAvatar(), userDetail.getDateOfBirth(), userDetail.isGender(),
+                userDetail.getIntroduction(), userDetail.getUserName()));
+        return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
     public Account getAccountDetailsById(String userId) {
@@ -111,6 +111,9 @@ public class AccountService {
         ResultSet execute = session.execute(getUserDetails.bind(userIdToFollow));
 
         List<Account> friendSet = AccountParser.userDetailParser(execute);
+        if (friendSet.size() == 0) {
+            return null;
+        }
         Account friend = friendSet.get(0);
         System.out.println("find friend" + friend);
         if (friend != null)  friend.setRelationship(friendsService.getRelationship(userId, userIdToFollow));
@@ -176,7 +179,7 @@ public class AccountService {
         return set.getExecutionInfo().getErrors().size() == 0;
     }
 
-    public boolean update(Friend friend) throws IOException, InterruptedException {
+    public boolean updateIndex(Friend friend) throws IOException, InterruptedException {
         searchService.setUserIndex(friend);
         return true;
     }
@@ -187,7 +190,6 @@ public class AccountService {
 
     public boolean insertStep1(String userId) {
         ResultSet judge = session.execute(getIsTemp.bind(userId));
-        System.out.println("------------");
         System.out.println(judge.all().size());
 
         if (judge.all().size() != 0) {

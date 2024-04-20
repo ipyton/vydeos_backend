@@ -93,19 +93,20 @@ public class AccountController {
     }
 
 
+    //get a user's info.
     @PostMapping("/getinfo")
     public LoginMessage getAccountInformation(HttpServletRequest request) {
         String userEmail = request.getHeader("userEmail");
         Account result = accountService.selectAccount(userEmail);
         if (null == result) {
-            return new LoginMessage(-1, "error");
+            return new LoginMessage(-1, "Do not have get any information.");
         }
         return new LoginMessage(1, JSON.toJSONString(result));
     }
 
     @PostMapping("/setinfo")
-    public LoginMessage setAccountInformation(Friend friend) throws IOException, InterruptedException {
-        boolean result = accountService.update(friend);
+    public LoginMessage setAccountInformation(Account account)  {
+        boolean result = accountService.insertUserDetails(account);
         if (result) {
             return new LoginMessage(1, "Success");
         }

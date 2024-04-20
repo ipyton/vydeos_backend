@@ -81,7 +81,7 @@ public class SingleMessageService {
                 singleMessage.getSendTime(), singleMessage.getType(), singleMessage.getMessageType(), 0,
                 singleMessage.getReferMessageId(), singleMessage.getReferMessageId()));
         //judge if a user can send message
-
+        producer.sendNotification(singleMessage);
         if (friendsService.getRelationship(singleMessage.getUserId(), singleMessage.getReceiverId()) != 11) {
             System.out.println("they are not friends");
             return false;

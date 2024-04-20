@@ -1,6 +1,7 @@
 package com.chen.blogbackend.entities;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -18,7 +19,7 @@ public class Account {
     private int relationship = 20;
     private String group = "";
 
-    List<String> apps;
+    List<String> apps = new ArrayList<>();
 
     public int getRelationship() {
         return relationship;
@@ -125,17 +126,6 @@ public class Account {
         return avatar;
     }
 
-    @Override
-    public String toString() {
-        return "Account{" +
-                "userID='" + userEmail + '\'' +
-                ", userName='" + userName + '\'' +
-                ", introduction='" + introduction + '\'' +
-                ", avatar='" + avatar + '\'' +
-                ", dateOfBirth=" + dateOfBirth +
-                '}';
-    }
-
     public void setAvatar(String avatar) {
         this.avatar = avatar;
     }
@@ -146,5 +136,22 @@ public class Account {
 
     public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
+    }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "userId='" + userId + '\'' +
+                ", userEmail='" + userEmail + '\'' +
+                ", userName='" + userName + '\'' +
+                ", introduction='" + introduction + '\'' +
+                ", avatar='" + avatar + '\'' +
+                ", dateOfBirth=" + dateOfBirth +
+                ", telephone='" + telephone + '\'' +
+                ", gender=" + gender +
+                ", relationship=" + relationship +
+                ", group='" + group + '\'' +
+                ", apps=" + apps +
+                '}';
     }
 }

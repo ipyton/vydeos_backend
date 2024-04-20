@@ -2,6 +2,7 @@ package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.notification.entities.Notification;
+import com.chen.notification.entities.SingleMessage;
 import com.chen.notification.service.SendNotificationService;
 import com.chen.notification.utils.ConfigUtil;
 import jakarta.annotation.PostConstruct;
@@ -29,7 +30,7 @@ public class AutoRunner {
 //    @Autowired
 //    SendNotificationService service;
 
-
+    @PostConstruct
     public void startListening() throws InterruptedException, ClientException {
         final ClientServiceProvider provider = ClientServiceProvider.loadService();
         String endpoints = "192.168.23.129:8081";
@@ -48,13 +49,11 @@ public class AutoRunner {
                     logger.info("Consume message successfully, messageId={}", messageView.getMessageId());
                     ByteBuffer body = messageView.getBody();
                     String s = Arrays.toString(body.array());
-                    JSON.parseObject(s, Notification.class);
+                    SingleMessage singleMessage = JSON.parseObject(s, SingleMessage.class);
+                    System.out.println(singleMessage);
                     return ConsumeResult.SUCCESS;
                 })
                 .build();
-
-
-        Thread.sleep(Long.MAX_VALUE);
     }
 
 }

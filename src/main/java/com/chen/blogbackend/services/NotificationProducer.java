@@ -23,9 +23,10 @@ public class NotificationProducer {
     Producer producer;
 
     public void sendNotification(SingleMessage message ) throws ClientException {
+        int partitions = 0;
         MessageBuilder builder = new MessageBuilderImpl();
         int i = message.getUserId().hashCode();
-        Message messageToSend = builder.setTopic("notification").setKeys().setTag("" + i)
+        Message messageToSend = builder.setTopic("notificationTopic").setKeys().setTag("1")
                 .setBody(JSON.toJSONBytes(message)).build();
 
         SendReceipt send = producer.send(messageToSend);
