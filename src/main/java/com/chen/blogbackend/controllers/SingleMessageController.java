@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @RequestMapping("chat")
@@ -38,10 +39,10 @@ public class SingleMessageController {
     }
 
     @RequestMapping("sendMessage")
-    public LoginMessage sendMessage(String userId, String receiverId, String content, String type) throws Exception {
+    public LoginMessage sendMessage(String userId, String receiverId, String content, String messageType) throws Exception {
         Instant instant = Instant.now();
         String messageId = RandomUtil.generateMessageId(userId);
-        SingleMessage singleMessage =  new SingleMessage(messageId, userId, receiverId, "single", instant,content,null,null, type);
+        SingleMessage singleMessage =  new SingleMessage(messageId, userId, receiverId, "single", instant,content,null,new ArrayList<>(), messageType);
         service.sendMessage(singleMessage);
         return new LoginMessage(1, JSON.toJSONString(new MessageSendingReceipt(messageId, instant)));
     }
@@ -75,11 +76,12 @@ public class SingleMessageController {
 //    }
 
 
-    @RequestMapping("getNewestRecords")
-    public LoginMessage getNewestRecords(String userId, Long timestamp) {
+    @RequestMapping("getNewestMessages")
+    public LoginMessage getNewestRecords(String userId,Long timestamp) {
+        System.out.println(timestamp);
         List<SingleMessage> newRecords = service.getNewRecords(userId, timestamp);
+        System.out.println(JSON.toJSONString(newRecords));
         return new LoginMessage(1, JSON.toJSONString(newRecords));
-
 
     }
 

@@ -2,9 +2,12 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.UserGroupDao;
+import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Friend;
+import com.chen.blogbackend.entities.Relationship;
 import com.chen.blogbackend.entities.UserGroup;
 import com.chen.blogbackend.mappers.FriendMapperBuilder;
+import com.chen.blogbackend.mappers.RelationshipParser;
 import com.chen.blogbackend.mappers.UserGroupMapperBuilder;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.util.RandomUtil;
@@ -15,6 +18,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.management.relation.Relation;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,10 +45,12 @@ public class FriendsService {
 //    PreparedStatement updateFriendDirectionByUserId;
     PreparedStatement block;
     PreparedStatement unBlock;
-
+    PreparedStatement deleteFriend;
     PreparedStatement follows;
     PreparedStatement insertFollowRelationship;
     PreparedStatement deleteFollowRelationship;
+    PreparedStatement addFriend;
+    PreparedStatement getAllFriends;
 
     @PostConstruct
     public void init(){
@@ -68,6 +74,9 @@ public class FriendsService {
             follows = session.prepare("select * from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
             insertFollowRelationship = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?)");
             deleteFollowRelationship = session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");
+            deleteFriend= session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");
+            addFriend = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?);");
+            getAllFriends = session.prepare("select * from relationship.followers_by_user_id where user_id = ?;");
 
     }
 
@@ -128,10 +137,22 @@ public class FriendsService {
         return userGroups.all();
     }
 
-    public boolean follow(String fanId, String idolId) {
+    public boolean follow(String fanId, String idolId) throws Exception {
         if (fanId == null || idolId == null) return false;
         ResultSet execute = session.execute(insertFollowRelationship.bind(fanId,idolId));
+        int relationship = getRelationship(fanId, idolId);
+        if (relationship == 11) {
+            return makeFriend(fanId, idolId, execute, addFriend);
+        }
         return execute.getExecutionInfos().get(0).getErrors().size() == 0;
+    }
+
+    private boolean makeFriend(String fanId, String idolId, ResultSet execute, PreparedStatement change) {
+        ResultSet set1 = session.execute(change.bind(fanId, idolId));
+        ResultSet set2 = session.execute(change.bind(idolId, fanId));
+        return execute.getExecutionInfo().getErrors().size() == 0 &&
+                set1.getExecutionInfo().getErrors().size() == 0 &&
+                set2.getExecutionInfo().getErrors().size() == 0;
     }
 
 
@@ -145,7 +166,7 @@ public class FriendsService {
 //         modify
 
         ResultSet execute = session.execute(deleteFollowRelationship.bind(fanId, idolId));
-        return execute.getExecutionInfos().get(0).getErrors().size() == 0;
+        return makeFriend(fanId, idolId, execute, deleteFriend);
     }
 
     public boolean createGroup(UserGroup group) {
@@ -162,7 +183,7 @@ public class FriendsService {
         batchStatementBuilder.addStatements(delUserGroup.bind(groupId));
         ResultSet execute = session.execute(batchStatementBuilder.build());
         // modify
-        return execute.getExecutionInfos().get(0).getErrors().size() == 0;
+        return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
     public List<Friend> batchGetUsers(List<String> users) {
@@ -181,7 +202,7 @@ public class FriendsService {
             batchStatementBuilder.addStatements(addUsersInGroups.bind(userId, groupId, friend.getUserId(), friend.getName(),friend.getAvatar()));
         }
         ResultSet execute = session.execute(batchStatementBuilder.build());
-        return execute.getExecutionInfos().get(0).getErrors().size() == 0;
+        return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
     public boolean moveToGroup(String userId, String friendId, String groupId) {
@@ -196,7 +217,7 @@ public class FriendsService {
             batchStatementBuilder.addStatements(delUsersInGroups.bind(groupFrom, userId));
         }
         ResultSet execute = session.execute(batchStatementBuilder.build());
-        return execute.getExecutionInfos().get(0).getErrors().size() == 0;
+        return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
     public boolean deleteFromGroup(String user, String userToRemove, String groupFrom) {
@@ -208,6 +229,12 @@ public class FriendsService {
     public boolean initUserIntro(String userId) {
         ResultSet execute = session.execute(initUsersIntro.bind(userId, RandomUtil.generateRandomName()));
         return execute.getExecutionInfo().getErrors().size() == 0;
+    }
+
+    public List<Relationship> getFriends(String userId) {
+        ResultSet execute = session.execute(getAllFriends.bind(userId));
+        return RelationshipParser.parseToRelationship(execute);
+
     }
 
 

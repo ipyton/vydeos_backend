@@ -6,8 +6,14 @@ CREATE KEYSPACE relationship
 
 use relationship;
 //user -> followers
+// follow
 create table followers_by_user_id(user_id text , friend_id text  , avatar text, group_id text,name text, primary key ( (user_id),friend_id));
 //create index on followers_by_user_id ((user_id));
+
+
+// friends by user id
+create table friends_by_user_id(user_id text , friend_id text  , avatar text, group_id text,name text, primary key ( (user_id),friend_id));
+
 
 //user -> fans
 //create table followers_by_idol_id(idol_id text, user_id text , avatar text, group_id text, name text, primary key ( (idol_id, user_id) ));

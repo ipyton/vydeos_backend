@@ -3,6 +3,7 @@ package com.chen.blogbackend.controllers;
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Friend;
+import com.chen.blogbackend.entities.Relationship;
 import com.chen.blogbackend.entities.UserGroup;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
@@ -24,7 +25,7 @@ import java.util.List;
 public class FriendsController {
 
     @Autowired
-    FriendsService service;
+    FriendsService friendsService;
 
     @Autowired
     AccountService accountService;
@@ -33,45 +34,51 @@ public class FriendsController {
     @RequestMapping("getFollowState")
     public LoginMessage getFollowState(String sender, String receiver) throws Exception {
         System.out.println(sender + receiver);
-        return new LoginMessage(1, Integer.toString(service.getRelationship(sender, receiver)));
+        return new LoginMessage(1, Integer.toString(friendsService.getRelationship(sender, receiver)));
     }
 
 
     @RequestMapping("follow")
-    public LoginMessage follow(String sender, String receiver){
+    public LoginMessage follow(String sender, String receiver) throws Exception {
         System.out.println(sender + receiver);
-        boolean follow = service.follow(sender, receiver);
+        boolean follow = friendsService.follow(sender, receiver);
         return new LoginMessage(follow?1:-1,"");
     }
 
     @RequestMapping("unfollow")
     public LoginMessage unfollow(String sender, String receiver) {
         System.out.println(sender + receiver);
-        boolean result = service.unfollow(sender, receiver);
+        boolean result = friendsService.unfollow(sender, receiver);
         return new LoginMessage(result?1:-1, "" );
+    }
+
+    @RequestMapping("getFriends")
+    public LoginMessage getFriends(String userId) {
+        List<Relationship> friends = friendsService.getFriends(userId);
+        return new LoginMessage(1, JSON.toJSONString(friends));
     }
 
     @RequestMapping("get_followers")
     public PagingMessage<Friend> getFollowers(String userId, String pagingState) {
-        return service.getFollowersByUserId(userId, pagingState);
+        return friendsService.getFollowersByUserId(userId, pagingState);
     }
 
     @RequestMapping("get_idols")
     public PagingMessage<Friend> getIdols(String userId, String pagingState) {
-        return service.getIdolsByUserId(userId,pagingState);
+        return friendsService.getIdolsByUserId(userId,pagingState);
     }
 
     @RequestMapping("get_groups")
     public PagingMessage<UserGroup> getGroups(String userId) {
-        List<UserGroup> groupById = service.getGroupById(userId);
+        List<UserGroup> groupById = friendsService.getGroupById(userId);
         PagingMessage<UserGroup> pagingMessage = new PagingMessage<>();
         pagingMessage.items = groupById;
         return pagingMessage;
     }
 
     @RequestMapping("get_group_users")
-    public PagingMessage<Friend> getFriends(String userId,String groupId) {
-        List<Friend> friendIdsByGroupId = service.getFriendsByGroupId(userId, groupId);
+    public PagingMessage<Friend> getGroupFriends(String userId,String groupId) {
+        List<Friend> friendIdsByGroupId = friendsService.getFriendsByGroupId(userId, groupId);
         PagingMessage<Friend> message = new PagingMessage<>();
         message.items = friendIdsByGroupId;
         return message;
@@ -80,21 +87,21 @@ public class FriendsController {
 
     @RequestMapping("move_to_group")
     public LoginMessage moveTo(String userId, String friendId,String groupId) {
-        boolean b = service.moveToGroup(userId, friendId, groupId);
+        boolean b = friendsService.moveToGroup(userId, friendId, groupId);
 
         return new LoginMessage(-1, "");
     }
 
     @RequestMapping("create_group")
     public LoginMessage createGroup(String userId, UserGroup group) {
-        service.createGroup(group);
+        friendsService.createGroup(group);
         return new LoginMessage(-1, "");
     }
 
 
     @RequestMapping("remove_group")
     public LoginMessage removeGroup(String userId, String group) {
-        boolean result = service.removeGroup(group);
+        boolean result = friendsService.removeGroup(group);
         if (result) {
             return new LoginMessage(1, "");
         }
@@ -105,7 +112,7 @@ public class FriendsController {
 
     @RequestMapping("delete_from_group")
     public LoginMessage deleteFromGroup(String user, String usrToRemove, String groupFrom) {
-        boolean result = service.deleteFromGroup(user, usrToRemove, groupFrom);
+        boolean result = friendsService.deleteFromGroup(user, usrToRemove, groupFrom);
         return new LoginMessage(-1, "");
     }
 

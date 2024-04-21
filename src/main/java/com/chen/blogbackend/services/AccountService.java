@@ -138,13 +138,11 @@ public class AccountService {
     public Account selectAccount(String accountID) {
         ResultSet execute = session.execute(getAccount.bind(accountID));
         List<Account> tokens = AccountParser.userDetailParser(execute);
-
         if (0 != execute.getExecutionInfo().getErrors().size() || tokens.size() != 1) {
             System.out.println("error!!!!");
             return null;
         }
         return tokens.get(0);
-
     }
 
 
@@ -205,8 +203,14 @@ public class AccountService {
             return judge.all().get(0).getBoolean("temp");
         }
         ResultSet execute = session.execute(insertUserName.bind(userId, userId));
-        return execute.getExecutionInfo().getErrors().size()==0;
+        return execute.getExecutionInfo().getErrors().size() == 0;
     }
+
+    public boolean insertStep2(String userId) {
+
+        return false;
+    }
+
 
     public boolean insertStep3(String password,String userId) {
         ResultSet execute = session.execute(insertPassword.bind(password, userId));

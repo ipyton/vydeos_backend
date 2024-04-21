@@ -69,17 +69,17 @@ public class SingleMessageService {
         ResultSet execute = session.execute(getRecord.bind(userId, receiverId).setPagingState(PagingState.fromString(pageState)));
         PagingState state = execute.getExecutionInfo().getSafePagingState();
         PagingIterable<SingleMessage> convert = messageDao.convert(execute);
-
         assert state != null;
         return new PagingMessage<>(convert.all(), state.toString(), 1);
     }
 
     public boolean sendMessage(SingleMessage singleMessage) throws Exception {
+        System.out.println(singleMessage);
         //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
         ResultSet execute = session.execute(setRecordById.bind(singleMessage.getUserId(),
                 singleMessage.getReceiverId(), singleMessage.getMessageId(), singleMessage.getContent(),
                 singleMessage.getSendTime(), singleMessage.getType(), singleMessage.getMessageType(), 0,
-                singleMessage.getReferMessageId(), singleMessage.getReferMessageId()));
+                singleMessage.getReferMessageId(), singleMessage.getReferUserIds()));
         //judge if a user can send message
         producer.sendNotification(singleMessage);
         if (friendsService.getRelationship(singleMessage.getUserId(), singleMessage.getReceiverId()) != 11) {
@@ -106,8 +106,17 @@ public class SingleMessageService {
 
     }
 
-    public List<SingleMessage> getNewRecords(String userId, long timestamp) {
-        ResultSet execute = session.execute(getNewestRecord.bind(userId, Instant.ofEpochMilli(timestamp)));
+    public List<SingleMessage> getNewRecords( String receiverId, Long timestamp) {
+        System.out.println(receiverId);
+        ResultSet execute;
+        if (null == timestamp) {
+            //get the things the user send
+            execute = session.execute(getNewestRecord.bind(receiverId, receiverId));
+        }
+        else {
+            execute = session.execute(getNewestRecord.bind(receiverId, receiverId + "_" + timestamp));
+        }
+
         return MessageParser.parseToSingleMessage(execute);
     }
 
