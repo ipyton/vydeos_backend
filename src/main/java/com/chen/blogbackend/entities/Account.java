@@ -18,8 +18,26 @@ public class Account {
     private boolean gender = false;
     private int relationship = 20;
     private String group = "";
+    private String location = "";
+
 
     List<String> apps = new ArrayList<>();
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
 
     public int getRelationship() {
         return relationship;
@@ -39,6 +57,21 @@ public class Account {
         this.telephone = telephone;
         this.gender = gender;
         this.relationship = relationship;
+        this.apps = apps;
+    }
+
+    public Account(String userId, String userEmail, String userName, String introduction, String avatar, LocalDate dateOfBirth, String telephone, boolean gender, int relationship, String group, String address, List<String> apps) {
+        this.userId = userId;
+        this.userEmail = userEmail;
+        this.userName = userName;
+        this.introduction = introduction;
+        this.avatar = avatar;
+        this.dateOfBirth = dateOfBirth;
+        this.telephone = telephone;
+        this.gender = gender;
+        this.relationship = relationship;
+        this.group = group;
+        this.location = address;
         this.apps = apps;
     }
 
@@ -84,7 +117,7 @@ public class Account {
         this.userId = userId;
     }
 
-    public boolean isGender() {
+    public boolean getGender() {
         return gender;
     }
 

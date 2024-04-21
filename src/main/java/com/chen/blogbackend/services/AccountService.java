@@ -11,14 +11,12 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import jakarta.annotation.PostConstruct;
-import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -73,7 +71,8 @@ public class AccountService {
         searchResult = session.prepare("select user_id, user_name, intro, avatar from userinfo.user_information where user_id=?");
 
 
-        insertUserDetails = session.prepare("insert into userinfo.user_information (user_id, apps, avatar, birthdate, gender, intro, user_name) values(?,?,?,?,?,?,?);");
+        insertUserDetails = session.prepare("insert into userinfo.user_information (user_id, apps, avatar, " +
+                "birthdate, gender, intro, user_name,location) values(?,?,?,?,?,?,?,?);");
         getUserDetails = session.prepare("select * from userinfo.user_information where user_id = ?");
 
         updateEmail = session.prepare("update userinfo.user_auth set email = ? where userId = ?");
@@ -96,13 +95,21 @@ public class AccountService {
 
     public boolean insertUserDetails(Account userDetail) {
         ResultSet execute = session.execute(insertUserDetails.bind(userDetail.getUserId(), userDetail.getApps(),
-                userDetail.getAvatar(), userDetail.getDateOfBirth(), userDetail.isGender(),
-                userDetail.getIntroduction(), userDetail.getUserName()));
+                userDetail.getAvatar(), userDetail.getDateOfBirth(), userDetail.getGender(),
+                userDetail.getIntroduction(), userDetail.getUserName(), userDetail.getLocation()));
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
     public Account getAccountDetailsById(String userId) {
-        return new Account();
+        if (userId == null || userId.length() == 0 ) {
+            return null;
+        }
+        ResultSet execute = session.execute(getUserDetails.bind(userId));
+        List<Account> account = AccountParser.userDetailParser(execute);
+        if (account.size() == 0) {
+            return null;
+        }
+        return account.get(0);
     }
 
 
@@ -123,7 +130,8 @@ public class AccountService {
 
 
     public boolean insert(Auth account) {
-        ResultSet execute = session.execute(insertAccount.bind(account.getEmail(), account.getEmail(), account.getPassword(), account.getTelephone()));
+        ResultSet execute = session.execute(insertAccount.bind(account.getEmail(), account.getEmail(),
+                account.getPassword(), account.getTelephone()));
         return 0 == execute.getExecutionInfo().getErrors().size();
     }
 
@@ -160,7 +168,8 @@ public class AccountService {
     }
 
     public boolean setToken(Token token) {
-        ResultSet set = session.execute(setToken.bind(token.getTokenString(), token.getUserId(), token.getExpireDatetime()));
+        ResultSet set = session.execute(setToken.bind(token.getTokenString(), token.getUserId(),
+                token.getExpireDatetime()));
         return set.getExecutionInfo().getErrors().size() == 0;
     }
 

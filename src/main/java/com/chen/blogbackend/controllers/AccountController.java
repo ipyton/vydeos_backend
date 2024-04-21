@@ -12,6 +12,7 @@ import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Token;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.PictureService;
+import com.sun.tools.jconsole.JConsoleContext;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,7 +98,7 @@ public class AccountController {
     @PostMapping("/getinfo")
     public LoginMessage getAccountInformation(HttpServletRequest request) {
         String userEmail = request.getHeader("userEmail");
-        Account result = accountService.selectAccount(userEmail);
+        Account result = accountService.getAccountDetailsById(userEmail);
         if (null == result) {
             return new LoginMessage(-1, "Do not have get any information.");
         }
@@ -106,6 +107,7 @@ public class AccountController {
 
     @PostMapping("/setinfo")
     public LoginMessage setAccountInformation(Account account)  {
+        System.out.println(account.getLocation());
         boolean result = accountService.insertUserDetails(account);
         if (result) {
             return new LoginMessage(1, "Success");

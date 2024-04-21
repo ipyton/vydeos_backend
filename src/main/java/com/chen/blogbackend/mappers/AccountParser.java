@@ -60,9 +60,13 @@ public class AccountParser {
                 set.all()) {
             ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
 
-            accounts.add(new Account(columnDefinitions.contains("user_id")?null:row.getString("user_id"),  columnDefinitions.contains("apps")?null:row.getList("apps", String.class),
-                    columnDefinitions.contains("avatar")?null:row.getString("avatar"),  columnDefinitions.contains("birthdate")?null:row.getLocalDate("birthdate"),  columnDefinitions.contains("gender")?null:row.getBoolean("gender"),
-                    columnDefinitions.contains("intro")?null:row.getString("intro"),  columnDefinitions.contains("user_name")?null:row.getString("user_name")));
+            accounts.add(new Account(columnDefinitions.contains("user_id")?null:row.getString("user_id"),
+                    columnDefinitions.contains("apps")?null:row.getList("apps", String.class),
+                    columnDefinitions.contains("avatar")?null:row.getString("avatar"),
+                    columnDefinitions.contains("birthdate")?null:row.getLocalDate("birthdate"),
+                    columnDefinitions.contains("gender")?null:row.getBoolean("gender"),
+                    columnDefinitions.contains("intro")?null:row.getString("intro"),
+                    columnDefinitions.contains("user_name")?null:row.getString("user_name")));
         }
         return accounts;
     }
