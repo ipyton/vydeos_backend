@@ -53,7 +53,8 @@ public class FriendsService {
     PreparedStatement addFriend;
     PreparedStatement getAllFriends;
     PreparedStatement getIdolsById;
-
+    PreparedStatement addIdol;
+    PreparedStatement deleteIdol;
 
     @PostConstruct
     public void init(){
@@ -77,14 +78,16 @@ public class FriendsService {
             follows = session.prepare("select * from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
             insertFollowRelationship = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?)");
             deleteFollowRelationship = session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");
-            deleteFriend= session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");
-            addFriend = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?);");
-            getAllFriends = session.prepare("select * from relationship.followers_by_user_id where user_id = ?;");
+            deleteFriend= session.prepare("delete from relationship.friends_by_user_id where user_id = ? and friend_id = ?");
+            addFriend = session.prepare("insert into relationship.friends_by_user_id (user_id, friend_id, name) values(?, ?, ?);");
+            getAllFriends = session.prepare("select * from relationship.friends_by_user_id where user_id = ?;");
             getIdolsById = session.prepare("select * from relationship.idol_by_user_id where user_id = ?");
+            addIdol = session.prepare("insert into relationship.idol_by_user_id (user_id, friend_id) values (?,?) ");
+            deleteIdol = session.prepare("delete from relationship.idol_by_user_id  where user_id=? and friend_id=?");
     }
 
     public List<Relationship> getFollowersByUserId(String userId) {
-        ResultSet execute = session.execute(getFollowersByUserId.bind(userId));
+        ResultSet execute = session.execute(getIdolsById.bind(userId));
 
         return RelationshipParser.parseToRelationship(execute);
     }
@@ -114,7 +117,7 @@ public class FriendsService {
 
 
     public List<Relationship> getIdolsByUserId(String userId){
-        ResultSet set = session.execute(getIdolsById.bind(userId));
+        ResultSet set = session.execute(getFollowersByUserId.bind(userId));
 
         return RelationshipParser.parseToRelationship(set);
     }
@@ -136,27 +139,29 @@ public class FriendsService {
         return userGroups.all();
     }
 
-    public boolean follow(String fanId, String idolId) throws Exception {
+    public boolean follow(String fanId, String idolId, String name) throws Exception {
         if (fanId == null || idolId == null) return false;
         ResultSet execute = session.execute(insertFollowRelationship.bind(fanId,idolId));
+        ResultSet set3 = session.execute(addIdol.bind(idolId,fanId));
         int relationship = getRelationship(fanId, idolId);
         if (relationship == 11) {
-            return makeFriend(fanId, idolId, execute, addFriend);
+            ResultSet set1 = session.execute(addFriend.bind(fanId, idolId, name));
+            ResultSet set2 = session.execute(addFriend.bind(idolId, fanId, name));
+
+            return execute.getExecutionInfo().getErrors().size() == 0 &&
+                    set1.getExecutionInfo().getErrors().size() == 0 &&
+                    set2.getExecutionInfo().getErrors().size() == 0 &&
+                    set3.getExecutionInfo().getErrors().size() == 0;
+
         }
-        return execute.getExecutionInfos().get(0).getErrors().size() == 0;
-    }
-
-    // make friend
-    private boolean makeFriend(String fanId, String idolId, ResultSet execute, PreparedStatement change) {
-        ResultSet set1 = session.execute(change.bind(fanId, idolId));
-        ResultSet set2 = session.execute(change.bind(idolId, fanId));
-        return execute.getExecutionInfo().getErrors().size() == 0 &&
-                set1.getExecutionInfo().getErrors().size() == 0 &&
-                set2.getExecutionInfo().getErrors().size() == 0;
+        return execute.getExecutionInfos().get(0).getErrors().size() == 0 &&
+                set3.getExecutionInfo().getErrors().size() == 0;
     }
 
 
-    public boolean unfollow(String fanId, String idolId) {
+
+
+    public boolean unfollow(String fanId, String idolId ) {
 //        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
 //        batchStatementBuilder.addStatement(delFriendByUserId.bind(fanId,idolId));
 //        batchStatementBuilder.addStatement(delFriendByUserId.bind(idolId,fanId));
@@ -166,7 +171,13 @@ public class FriendsService {
 //         modify
 
         ResultSet execute = session.execute(deleteFollowRelationship.bind(fanId, idolId));
-        return makeFriend(fanId, idolId, execute, deleteFriend);
+        ResultSet set1 = session.execute(deleteFriend.bind(fanId, idolId));
+        ResultSet set2 = session.execute(deleteFriend.bind(idolId, fanId));
+        ResultSet set3 = session.execute(deleteIdol.bind(idolId,fanId));
+        return execute.getExecutionInfo().getErrors().size() == 0 &&
+                set1.getExecutionInfo().getErrors().size() == 0 &&
+                set2.getExecutionInfo().getErrors().size() == 0 &&
+                set3.getExecutionInfo().getErrors().size() == 0;
     }
 
     public boolean createGroup(UserGroup group) {
@@ -232,6 +243,7 @@ public class FriendsService {
     }
 
     public List<Relationship> getFriends(String userId) {
+        System.out.println(userId);
         ResultSet execute = session.execute(getAllFriends.bind(userId));
         return RelationshipParser.parseToRelationship(execute);
 

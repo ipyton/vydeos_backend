@@ -112,7 +112,7 @@ public class AccountService {
         return account.get(0);
     }
 
-
+    //get user details
     public Account getFriendDetailsById(String userId, String userIdToFollow) throws Exception {
         System.out.println("friend details " + userIdToFollow) ;
         ResultSet execute = session.execute(getUserDetails.bind(userIdToFollow));

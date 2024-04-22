@@ -13,7 +13,7 @@ public class RelationshipParser {
         ArrayList<Relationship> result = new ArrayList<>();
         for (Row row: set.all()) {
             result.add(new Relationship(row.getString("user_id"), row.getString("friend_id"),
-                    row.getString("avatar"), row.getString("group_id"), row.getString("name")));
+                    set.getColumnDefinitions().contains("avatar")?row.getString("avatar"):null, row.getString("group_id"), row.getString("name")));
         }
         return result;
 

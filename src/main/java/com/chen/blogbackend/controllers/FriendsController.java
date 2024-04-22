@@ -39,8 +39,8 @@ public class FriendsController {
 
 
     @RequestMapping("follow")
-    public LoginMessage follow(String sender, String receiver) throws Exception {
-        boolean follow = friendsService.follow(sender, receiver);
+    public LoginMessage follow(String sender, String receiver, String name) throws Exception {
+        boolean follow = friendsService.follow(sender, receiver, name);
         return new LoginMessage(follow?1:-1,"");
     }
 
@@ -52,27 +52,27 @@ public class FriendsController {
 
     @RequestMapping("get_friends")
     public LoginMessage getFriends(HttpServletRequest request) {
-        String userId = request.getHeader("userEmail");
+        String userId = (String) request.getAttribute("userEmail");
         List<Relationship> friends = friendsService.getFriends(userId);
         return new LoginMessage(1, JSON.toJSONString(friends));
     }
 
     @RequestMapping("get_followers")
     public LoginMessage getFollowers(HttpServletRequest request) {
-        String userId = request.getHeader("userEmail");
+        String userId = (String) request.getAttribute("userEmail");
         List<Relationship> followersByUserId = friendsService.getFollowersByUserId(userId);
         return new LoginMessage(1, JSON.toJSONString(followersByUserId));
     }
 
     @RequestMapping("get_idols")
     public LoginMessage getIdols(HttpServletRequest request) {
-        String userId = request.getHeader("userEmail");
+        String userId = (String) request.getAttribute("userEmail");
         return new LoginMessage(1,JSON.toJSONString(friendsService.getIdolsByUserId(userId)));
     }
 
     @RequestMapping("get_groups")
     public LoginMessage getGroups(HttpServletRequest request) {
-        String userId = request.getHeader("userEmail");
+        String userId = (String) request.getAttribute("userEmail");
         return new LoginMessage(1, JSON.toJSONString(friendsService.getGroupById(userId)));
     }
 
