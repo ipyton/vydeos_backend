@@ -4,6 +4,7 @@ import com.chen.blogbackend.DAO.ArticleDao;
 import com.chen.blogbackend.entities.Article;
 import com.chen.blogbackend.entities.Friend;
 
+import com.chen.blogbackend.entities.Relationship;
 import com.chen.blogbackend.filters.PostRecognizer;
 import com.chen.blogbackend.mappers.ArticleMapperBuilder;
 import com.chen.blogbackend.responseMessage.PagingMessage;
@@ -106,18 +107,18 @@ public class PostService {
         return result;
     }
 
-    public PagingMessage<Article> getArticlesByGroup(String userId, String groupId, Long startIndex) {
-        List<String> friendIdsByGroupId = friendsService.getFriendIdsByGroupId(groupId);
-        ArrayList<String> strings = recognizer.get(friendIdsByGroupId, startIndex, timeSlice);
-        List<Article> res = getBatchArticles(strings, userId);
-        return new PagingMessage<>(res, null, 1, Long.toString(timeSlice));
-    }
-
-    public PagingMessage<Article> getArticlesFollowing(String userId, Long startIndex) {
-        List<String> idolsByUserId = friendsService.getIdolIdsByUserId(userId);
-        ArrayList<String> strings = recognizer.get(idolsByUserId, startIndex, timeSlice);
-        List<Article> res = getBatchArticles(strings, userId);
-        return new PagingMessage<>(res, null, 1, Long.toString(timeSlice));
-    }
+//    public PagingMessage<Article> getArticlesByGroup(String userId, String groupId, Long startIndex) {
+//        List<String> friendIdsByGroupId = friendsService.getFriendIdsByGroupId(groupId);
+//        ArrayList<String> strings = recognizer.get(friendIdsByGroupId, startIndex, timeSlice);
+//        List<Article> res = getBatchArticles(strings, userId);
+//        return new PagingMessage<>(res, null, 1, Long.toString(timeSlice));
+//    }
+//
+//    public PagingMessage<Article> getArticlesFollowing(String userId, Long startIndex) {
+//        List<Relationship> idolsByUserId = friendsService.getIdolsByUserId(userId);
+//        ArrayList<String> strings = recognizer.get(idolsByUserId, startIndex, timeSlice);
+//        List<Article> res = getBatchArticles(strings, userId);
+//        return new PagingMessage<>(res, null, 1, Long.toString(timeSlice));
+//    }
 
 }

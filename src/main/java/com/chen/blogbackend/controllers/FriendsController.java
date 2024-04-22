@@ -40,40 +40,40 @@ public class FriendsController {
 
     @RequestMapping("follow")
     public LoginMessage follow(String sender, String receiver) throws Exception {
-        System.out.println(sender + receiver);
         boolean follow = friendsService.follow(sender, receiver);
         return new LoginMessage(follow?1:-1,"");
     }
 
     @RequestMapping("unfollow")
     public LoginMessage unfollow(String sender, String receiver) {
-        System.out.println(sender + receiver);
         boolean result = friendsService.unfollow(sender, receiver);
         return new LoginMessage(result?1:-1, "" );
     }
 
-    @RequestMapping("getFriends")
-    public LoginMessage getFriends(String userId) {
+    @RequestMapping("get_friends")
+    public LoginMessage getFriends(HttpServletRequest request) {
+        String userId = request.getHeader("userEmail");
         List<Relationship> friends = friendsService.getFriends(userId);
         return new LoginMessage(1, JSON.toJSONString(friends));
     }
 
     @RequestMapping("get_followers")
-    public PagingMessage<Friend> getFollowers(String userId, String pagingState) {
-        return friendsService.getFollowersByUserId(userId, pagingState);
+    public LoginMessage getFollowers(HttpServletRequest request) {
+        String userId = request.getHeader("userEmail");
+        List<Relationship> followersByUserId = friendsService.getFollowersByUserId(userId);
+        return new LoginMessage(1, JSON.toJSONString(followersByUserId));
     }
 
     @RequestMapping("get_idols")
-    public PagingMessage<Friend> getIdols(String userId, String pagingState) {
-        return friendsService.getIdolsByUserId(userId,pagingState);
+    public LoginMessage getIdols(HttpServletRequest request) {
+        String userId = request.getHeader("userEmail");
+        return new LoginMessage(1,JSON.toJSONString(friendsService.getIdolsByUserId(userId)));
     }
 
     @RequestMapping("get_groups")
-    public PagingMessage<UserGroup> getGroups(String userId) {
-        List<UserGroup> groupById = friendsService.getGroupById(userId);
-        PagingMessage<UserGroup> pagingMessage = new PagingMessage<>();
-        pagingMessage.items = groupById;
-        return pagingMessage;
+    public LoginMessage getGroups(HttpServletRequest request) {
+        String userId = request.getHeader("userEmail");
+        return new LoginMessage(1, JSON.toJSONString(friendsService.getGroupById(userId)));
     }
 
     @RequestMapping("get_group_users")
@@ -135,5 +135,15 @@ public class FriendsController {
         return new LoginMessage(1, "success");
     }
 
+
+    @PostMapping("get_invitations")
+    public LoginMessage getInvitations(String userId) {
+        return new LoginMessage(1, "[]");
+    }
+
+    @PostMapping("get_black_list")
+    public LoginMessage getBlackList(String userId) {
+        return new LoginMessage(1, "");
+    }
 
 }

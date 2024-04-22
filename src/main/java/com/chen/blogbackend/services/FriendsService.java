@@ -6,6 +6,7 @@ import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.entities.Relationship;
 import com.chen.blogbackend.entities.UserGroup;
+import com.chen.blogbackend.mappers.AccountParser;
 import com.chen.blogbackend.mappers.FriendMapperBuilder;
 import com.chen.blogbackend.mappers.RelationshipParser;
 import com.chen.blogbackend.mappers.UserGroupMapperBuilder;
@@ -51,6 +52,8 @@ public class FriendsService {
     PreparedStatement deleteFollowRelationship;
     PreparedStatement addFriend;
     PreparedStatement getAllFriends;
+    PreparedStatement getIdolsById;
+
 
     @PostConstruct
     public void init(){
@@ -77,13 +80,13 @@ public class FriendsService {
             deleteFriend= session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");
             addFriend = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?);");
             getAllFriends = session.prepare("select * from relationship.followers_by_user_id where user_id = ?;");
-
+            getIdolsById = session.prepare("select * from relationship.idol_by_user_id where user_id = ?");
     }
 
-    public PagingMessage<Friend> getFollowersByUserId(String userId, String pagingState) {
-        PagingIterable<Friend> friends = friendDao.selectUserFollowers(userId);
-        PagingMessage<Friend> message = new PagingMessage<>(friends.all(), pagingState, 0);
-        return message;
+    public List<Relationship> getFollowersByUserId(String userId) {
+        ResultSet execute = session.execute(getFollowersByUserId.bind(userId));
+
+        return RelationshipParser.parseToRelationship(execute);
     }
 
 
@@ -110,16 +113,12 @@ public class FriendsService {
     }
 
 
-    public PagingMessage<Friend> getIdolsByUserId(String userId, String pagingState){
-        PagingIterable<Friend> friends = friendDao.selectUserFollows(userId);
-        PagingMessage<Friend> message = new PagingMessage<>(friends.all(), pagingState, 0);
-        return message;
+    public List<Relationship> getIdolsByUserId(String userId){
+        ResultSet set = session.execute(getIdolsById.bind(userId));
+
+        return RelationshipParser.parseToRelationship(set);
     }
 
-    public List<String> getIdolIdsByUserId(String userId) {
-        PagingIterable<String> ids = friendDao.selectUserIdsFollows(userId);
-        return ids.all();
-    }
 
 
     public List<Friend> getFriendsByGroupId(String userId, String groupId) {
@@ -147,6 +146,7 @@ public class FriendsService {
         return execute.getExecutionInfos().get(0).getErrors().size() == 0;
     }
 
+    // make friend
     private boolean makeFriend(String fanId, String idolId, ResultSet execute, PreparedStatement change) {
         ResultSet set1 = session.execute(change.bind(fanId, idolId));
         ResultSet set2 = session.execute(change.bind(idolId, fanId));

@@ -1,5 +1,6 @@
 package com.chen.blogbackend.filters;
 
+import com.chen.blogbackend.entities.Relationship;
 import com.datastax.oss.driver.shaded.guava.common.base.Charsets;
 import com.datastax.oss.driver.shaded.guava.common.hash.BloomFilter;
 
@@ -7,6 +8,7 @@ import com.datastax.oss.driver.shaded.guava.common.hash.Funnel;
 import com.datastax.oss.driver.shaded.guava.common.hash.Funnels;
 import org.springframework.stereotype.Service;
 
+import javax.management.relation.RelationService;
 import java.io.*;
 import java.util.*;
 
@@ -90,18 +92,18 @@ public class PostRecognizer {
         current.getContent().put(userId);
     }
 
-    public ArrayList<String> get(List<String> userIds,Long start, Long timeSlices){
+    public ArrayList<Relationship> get(List<Relationship> userIds, Long start, Long timeSlices){
         if(outOfBoundary()) {
             createSlice();
         }
 
-        Set<String> set = new HashSet<>();
+        Set<Relationship> set = new HashSet<>();
         for (int i = 1; i <= timeSlices; i ++) {
             if (list.size() - i >= 0) {
                 DecoratedBloomFilter<String> filter = list.get(list.size() - i);
-                for (String userId : userIds) {
-                    if (filter.getContent().mightContain(userId)) {
-                        set.add(userId);
+                for (Relationship relationship : userIds) {
+                    if (filter.getContent().mightContain(relationship.getFriend_id())) {
+                        set.add(relationship);
                     }
                 }
             }
