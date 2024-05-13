@@ -120,4 +120,19 @@ public class SingleMessage {
     public void setReferUserIds(List<String> referUserIds) {
         this.referUserIds = referUserIds;
     }
+
+    @Override
+    public String toString() {
+        return "SingleMessage{" +
+                "messageId='" + messageId + '\'' +
+                ", userId='" + userId + '\'' +
+                ", receiverId='" + receiverId + '\'' +
+                ", type='" + type + '\'' +
+                ", sendTime=" + sendTime +
+                ", content='" + content + '\'' +
+                ", referMessageId='" + referMessageId + '\'' +
+                ", referUserIds=" + referUserIds +
+                ", messageType='" + messageType + '\'' +
+                '}';
+    }
 }

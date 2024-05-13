@@ -1,6 +1,7 @@
 package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
+import com.chen.notification.endpoints.NotificationServerEndpoint;
 import com.chen.notification.entities.Notification;
 import com.chen.notification.entities.SingleMessage;
 import com.chen.notification.service.SendNotificationService;
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -27,8 +30,8 @@ public class AutoRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(AutoRunner.class);
 
-//    @Autowired
-//    SendNotificationService service;
+    @Autowired
+    NotificationServerEndpoint service;
 
     @PostConstruct
     public void startListening() throws InterruptedException, ClientException {
@@ -46,14 +49,23 @@ public class AutoRunner {
                 .setConsumerGroup(consumerGroup)
                 .setSubscriptionExpressions(Collections.singletonMap(topic, filterExpression))
                 .setMessageListener(messageView -> {
-                    logger.info("Consume message successfully, messageId={}", messageView.getMessageId());
                     ByteBuffer body = messageView.getBody();
-                    String s = Arrays.toString(body.array());
+
+                    String s = StandardCharsets.UTF_8.decode(body).toString();
+
+                    System.out.println(s);
+
+                    logger.info("Consume message successfully, messageContent={}", s);
                     SingleMessage singleMessage = JSON.parseObject(s, SingleMessage.class);
-                    System.out.println(singleMessage);
+                    try {
+                        service.sendMessage(singleMessage.getReceiverId(), singleMessage);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     return ConsumeResult.SUCCESS;
                 })
                 .build();
+
     }
 
 }

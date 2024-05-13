@@ -3,6 +3,7 @@ package com.chen.notification.endpoints;
 import com.alibaba.fastjson.JSON;
 import com.chen.notification.entities.Negotiation;
 import com.chen.notification.entities.Notification;
+import com.chen.notification.entities.SingleMessage;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
@@ -78,10 +79,13 @@ public class NotificationServerEndpoint {
         messageList.get(userId).add(notification);
     }
 
-    private void sendMessage(String userId,Notification notification) throws IOException {
+    public void sendMessage(String userId, SingleMessage message) throws IOException {
         Session session = sessionPool.get(userId);
-        if (session.isOpen()) session.getBasicRemote().sendText(JSON.toJSONString(notification));
+        if (session.isOpen()) {session.getBasicRemote().sendText(JSON.toJSONString(message));
+            System.out.println("successfullly");}
+
         else {
+            System.out.println("user" + userId + "do not exist!!!!!!");
             sessionPool.remove(userId);
         }
     }

@@ -1,6 +1,5 @@
 package com.chen.blogbackend.DAO;
 
-import com.chen.blogbackend.entities.Article;
 import com.chen.blogbackend.entities.UnfinishedUpload;
 import com.datastax.oss.driver.api.mapper.annotations.Dao;
 import com.datastax.oss.driver.api.mapper.annotations.Insert;

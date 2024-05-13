@@ -14,7 +14,7 @@ public class VideoService {
         return new Video();
     }
 
-    public Video getVideoInformation() {
+    public Video getVideoMeta() {
         return new Video();
     }
 

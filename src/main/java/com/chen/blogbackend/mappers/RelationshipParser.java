@@ -1,7 +1,6 @@
 package com.chen.blogbackend.mappers;
 
 import com.chen.blogbackend.entities.Relationship;
-import com.chen.blogbackend.entities.SingleMessage;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 

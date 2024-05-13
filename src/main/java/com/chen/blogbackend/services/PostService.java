@@ -1,14 +1,11 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.ArticleDao;
-import com.chen.blogbackend.entities.Article;
-import com.chen.blogbackend.entities.Friend;
+import com.chen.blogbackend.entities.Post;
 
-import com.chen.blogbackend.entities.Relationship;
+import com.chen.blogbackend.entities.Trend;
 import com.chen.blogbackend.filters.PostRecognizer;
-import com.chen.blogbackend.mappers.ArticleMapperBuilder;
-import com.chen.blogbackend.responseMessage.PagingMessage;
-import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.chen.blogbackend.mappers.TrendsMapper;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
@@ -16,8 +13,10 @@ import jakarta.annotation.PostConstruct;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.resps.Tuple;
 
-import java.net.InetSocketAddress;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -39,9 +38,14 @@ public class PostService {
     @Autowired
     CqlSession session;
 
+    @Autowired
+    Jedis jedis;
+
+
 
     PreparedStatement getRangeArticlesByUserId;
     PreparedStatement getIdolsArticles;
+    PreparedStatement saveArticle;
 
     public int pageSize = 10;
     public long timeSlice = 50;
@@ -56,34 +60,41 @@ public class PostService {
 //                .withAuthCredentials("cassandra", "cassandra")
 //                .withKeyspace(CqlIdentifier.fromCql("post"))
 //                .build();
-
+        saveArticle = session.prepare("insert into ");
         getRangeArticlesByUserId = session.prepare("select * from posts.posts_by_user_id where author_id = ?");
         pageSize = 10;
     }
 
 
-    public ArrayList<Article> getArticlesByUserID(String userEmail, PagingState state) {
+    public ArrayList<Post> getArticlesByUserID(String userEmail, PagingState state) {
         ResultSet result = session.execute(getRangeArticlesByUserId.bind(":").setPageSize(pageSize).setPagingState(state));
-        ArrayList<Article> articles = new ArrayList<>();
+        ArrayList<Post> posts = new ArrayList<>();
 
         for (Row row : result) {
-            articles.add(new Article());
+            posts.add(new Post());
 
         }
-        return articles;
+        return posts;
     }
 
-    public int uploadArticle(String userId, Article article){
-        articleDao.save(article);
+    public ArrayList<Post> getPostsByTimestamp(String userId, Instant timestampFrom, Instant timestampTo) {
+
+
+    }
+
+
+
+    public int uploadArticle(String userId, Post post){
+        articleDao.save(post);
         return 1;
     }
 
-    public Article getArticleByArticleID(String articleID) {
+    public Post getArticleByArticleID(String articleID) {
         return articleDao.findById(articleID);
     }
 
-    private List<Article> getBatchArticles(List<String> targetUsers, String userId) {
-        ArrayList<Article> result = new ArrayList<>();
+    private List<Post> getBatchArticles(List<String> targetUsers, String userId) {
+        ArrayList<Post> result = new ArrayList<>();
         BatchStatementBuilder batch = BatchStatement.builder(DefaultBatchType.LOGGED);
 
         for (String id : targetUsers) {
@@ -91,21 +102,29 @@ public class PostService {
         }
         BatchStatement build = batch.build();
         ResultSet execute = session.execute(build);
-        PagingIterable<Article> articles = articleDao.getArticles(execute);
+        PagingIterable<Post> articles = articleDao.getArticles(execute);
 
-        for (Article article : articles) {
-            Set<String> users = article.getUsers();
-            if (article.getAccessType().equals("exclude")) {
+        for (Post post : articles) {
+            Set<String> users = post.getUsers();
+            if (post.getAccessType().equals("exclude")) {
                 if(!users.contains(userId)){
-                    result.add(article);
+                    result.add(post);
                 }
             }
-            else if (null == article.getAccessType() || article.getAccessType().equals("include")) {
-                result.add(article);
+            else if (null == post.getAccessType() || post.getAccessType().equals("include")) {
+                result.add(post);
             }
         }
         return result;
     }
+
+    public List<Trend> getTrends() {
+        List<Tuple> trends = jedis.zrangeWithScores("trends", 0, 10);
+        return TrendsMapper.parseTrends(trends);
+
+    }
+
+
 
 //    public PagingMessage<Article> getArticlesByGroup(String userId, String groupId, Long startIndex) {
 //        List<String> friendIdsByGroupId = friendsService.getFriendIdsByGroupId(groupId);

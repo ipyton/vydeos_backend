@@ -42,7 +42,7 @@ PUT videos
 }
 
 
-PUT articles
+PUT posts
 {
       "mappings" : {
       "properties" : {

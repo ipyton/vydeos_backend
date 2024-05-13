@@ -88,10 +88,8 @@ public class FriendsService {
 
     public List<Relationship> getFollowersByUserId(String userId) {
         ResultSet execute = session.execute(getIdolsById.bind(userId));
-
         return RelationshipParser.parseToRelationship(execute);
     }
-
 
     public int getRelationship(String userid, String userIdToFollow) throws Exception {
         boolean flag = false;

@@ -1,7 +1,6 @@
 package com.chen.blogbackend.DAO;
 
 import com.chen.blogbackend.entities.App;
-import com.chen.blogbackend.entities.Article;
 import com.chen.blogbackend.entities.Setting;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.ResultSet;

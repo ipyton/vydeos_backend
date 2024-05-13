@@ -1,8 +1,8 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.entities.Post;
 import com.chen.blogbackend.responseMessage.LoginMessage;
-import com.chen.blogbackend.entities.Article;
 
 import com.chen.blogbackend.services.PostService;
 import com.chen.blogbackend.services.PictureService;
@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
+import java.time.Instant;
+import java.util.ArrayList;
 
 @RequestMapping("post")
 @Controller()
@@ -54,9 +57,9 @@ public class PostController {
 
 
     @PostMapping("upload_post")
-    public LoginMessage uploadArticle(HttpServletRequest request, Article article) {
+    public LoginMessage uploadArticle(HttpServletRequest request, Post post) {
         String userEmail = request.getHeader("userEmail");
-        int result = postService.uploadArticle(userEmail, article);
+        int result = postService.uploadArticle(userEmail, post);
         if (-1 != result) {
             return new LoginMessage(1, Integer.toString(result));
         } else {
@@ -66,13 +69,24 @@ public class PostController {
 
     @PostMapping("get_post")
     public LoginMessage getArticle(String articleID) {
-        Article article = postService.getArticleByArticleID(articleID);
+        Post post = postService.getArticleByArticleID(articleID);
         if(null != postService.getArticleByArticleID(articleID)) {
-            return new LoginMessage(1, JSON.toJSONString(article));
+            return new LoginMessage(1, JSON.toJSONString(post));
         }
         return new LoginMessage(-1, "Error");
 
     }
+
+    @PostMapping("get_posts_by_timestamp")
+    public LoginMessage getPostsByTimeStamp(HttpServletRequest request, String timestampFrom, String timestampTo) {
+        String userEmail = request.getHeader("userEmail");
+        CharSequence sequenceFrom = timestampFrom;
+        Instant timeFrom = Instant.parse(sequenceFrom);
+        Instant timeTo = Instant.parse((CharSequence) timestampTo);
+        ArrayList<Post> postsByTimestamp = postService.getPostsByTimestamp(userEmail, timeFrom, timeTo);
+        return new LoginMessage(1, JSON.toJSONString(postsByTimestamp));
+    }
+
 
     @PostMapping("get_posts_range")
     public LoginMessage getPagingArticles(String userID, PagingState state) {
@@ -86,4 +100,15 @@ public class PostController {
         return new LoginMessage(-1, "error");
     }
 
+    @PostMapping("get_trends")
+    public LoginMessage getTrends(){
+        return new LoginMessage(1, JSON.toJSONString(postService.getTrends()));
+    }
+
+
+
+    @PostMapping("add_post")
+    public LoginMessage addPost(String inrtoduction) {
+
+    }
 }

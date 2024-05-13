@@ -4,12 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
-import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.AuthorityService;
-import com.chen.blogbackend.services.FriendsService;
 import com.chen.blogbackend.services.SearchService;
-import org.apache.juli.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -81,8 +78,8 @@ public class SearchController {
     }
 
     @PostMapping("setContent")
-    public LoginMessage setContent(Article article) throws IOException, InterruptedException {
-        searchService.setArticleIndex(article);
+    public LoginMessage setContent(Post post) throws IOException, InterruptedException {
+        searchService.setArticleIndex(post);
         return new LoginMessage(-1, "");
     }
 

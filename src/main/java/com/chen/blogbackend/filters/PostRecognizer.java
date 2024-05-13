@@ -15,7 +15,7 @@ import java.util.*;
 @Service
 public class PostRecognizer {
 
-    class DecoratedBloomFilter<T> {
+    static class DecoratedBloomFilter<T> {
         private Long from, to;
         BloomFilter<T> content;
 
@@ -68,7 +68,7 @@ public class PostRecognizer {
     private void createSlice() {
         long start = System.currentTimeMillis();
 
-        DecoratedBloomFilter<String> decoratedBloomFilter = new DecoratedBloomFilter<>(start, start + timeSlice ,BloomFilter.create(Funnels.stringFunnel(Charsets.UTF_8), 100000, 0.01));
+        DecoratedBloomFilter<String> decoratedBloomFilter = new DecoratedBloomFilter<>(start, start + timeSlice, BloomFilter.create(Funnels.stringFunnel(Charsets.UTF_8), 100000, 0.01));
         list.add(decoratedBloomFilter);
         current = decoratedBloomFilter;
         previousTime = start;
@@ -111,6 +111,8 @@ public class PostRecognizer {
         return new ArrayList<>(set);
     }
 
+
+    //serialize to databse.
     public boolean serialize(String path) throws IOException {
         File file = new File(path);
         if (!file.isFile()) {
@@ -130,6 +132,8 @@ public class PostRecognizer {
         fileWriter.close();
         return true;
     }
+
+    // read from database
 
     public ArrayList<DecoratedBloomFilter<String>> deSerialize(String path) throws IOException {
         Scanner sc = new Scanner(new FileInputStream(path+"_meta"));

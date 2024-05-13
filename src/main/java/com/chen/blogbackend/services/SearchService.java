@@ -6,9 +6,7 @@ import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.chen.blogbackend.entities.*;
-import com.chen.blogbackend.responseMessage.Message;
 import org.apache.ibatis.session.SqlSessionFactory;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -80,8 +78,8 @@ public class SearchService {
         return result;
     }
 
-    public List<Article> searchByArticle(String userId, String text, int from) throws IOException {
-        SearchResponse<Article> response = client.search(s -> s
+    public List<Post> searchByArticle(String userId, String text, int from) throws IOException {
+        SearchResponse<Post> response = client.search(s -> s
                         .index("Article")
                         .query(q -> q
                                 .match(t -> t
@@ -89,20 +87,20 @@ public class SearchService {
                                         .query(text)
                                 )
                         ).from(from).size(size),
-                Article.class
+                Post.class
         );
-        ArrayList<Article> result = new ArrayList<>();
-        for (Hit<Article> hit : response.hits().hits()) {
+        ArrayList<Post> result = new ArrayList<>();
+        for (Hit<Post> hit : response.hits().hits()) {
             result.add(hit.source());
         }
         return result;
     }
 
-    public boolean setArticleIndex(Article article) throws InterruptedException, IOException {
+    public boolean setArticleIndex(Post post) throws InterruptedException, IOException {
         IndexResponse response = client.index(i -> i
                 .index("products")
-                .id(article.getArticleID())
-                .document(article)
+                .id(post.getArticleID())
+                .document(post)
         );
         response.result().wait(2000);
         ShardStatistics shards = response.shards();
