@@ -60,7 +60,7 @@ public class PostService {
 //                .withAuthCredentials("cassandra", "cassandra")
 //                .withKeyspace(CqlIdentifier.fromCql("post"))
 //                .build();
-        saveArticle = session.prepare("insert into ");
+        //saveArticle = session.prepare("insert into ");
         getRangeArticlesByUserId = session.prepare("select * from posts.posts_by_user_id where author_id = ?");
         pageSize = 10;
     }
@@ -77,9 +77,9 @@ public class PostService {
         return posts;
     }
 
-    public ArrayList<Post> getPostsByTimestamp(String userId, Instant timestampFrom, Instant timestampTo) {
+    public List<Post> getPostsByTimestamp(String userId, Instant timestampFrom, Instant timestampTo) {
 
-
+        return new ArrayList<>();
     }
 
 

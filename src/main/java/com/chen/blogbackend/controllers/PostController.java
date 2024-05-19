@@ -20,6 +20,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 
 @RequestMapping("post")
 @Controller()
@@ -56,7 +57,7 @@ public class PostController {
     }
 
 
-    @PostMapping("upload_post")
+    @PostMapping("upload")
     public LoginMessage uploadArticle(HttpServletRequest request, Post post) {
         String userEmail = request.getHeader("userEmail");
         int result = postService.uploadArticle(userEmail, post);
@@ -67,7 +68,7 @@ public class PostController {
         }
     }
 
-    @PostMapping("get_post")
+    @PostMapping("get")
     public LoginMessage getArticle(String articleID) {
         Post post = postService.getArticleByArticleID(articleID);
         if(null != postService.getArticleByArticleID(articleID)) {
@@ -83,7 +84,7 @@ public class PostController {
         CharSequence sequenceFrom = timestampFrom;
         Instant timeFrom = Instant.parse(sequenceFrom);
         Instant timeTo = Instant.parse((CharSequence) timestampTo);
-        ArrayList<Post> postsByTimestamp = postService.getPostsByTimestamp(userEmail, timeFrom, timeTo);
+        List<Post> postsByTimestamp = postService.getPostsByTimestamp(userEmail, timeFrom, timeTo);
         return new LoginMessage(1, JSON.toJSONString(postsByTimestamp));
     }
 
@@ -108,7 +109,7 @@ public class PostController {
 
 
     @PostMapping("add_post")
-    public LoginMessage addPost(String inrtoduction) {
-
+    public LoginMessage addPost(String introduction) {
+        return new LoginMessage(-1,introduction);
     }
 }

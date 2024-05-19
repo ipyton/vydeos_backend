@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller("file")
 public class FileController {
-    // manage all files download and upload.
+    // manage all files movie.cql and upload.
 
     @PostMapping("getAvatar")
     public String getAvatar() {

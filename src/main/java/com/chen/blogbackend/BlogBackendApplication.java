@@ -61,14 +61,6 @@ public class BlogBackendApplication {
     }
 
     @Bean
-    public static SqlSessionFactory sessionFactoryBean() throws IOException {
-        System.out.println("sdfgsdgsdgfsd");
-        return new SqlSessionFactoryBuilder().build(
-                Resources.getResourceAsStream("mybatis-config.xml")
-        );
-    }
-
-    @Bean
     public static MinioClient setMinioClient(){
         return MinioClient.builder()
                 // api地址

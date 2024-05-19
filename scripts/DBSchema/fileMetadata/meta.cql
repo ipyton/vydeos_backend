@@ -7,5 +7,7 @@ CREATE KEYSPACE files
 use files;
 
 
+// this include every one's own workspace directory, for users avatar information,it creates
+
 create table fileInformation(user_id text primary key, user_name text, avatar text, birthdate date,gender boolean, intro text, apps list<text>);
 

@@ -9,12 +9,12 @@ Social media function is also under work.
 ####friend entity is used to showed publicly. done
 ####account entity is used to configure self settings. done
 
-###add rocket mq support
-###add group support 
-###add bloom filter experiment 
-###combine single message with group message function.
-###openresty integration(file cache)
-###video streaming() on openresty.
-###search for contents and others.
-
-
+### add rocket mq support: make scalable rocketmq cluster.
+### add group support 
+### add bloom filter experiment 
+### combine single message with group message function.
+### openresty integration(file cache)
+### video streaming() on openresty.
+### search for contents and others.
+### render a page for the users.
+### finish a user owned file directory.
