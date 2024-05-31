@@ -99,7 +99,7 @@ public class SearchService {
     public boolean setArticleIndex(Post post) throws InterruptedException, IOException {
         IndexResponse response = client.index(i -> i
                 .index("products")
-                .id(post.getArticleID())
+                .id(post.getPostID())
                 .document(post)
         );
         response.result().wait(2000);

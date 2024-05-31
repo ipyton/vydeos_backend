@@ -1,5 +1,6 @@
 package com.chen.blogbackend.services;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.chen.blogbackend.DAO.ArticleDao;
 import com.chen.blogbackend.entities.Post;
 
@@ -68,22 +69,25 @@ public class PostService {
 //                .build();
         //saveArticle = session.prepare("insert into ");
         getRangeArticlesByUserId = session.prepare("select * from posts.posts_by_user_id where author_id = ?");
-        savePostById= session.prepare("insert into posts.posts_by_post_id (author_id, post_id,  author_name, " +
-                "last_modified, images, videos,voices , content, access_rules, notice, location) values(?,?,?,?,?,?,?,?,?,?,?)");
-        savePostByUserId = session.prepare("insert into post.posts_by_user_id (post_id, author_id, author_name, last_modified," +
-                "images , videos, voices , content, access_rules, notice, location ) values(?,?,?,?,?,?,?,?,?,?,?)");
-        sendToMailbox =session.prepare("insert into post.mailbox (receiver_id, last_modified, author_id,author_name, " +
-                " images, videos, voices, post_id, notice, access_rules, location) values(?,?,?,?,?,?,?,?,?,?,?)");
-        getPostById = session.prepare("select * from posts.post_by_id where author_id = ?");
-        getPostByUserId = session.prepare("select * from posts.post_by_user_id where author_id = ?");
-        getMailBox = session.prepare("select * from posts.post_by_user_id where author_id = ?");
+        savePostById= session.prepare("insert into posts.posts_by_post_id (post_id, likes, author_id,  author_name,  comments, last_modified, images , videos , voices  , content , access_rules , notice, location ) values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        savePostByUserId = session.prepare("insert into posts.posts_by_user_id (post_id, likes, author_id, author_name, comments, last_modified, images, videos, voices, content, access_rules, notice, location) values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        sendToMailbox =session.prepare("insert into posts.mail_box (receiver_id, last_modified, likes, comments,content, author_id,author_name,  images , videos , voices  , post_id , notice , access_rules , location) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+        getPostById = session.prepare("select * from posts.posts_by_post_id where post_id = ? ");
+        getPostByUserId = session.prepare("select * from posts.posts_by_user_id where author_id = ?");
+        getMailBox = session.prepare("select * from posts.posts_by_user_id where author_id = ?");
         pageSize = 10;
     }
 
 
-    public List<Post> getPostsByUserID(String userEmail, PagingState state) {
-        ResultSet result = session.execute(getRangeArticlesByUserId.bind(":").setPageSize(pageSize).setPagingState(state));
-        return PostParser.userDetailParser(result);
+    public JSONObject getPostsByUserID(String userEmail, String state) {
+        PagingState pagingState = PagingState.fromString(state);
+        ResultSet result = session.execute(getRangeArticlesByUserId.bind(":").setPageSize(pageSize).setPagingState(pagingState));
+        String newState = result.getExecutionInfo().getPagingState().toString();
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("posts", PostParser.userDetailParser(result));
+        jsonObject.put("pagingState", pagingState);
+        jsonObject.put("code", 1);
+        return jsonObject;
     }
 
     public List<Post> getPostsByTimestamp(String userId, Instant timestampFrom, Instant timestampTo) {
@@ -94,27 +98,38 @@ public class PostService {
 
 
     public int uploadPost(String userId, Post post){
+        System.out.println(post);
         BatchStatementBuilder builder = BatchStatement.builder(DefaultBatchType.LOGGED);
-        builder.addStatement(savePostById.bind());
-        builder.addStatement(savePostByUserId.bind());
-        List<Relationship> friends = friendsService.getFriends(userId);
-        for (Relationship friend : friends) {
-            String friendId = friend.getFriendId();
-            builder.addStatement(sendToMailbox.bind());
-        }
+        builder.addStatement(savePostById.bind(post.getPostID(), post.getLikes(),post.getAuthorID(), post.getAuthorName(),
+                post.getComments(), post.getLastModified(), post.getImages(), post.getVideos(), post.getVoices(),
+                post.getContent(), post.getAccessRules(),post.getNotice(),post.getLocation()));
+        builder.addStatement(savePostByUserId.bind(post.getPostID(), post.getLikes(),post.getAuthorID(), post.getAuthorName(),
+                post.getComments(), post.getLastModified(), post.getImages(), post.getVideos(), post.getVoices(),
+                post.getContent(), post.getAccessRules(),post.getNotice(),post.getLocation()));
+//        List<Relationship> friends = friendsService.getFriends(userId);
+//        for (Relationship friend : friends) {
+//            String friendId = friend.getFriendId();
+//            builder.addStatement(sendToMailbox.bind());
+//        }
         return 1;
     }
 
-    public Post getPostByPostID(String articleID) {
-        ResultSet execute = session.execute(getPostById.bind(articleID));
+    public List<Post> getFriendsPosts(String userEmail) {
+        List<Relationship> friends = friendsService.getFriends(userEmail);
+        BatchStatementBuilder builder = BatchStatement.builder(DefaultBatchType.LOGGED);
+        for (Relationship friend : friends) {
+            builder.addStatement(getPostByUserId.bind(friend.getFriendId()));
+        }
+        ResultSet execute = session.execute(builder.build());
+        return PostParser.userDetailParser(execute);
 
+    }
+
+    public Post getPostByPostID(String postId) {
+        ResultSet execute = session.execute(getPostById.bind(postId));
         return PostParser.userDetailParser(execute).get(0);
     }
 
-    public List<Post> getUserArticles(String userId) {
-        ResultSet execute = session.execute(getPostByUserId.bind(userId));
-        return PostParser.userDetailParser(execute);
-    }
 
     //    get articles from target users.
 //    private List<Post> getBatchArticles(List<String> targetUsers, String userId) {

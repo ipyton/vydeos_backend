@@ -102,7 +102,7 @@ public class PostRecognizer {
             if (list.size() - i >= 0) {
                 DecoratedBloomFilter<String> filter = list.get(list.size() - i);
                 for (Relationship relationship : userIds) {
-                    if (filter.getContent().mightContain(relationship.getFriend_id())) {
+                    if (filter.getContent().mightContain(relationship.getFriendId())) {
                         set.add(relationship);
                     }
                 }

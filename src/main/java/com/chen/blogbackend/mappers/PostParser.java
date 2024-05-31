@@ -17,19 +17,32 @@ public class PostParser {
                 set.all()) {
             ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
             if (columnDefinitions.contains("receiver_id")) {
-                posts.add(new Post(!columnDefinitions.contains("user_id")?null:row.getString("user_id"),
-                        !columnDefinitions.contains("user_email")?null:row.getString("user_email"),
-                        !columnDefinitions.contains("user_name")?null:row.getString("user_name"),
-                        !columnDefinitions.contains("intro")?null:row.getString("intro"),
-                        !columnDefinitions.contains("avatar")?null:row.getString("avatar"),
-                        !columnDefinitions.contains("birthdate")?null:row.getLocalDate("birthdate"),
-                        !columnDefinitions.contains("telephone")?null:row.getString("telephone"),
-                        !columnDefinitions.contains("gender") || row.getBoolean("gender"),
-                        !columnDefinitions.contains("relationship")?0:row.getInt("relationship"),
-                        !columnDefinitions.contains("apps")?null:row.getList("apps", String.class)));
-
+                posts.add(new Post(!columnDefinitions.contains("author_id")?null:row.getString("author_id"),
+                        !columnDefinitions.contains("author_name")?null:row.getString("author_name"),
+                        !columnDefinitions.contains("post_id")?null:row.getString("post_id"),
+                        !columnDefinitions.contains("last_modified")?null:row.getInstant("last_modified"),
+                        !columnDefinitions.contains("content")?null:row.getString("content"),
+                        !columnDefinitions.contains("likes")?0:row.getInt("likes"),
+                        !columnDefinitions.contains("notice")?null:row.getList("notice", String.class),
+                        !columnDefinitions.contains("accessRules")?null:row.getList("accessRules", String.class),
+                        !columnDefinitions.contains("images")?null:row.getList("images", String.class),
+                        !columnDefinitions.contains("voices")?null:row.getList("voices", String.class),
+                        !columnDefinitions.contains("videos")?null:row.getList("videos",String.class),
+                        !columnDefinitions.contains("comments")?null:row.getList("comments", String.class),
+                        row.getString("receiverId")));
             } else {
-                posts.add(new Post());
+                posts.add(new Post(!columnDefinitions.contains("author_id")?null:row.getString("author_id"),
+                        !columnDefinitions.contains("author_name")?null:row.getString("author_name"),
+                        !columnDefinitions.contains("post_id")?null:row.getString("post_id"),
+                        !columnDefinitions.contains("last_modified")?null:row.getInstant("last_modified"),
+                        !columnDefinitions.contains("content")?null:row.getString("content"),
+                        !columnDefinitions.contains("likes")?0:row.getInt("likes"),
+                        !columnDefinitions.contains("notice")?null:row.getList("notice", String.class),
+                        !columnDefinitions.contains("accessRules")?null:row.getList("accessRules", String.class),
+                        !columnDefinitions.contains("images")?null:row.getList("images", String.class),
+                        !columnDefinitions.contains("voices")?null:row.getList("voices", String.class),
+                        !columnDefinitions.contains("videos")?null:row.getList("videos",String.class),
+                        !columnDefinitions.contains("comments")?null:row.getList("comments", String.class)));
 
             }
         }
