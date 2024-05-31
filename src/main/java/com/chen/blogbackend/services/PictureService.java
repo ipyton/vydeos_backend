@@ -40,7 +40,7 @@ public class PictureService {
         return true;
     }
 
-    public boolean uploadArticlePicture(String articleID, MultipartFile file, int number) {
+    public boolean uploadPostPicture(String articleID, MultipartFile file, int number) {
         String hash = RandomUtil.getHash(articleID);
         String bucket = "articlePics";
         try {
@@ -69,7 +69,7 @@ public class PictureService {
     }
 
 
-    public StreamingResponseBody getPicture(String articleID, int index) {
+    public StreamingResponseBody getPostPicture(String userId,String articleID, int index) {
         StreamingResponseBody responseBody;
         try {
             InputStream stream = fileClient.getObject(GetObjectArgs.builder().bucket("articlePics").object(articleID + Integer.toString(index)).build());
@@ -109,7 +109,7 @@ public class PictureService {
         return responseBody;
     }
 
-    public ArrayList<String> getArticlePictureAddress(String articleId) {
+    public ArrayList<String> getPostPictureAddress(String articleId) {
         SqlSession session = sqlSessionFactory.openSession();
         PictureMapper mapper = session.getMapper(PictureMapper.class);
         int amount = mapper.getPictureAmountByArticleID(articleId);
@@ -122,14 +122,27 @@ public class PictureService {
         return result;
     }
 
-    public void uploadSocialMediaPics(){
+    public void uploadChatPics(String fromId, String toId, String target){
 
     }
 
-    public void downloadSocialMediaPics() {
+    public void downloadChatPics(String fromId, String toId, String target) {
 
 
     }
+    public void deleteChatPics(String fromId, String toId, String target) {
+
+
+    }
+
+    public void deletePostPic(String userId, String postId, String targetId) {
+
+    }
+
+    public void deletePostPics(String userId, String postId) {
+
+    }
+
 
 
 }

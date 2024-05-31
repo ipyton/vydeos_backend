@@ -32,29 +32,29 @@ public class FriendsService {
     FriendDao friendDao;
     UserGroupDao userGroupDao;
 
-    PreparedStatement addUsersInGroups;
-    PreparedStatement addUserOwnedGroups;
-    PreparedStatement delFriendByUserId;
-    PreparedStatement delUsersInGroups;
-    PreparedStatement delOwnGroups;
-    PreparedStatement delUserGroup;
-    PreparedStatement getFollowersByUserId;
-    PreparedStatement getFollowersByIdolId;
-    PreparedStatement getUsersIntro;
-    PreparedStatement initUsersIntro;
-//    PreparedStatement updateFriendDirectionByIdolId;
-//    PreparedStatement updateFriendDirectionByUserId;
-    PreparedStatement block;
-    PreparedStatement unBlock;
-    PreparedStatement deleteFriend;
-    PreparedStatement follows;
-    PreparedStatement insertFollowRelationship;
-    PreparedStatement deleteFollowRelationship;
-    PreparedStatement addFriend;
-    PreparedStatement getAllFriends;
-    PreparedStatement getIdolsById;
-    PreparedStatement addIdol;
-    PreparedStatement deleteIdol;
+    private PreparedStatement addUsersInGroups;
+    private PreparedStatement addUserOwnedGroups;
+    private PreparedStatement delFriendByUserId;
+    private PreparedStatement delUsersInGroups;
+    private PreparedStatement delOwnGroups;
+    private PreparedStatement delUserGroup;
+    private PreparedStatement getFollowersByUserId;
+    private PreparedStatement getFollowersByIdolId;
+    private PreparedStatement getUsersIntro;
+    private PreparedStatement initUsersIntro;
+//  private   PreparedStatement updateFriendDirectionByIdolId;
+//  private   PreparedStatement updateFriendDirectionByUserId;
+    private PreparedStatement block;
+    private PreparedStatement unBlock;
+    private PreparedStatement deleteFriend;
+    private PreparedStatement follows;
+    private PreparedStatement insertFollowRelationship;
+    private PreparedStatement deleteFollowRelationship;
+    private PreparedStatement addFriend;
+    private PreparedStatement getAllFriends;
+    private PreparedStatement getIdolsById;
+    private PreparedStatement addIdol;
+    private PreparedStatement deleteIdol;
 
     @PostConstruct
     public void init(){

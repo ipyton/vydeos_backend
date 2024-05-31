@@ -18,3 +18,5 @@ Social media function is also under work.
 ### search for contents and others.
 ### render a page for the users.
 ### finish a user owned file directory.
+
+to start aria2 on the machine: use this aria2c --enable-rpc --rpc-listen-all -D

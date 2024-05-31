@@ -1,52 +1,91 @@
 package com.chen.blogbackend.controllers;
 
+import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.services.FileService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-@Controller("file")
+@ResponseBody
+@Controller()
+@RequestMapping("file")
 public class FileController {
-    // manage all files movie.cql and upload.
 
-    @PostMapping("getAvatar")
-    public String getAvatar() {
-        return "";
+    @Autowired
+    FileService fileService;
+
+    @PostMapping("getAvatar/{userEmail}")
+    public ResponseEntity<InputStreamResource> getAvatar(@PathVariable String userEmail) {
+        return fileService.download("avatar", userEmail, MediaType.IMAGE_JPEG);
     }
 
-    @PostMapping("setAvatar")
-    public String setAvatar() {
-        return "";
+    @PostMapping("uploadAvatar")
+    public String uploadAvatar(HttpServletRequest httpServletRequest, MultipartFile file) {
+        String userEmail = httpServletRequest.getHeader("useremail");
+        return JSON.toJSONString(fileService.uploadAvatar(userEmail, file));
     }
 
-    @PostMapping("uploadPics")
-    public String uploadPics(String name) {
-        return "";
+
+    @PostMapping("uploadPostPic")
+    public ResponseEntity<String> uploadPostPic(HttpServletRequest request, @RequestParam("file") MultipartFile file) {
+        String userEmail = request.getAttribute("userEmail").toString();
+        return fileService.uploadPostPics(userEmail, file);
     }
 
-    @PostMapping("downloadPics")
-    public String downloadPics(String name) {
-        return "";
+    @PostMapping("downloadPostPic/{filename}")
+    public ResponseEntity<InputStreamResource> downloadPostPic(@PathVariable String filename) {
+        return fileService.download("postpics",filename, MediaType.IMAGE_JPEG);
+
     }
 
-    @PostMapping("uploadVoice")
-    public String uploadVoice() {
-        return "";
+    @PostMapping("uploadChatPics/")
+    public String uploadChatPics(String userId,  @RequestParam("file")  MultipartFile file) {
+        return JSON.toJSONString(fileService.uploadChatPics(userId, file));
     }
 
-    @PostMapping("downloadVoice")
-    public String downloadVoice() {
-        return "";
+    @GetMapping("downloadChatPics/{filename}")
+    public ResponseEntity<InputStreamResource> downloadChatPics(@PathVariable String filename) {
+        return fileService.download("chatpics",filename, MediaType.IMAGE_JPEG);
     }
 
-    @PostMapping("uploadVideo")
-    public String uploadVideo() {
-        return "";
+    @PostMapping("uploadChatVoice/")
+    public String uploadChatVoice(String userId,  @RequestParam("file") MultipartFile file) {
+        return JSON.toJSONString(fileService.uploadChatVoice(userId, file));
     }
 
-    @PostMapping("downloadVideo")
-    public String downloadVideo() {
-        return "";
+    @PostMapping("downloadChatVoice/{resourceId}")
+    public ResponseEntity<InputStreamResource> downloadChatVoice(@PathVariable String resourceId) {
+        return fileService.download("chatvoice",resourceId ,new MediaType("audio/mpeg"));
     }
+
+    @PostMapping("uploadPostVoice")
+    public String uploadPostVoice(String userId, MultipartFile file) {
+        return JSON.toJSONString(fileService.uploadPostVoice(userId, file));
+    }
+
+    @PostMapping("downloadPostVoice/{resourceId}")
+    public ResponseEntity<InputStreamResource> downloadPostVoice(@PathVariable String resourceId)
+    {
+        return fileService.download("postvoice", resourceId, new MediaType("audio/mpeg"));
+    }
+
+
+    @PostMapping("uploadChatVideo")
+    public ResponseEntity<String> uploadChatVideo(String userId,  @RequestParam("file") MultipartFile file) {
+        return fileService.uploadChatVideo(userId, file);
+    }
+
+    @PostMapping("downloadChatVideo/{resourceId}")
+    public ResponseEntity<InputStreamResource> downloadChaVideo(@PathVariable String resourceId ) {
+        return fileService.download("chatvideo",resourceId,new MediaType("video/mpeg"));
+    }
+
+
 
 
 }

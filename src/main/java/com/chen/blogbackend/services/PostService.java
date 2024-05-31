@@ -3,8 +3,10 @@ package com.chen.blogbackend.services;
 import com.chen.blogbackend.DAO.ArticleDao;
 import com.chen.blogbackend.entities.Post;
 
+import com.chen.blogbackend.entities.Relationship;
 import com.chen.blogbackend.entities.Trend;
 import com.chen.blogbackend.filters.PostRecognizer;
+import com.chen.blogbackend.mappers.PostParser;
 import com.chen.blogbackend.mappers.TrendsMapper;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
@@ -43,13 +45,17 @@ public class PostService {
 
 
 
-    PreparedStatement getRangeArticlesByUserId;
-    PreparedStatement getIdolsArticles;
-    PreparedStatement saveArticle;
+    private PreparedStatement getRangeArticlesByUserId;
+    private PreparedStatement getIdolsArticles;
+    private PreparedStatement savePostById;
+    private PreparedStatement getPostById;
+    private PreparedStatement getPostByUserId;
+    private PreparedStatement savePostByUserId;
+    private PreparedStatement sendToMailbox;
+    private PreparedStatement getMailBox;
+    private int pageSize = 10;
+    private long timeSlice = 50;
 
-    public int pageSize = 10;
-    public long timeSlice = 50;
-    ArticleDao articleDao;
 
     @PostConstruct
     public void init() {
@@ -62,19 +68,22 @@ public class PostService {
 //                .build();
         //saveArticle = session.prepare("insert into ");
         getRangeArticlesByUserId = session.prepare("select * from posts.posts_by_user_id where author_id = ?");
+        savePostById= session.prepare("insert into posts.posts_by_post_id (author_id, post_id,  author_name, " +
+                "last_modified, images, videos,voices , content, access_rules, notice, location) values(?,?,?,?,?,?,?,?,?,?,?)");
+        savePostByUserId = session.prepare("insert into post.posts_by_user_id (post_id, author_id, author_name, last_modified," +
+                "images , videos, voices , content, access_rules, notice, location ) values(?,?,?,?,?,?,?,?,?,?,?)");
+        sendToMailbox =session.prepare("insert into post.mailbox (receiver_id, last_modified, author_id,author_name, " +
+                " images, videos, voices, post_id, notice, access_rules, location) values(?,?,?,?,?,?,?,?,?,?,?)");
+        getPostById = session.prepare("select * from posts.post_by_id where author_id = ?");
+        getPostByUserId = session.prepare("select * from posts.post_by_user_id where author_id = ?");
+        getMailBox = session.prepare("select * from posts.post_by_user_id where author_id = ?");
         pageSize = 10;
     }
 
 
-    public ArrayList<Post> getArticlesByUserID(String userEmail, PagingState state) {
+    public List<Post> getPostsByUserID(String userEmail, PagingState state) {
         ResultSet result = session.execute(getRangeArticlesByUserId.bind(":").setPageSize(pageSize).setPagingState(state));
-        ArrayList<Post> posts = new ArrayList<>();
-
-        for (Row row : result) {
-            posts.add(new Post());
-
-        }
-        return posts;
+        return PostParser.userDetailParser(result);
     }
 
     public List<Post> getPostsByTimestamp(String userId, Instant timestampFrom, Instant timestampTo) {
@@ -84,45 +93,65 @@ public class PostService {
 
 
 
-    public int uploadArticle(String userId, Post post){
-        articleDao.save(post);
+    public int uploadPost(String userId, Post post){
+        BatchStatementBuilder builder = BatchStatement.builder(DefaultBatchType.LOGGED);
+        builder.addStatement(savePostById.bind());
+        builder.addStatement(savePostByUserId.bind());
+        List<Relationship> friends = friendsService.getFriends(userId);
+        for (Relationship friend : friends) {
+            String friendId = friend.getFriendId();
+            builder.addStatement(sendToMailbox.bind());
+        }
         return 1;
     }
 
-    public Post getArticleByArticleID(String articleID) {
-        return articleDao.findById(articleID);
+    public Post getPostByPostID(String articleID) {
+        ResultSet execute = session.execute(getPostById.bind(articleID));
+
+        return PostParser.userDetailParser(execute).get(0);
     }
 
-    private List<Post> getBatchArticles(List<String> targetUsers, String userId) {
-        ArrayList<Post> result = new ArrayList<>();
-        BatchStatementBuilder batch = BatchStatement.builder(DefaultBatchType.LOGGED);
-
-        for (String id : targetUsers) {
-            batch.addStatement(getRangeArticlesByUserId.bind(id));
-        }
-        BatchStatement build = batch.build();
-        ResultSet execute = session.execute(build);
-        PagingIterable<Post> articles = articleDao.getArticles(execute);
-
-        for (Post post : articles) {
-            Set<String> users = post.getUsers();
-            if (post.getAccessType().equals("exclude")) {
-                if(!users.contains(userId)){
-                    result.add(post);
-                }
-            }
-            else if (null == post.getAccessType() || post.getAccessType().equals("include")) {
-                result.add(post);
-            }
-        }
-        return result;
+    public List<Post> getUserArticles(String userId) {
+        ResultSet execute = session.execute(getPostByUserId.bind(userId));
+        return PostParser.userDetailParser(execute);
     }
+
+    //    get articles from target users.
+//    private List<Post> getBatchArticles(List<String> targetUsers, String userId) {
+//        ArrayList<Post> result = new ArrayList<>();
+//        BatchStatementBuilder batch = BatchStatement.builder(DefaultBatchType.LOGGED);
+//
+//        for (String id : targetUsers) {
+//            batch.addStatement(getRangeArticlesByUserId.bind(id));
+//        }
+//        BatchStatement build = batch.build();
+//        ResultSet execute = session.execute(build);
+//        PagingIterable<Post> articles = articleDao.getArticles(execute);
+//
+//        for (Post post : articles) {
+//            List<String> users = post.getUsers();
+//            if (post.getAccessType().equals("exclude")) {
+//                if(!users.contains(userId)){
+//                    result.add(post);
+//                }
+//            }
+//            else if (null == post.getAccessType() || post.getAccessType().equals("include")) {
+//                result.add(post);
+//            }
+//        }
+//        return result;
+//    }
 
     public List<Trend> getTrends() {
         List<Tuple> trends = jedis.zrangeWithScores("trends", 0, 10);
         return TrendsMapper.parseTrends(trends);
 
     }
+
+    public String preparePostId(){
+        return "";
+    }
+
 
 
 

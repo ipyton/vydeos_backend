@@ -3,7 +3,9 @@ package com.chen.blogbackend.entities;
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -15,10 +17,12 @@ public class Post {
     private String content = "";
     private int likes = 0;
     private int pictureAmount = 0;
-    private Set<String> users;
-    private String accessType;
+    private List<String> users;
+    private List<String> notice;
+    private List<String> accessType;
 
-    public Post(String userID, String postID, Date lastEdit, String content, int likes, int pictureAmount, Set<String> users, String accessType) {
+    public Post(String userID, String postID, Date lastEdit, String content, int likes, int pictureAmount,
+                List<String> users, String accessType, List<String> notice) {
         this.userID = userID;
         this.postID = postID;
         this.lastEdit = lastEdit;
@@ -27,13 +31,30 @@ public class Post {
         this.pictureAmount = pictureAmount;
         this.users = users;
         this.accessType = accessType;
+        this.notice = notice;
     }
 
-    public Set<String> getUsers() {
+    public String getPostID() {
+        return postID;
+    }
+
+    public void setPostID(String postID) {
+        this.postID = postID;
+    }
+
+    public List<String> getNotice() {
+        return notice;
+    }
+
+    public void setNotice(List<String> notice) {
+        this.notice = notice;
+    }
+
+    public List<String> getUsers() {
         return users;
     }
 
-    public void setUsers(Set<String> users) {
+    public void setUsers(List<String> users) {
         this.users = users;
     }
 

@@ -1,5 +1,6 @@
 package com.chen.blogbackend.controllers;
 
+import co.elastic.clients.elasticsearch.nodes.Http;
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.Post;
 import com.chen.blogbackend.responseMessage.LoginMessage;
@@ -7,6 +8,8 @@ import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.PostService;
 import com.chen.blogbackend.services.PictureService;
 import com.datastax.oss.driver.api.core.cql.PagingState;
+import com.fasterxml.uuid.Generators;
+import com.fasterxml.uuid.impl.TimeBasedGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -19,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 @RequestMapping("post")
@@ -35,32 +37,24 @@ public class PostController {
 
     private final static int page_size = 10;
 
-    @PostMapping(value = "uploadPostPics")
-    public LoginMessage uploadArticlePics(MultipartFile multipartFile, String articleID){
-        boolean result = pictureService.uploadAvatarPicture(articleID, multipartFile);
-        if(!result) return new LoginMessage(-1, "hello");
-        else return new LoginMessage(1, "success");
-    }
+    TimeBasedGenerator timeBasedGenerator = Generators.timeBasedGenerator();
 
-    @PostMapping("get_pic")
-    public ResponseEntity<StreamingResponseBody> getArticlePicture(String articleID, int idx) {
-        StreamingResponseBody responseBody = pictureService.getPicture(articleID, idx);
-        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(responseBody);
-    }
 
-    @PostMapping("upload_pic")
-    public LoginMessage uploadPicture(String articleID, MultipartFile file, int index) {
-        if (pictureService.uploadArticlePicture(articleID, file, index)) {
-            return new LoginMessage(1, "success");
-        }
+
+
+
+    @PostMapping("delete")
+    public LoginMessage deletePost(String articleId) {
         return new LoginMessage(-1, "failed");
     }
 
-
     @PostMapping("upload")
-    public LoginMessage uploadArticle(HttpServletRequest request, Post post) {
+    public LoginMessage uploadPost(HttpServletRequest request, Post post) {
         String userEmail = request.getHeader("userEmail");
-        int result = postService.uploadArticle(userEmail, post);
+        post.setUserID(userEmail);
+        String uuid = timeBasedGenerator.generate().toString();
+        post.setPostID(uuid);
+        int result = postService.uploadPost(userEmail, post);
         if (-1 != result) {
             return new LoginMessage(1, Integer.toString(result));
         } else {
@@ -91,8 +85,6 @@ public class PostController {
 
     @PostMapping("get_posts_range")
     public LoginMessage getPagingArticles(String userID, PagingState state) {
-
-
         return new LoginMessage(-1, "Error");
     }
 
@@ -105,8 +97,6 @@ public class PostController {
     public LoginMessage getTrends(){
         return new LoginMessage(1, JSON.toJSONString(postService.getTrends()));
     }
-
-
 
     @PostMapping("add_post")
     public LoginMessage addPost(String introduction) {

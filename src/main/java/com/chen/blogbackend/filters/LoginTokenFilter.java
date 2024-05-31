@@ -43,10 +43,13 @@ public class LoginTokenFilter implements Filter {
 //        request.getHeaderNames().asIterator().forEachRemaining(System.out::println);
 //        System.out.println(request.getHeader("token"));
         if (token == null) {
-            System.out.println("unauthorized");
+            System.out.println("unauthorized token is null");
             servletResponse.setContentType("application/json");
             servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "please login first")).getBytes(StandardCharsets.UTF_8));
             return;
+        }
+        else {
+            System.out.printf("Success");
         }
 //        boolean result = accountService.haveValidLogin(request.getHeader("token"));
 //        if(null == token) {
@@ -67,6 +70,7 @@ public class LoginTokenFilter implements Filter {
 //                return;
 //            }
 //        }
+        System.out.printf(TokenUtil.resolveToken(token).getUserId());
         request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
         chain.doFilter(request, response);
     }

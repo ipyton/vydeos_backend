@@ -7,19 +7,19 @@ public class Relationship {
     private String group_id;
     private String name;
 
-    public String getUser_id() {
+    public String getUserId() {
         return user_id;
     }
 
-    public void setUser_id(String user_id) {
-        this.user_id = user_id;
+    public void setUserId(String userId) {
+        this.user_id = userId;
     }
 
-    public String getFriend_id() {
+    public String getFriendId() {
         return friend_id;
     }
 
-    public void setFriend_id(String friend_id) {
+    public void setFriendId(String friend_id) {
         this.friend_id = friend_id;
     }
 
@@ -31,11 +31,11 @@ public class Relationship {
         this.avatar = avatar;
     }
 
-    public String getGroup_id() {
+    public String getGroupId() {
         return group_id;
     }
 
-    public void setGroup_id(String group_id) {
+    public void setGroupId(String group_id) {
         this.group_id = group_id;
     }
 
