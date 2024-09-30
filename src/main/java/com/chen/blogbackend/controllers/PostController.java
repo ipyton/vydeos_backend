@@ -30,7 +30,6 @@ import java.util.List;
 @RequestMapping("post")
 @Controller()
 @ResponseBody
-@EnableWebMvc
 public class PostController {
 
     @Autowired
@@ -42,9 +41,6 @@ public class PostController {
     private final static int page_size = 10;
 
     TimeBasedGenerator timeBasedGenerator = Generators.timeBasedGenerator();
-
-
-
 
 
     @PostMapping("delete")
@@ -83,9 +79,9 @@ public class PostController {
     }
 
     @PostMapping("get_friends_posts")
-    public LoginMessage getFriendsPosts(HttpServletRequest request) {
+    public JSONObject getFriendsPosts(HttpServletRequest request, String pagingState) {
         String email = (String) request.getAttribute("userEmail");
-        return new LoginMessage(1, JSON.toJSONString(postService.getFriendsPosts(email)));
+        return postService.getFriendsPosts(email, pagingState);
     }
 
     @PostMapping("get_posts_by_timestamp")

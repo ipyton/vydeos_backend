@@ -1,1 +1,1 @@
-H:\\ffmpeg-master-latest-win64-gpl\\bin\\ffmpeg.exe -i G:\\m.mp4 -c:v copy G:\\output\\a.m3u8 -hls_segment_filename %d.ts -f hls
+ffmpeg -threads 10 -fflags +genpts -i "Tom & Jerry Kids 101a Flippin' Fido [foo].avi" -hls_time 30 -hls_list_size 0 -c:v copy -c:a copy -hls_segment_filename "output/segment_%03d.ts" output/index.m3u8

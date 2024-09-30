@@ -11,23 +11,35 @@ import com.chen.blogbackend.mappers.FriendMapperBuilder;
 import com.chen.blogbackend.mappers.RelationshipParser;
 import com.chen.blogbackend.mappers.UserGroupMapperBuilder;
 import com.chen.blogbackend.responseMessage.PagingMessage;
+import com.chen.blogbackend.util.BloomFilterIOTool;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
+import com.datastax.oss.driver.shaded.guava.common.hash.BloomFilter;
+import com.datastax.oss.driver.shaded.guava.common.hash.Funnels;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
 
 import javax.management.relation.Relation;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Service
 public class FriendsService {
 
     @Autowired
     CqlSession session;
+
+    @Autowired
+    Jedis redisClient;
 
     FriendDao friendDao;
     UserGroupDao userGroupDao;
@@ -56,9 +68,14 @@ public class FriendsService {
     private PreparedStatement addIdol;
     private PreparedStatement deleteIdol;
 
-    @PostConstruct
-    public void init(){
 
+    ThreadPoolExecutor executor;
+
+
+
+
+    @PostConstruct
+    public void init() throws IOException {
             //friendDao = new FriendMapperBuilder(session).build().getDao();
             //userGroupDao = new UserGroupMapperBuilder(session).build().getDao();
             // addUsersInGroups = session.prepare("insert into relationship.users_in_groups () values(?,?,?,?);");
@@ -73,8 +90,6 @@ public class FriendsService {
 //            updateFriendDirectionByIdolId = session.prepare("update relationship.followers_by_user_id set bi_direction=?;");
 //            updateFriendDirectionByUserId = session.prepare("update relationship.followers_by_idol_id set bi_direction=?;");
             //getFollowersByIdolId = session.prepare("select * from followers_by_idol_id where idol_id=?;");
-
-
             follows = session.prepare("select * from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
             insertFollowRelationship = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?)");
             deleteFollowRelationship = session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");
@@ -84,6 +99,7 @@ public class FriendsService {
             getIdolsById = session.prepare("select * from relationship.idol_by_user_id where user_id = ?");
             addIdol = session.prepare("insert into relationship.idol_by_user_id (user_id, friend_id) values (?,?) ");
             deleteIdol = session.prepare("delete from relationship.idol_by_user_id  where user_id=? and friend_id=?");
+
     }
 
     public List<Relationship> getFollowersByUserId(String userId) {
@@ -116,7 +132,6 @@ public class FriendsService {
 
     public List<Relationship> getIdolsByUserId(String userId){
         ResultSet set = session.execute(getFollowersByUserId.bind(userId));
-
         return RelationshipParser.parseToRelationship(set);
     }
 

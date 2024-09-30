@@ -22,9 +22,6 @@ public class MovieController {
     @PostMapping("getMeta")
     public LoginMessage getMovieMetadata(String movieName) {
 
-
-
-
         return new LoginMessage(-1, "success");
 
     }

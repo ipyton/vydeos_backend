@@ -1,29 +1,28 @@
 package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.chen.notification.endpoints.NotificationServerEndpoint;
 import com.chen.notification.entities.Notification;
 import com.chen.notification.entities.SingleMessage;
 import com.chen.notification.service.SendNotificationService;
 import com.chen.notification.utils.ConfigUtil;
 import jakarta.annotation.PostConstruct;
-import org.apache.rocketmq.client.apis.ClientConfiguration;
-import org.apache.rocketmq.client.apis.ClientException;
-import org.apache.rocketmq.client.apis.ClientServiceProvider;
-import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
-import org.apache.rocketmq.client.apis.consumer.FilterExpression;
-import org.apache.rocketmq.client.apis.consumer.FilterExpressionType;
-import org.apache.rocketmq.client.apis.consumer.PushConsumer;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collections;
+import java.time.Duration;
+import java.util.*;
 
 @Component
 public class AutoRunner {
@@ -33,38 +32,37 @@ public class AutoRunner {
     @Autowired
     NotificationServerEndpoint service;
 
+    @Value("notification_topic")
+    String topic;
+
     @PostConstruct
-    public void startListening() throws InterruptedException, ClientException {
-        final ClientServiceProvider provider = ClientServiceProvider.loadService();
-        String endpoints = "192.168.23.129:8081";
-        ClientConfiguration clientConfiguration = ClientConfiguration.newBuilder()
-                .setEndpoints(endpoints)
-                .build();
-        String tag = ConfigUtil.getTag();
-        FilterExpression filterExpression = new FilterExpression(tag, FilterExpressionType.TAG);
-        String consumerGroup = "notificationGroup";
-        String topic = "notificationTopic";
-        PushConsumer pushConsumer = provider.newPushConsumerBuilder()
-                .setClientConfiguration(clientConfiguration)
-                .setConsumerGroup(consumerGroup)
-                .setSubscriptionExpressions(Collections.singletonMap(topic, filterExpression))
-                .setMessageListener(messageView -> {
-                    ByteBuffer body = messageView.getBody();
-
-                    String s = StandardCharsets.UTF_8.decode(body).toString();
-
-                    System.out.println(s);
-
-                    logger.info("Consume message successfully, messageContent={}", s);
-                    SingleMessage singleMessage = JSON.parseObject(s, SingleMessage.class);
-                    try {
-                        service.sendMessage(singleMessage.getReceiverId(), singleMessage);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    return ConsumeResult.SUCCESS;
-                })
-                .build();
+    public void startListening() throws InterruptedException {
+        Properties props = new Properties();
+        props.setProperty("bootstrap. servers", "localhost:9092");
+        props.setProperty("group.id", "test");
+        props.setProperty("enable.auto.commit", "false");
+        props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Arrays.asList(topic));
+        final int minBatchSize = 200;
+        List<ConsumerRecord<String, String>> buffer = new ArrayList<>();
+        while (true) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(100));
+            for (ConsumerRecord<String, String> record : records) {
+                buffer.add(record);
+            }
+            buffer.forEach(record -> {
+                SingleMessage jsonObject = JSON.parseObject(record.value(),SingleMessage.class );
+                try {
+                    service.sendMessage(jsonObject);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            consumer.commitSync();
+            buffer.clear();
+        }
 
     }
 

@@ -29,7 +29,8 @@ public class PostParser {
                         !columnDefinitions.contains("voices")?null:row.getList("voices", String.class),
                         !columnDefinitions.contains("videos")?null:row.getList("videos",String.class),
                         !columnDefinitions.contains("comments")?null:row.getList("comments", String.class),
-                        row.getString("receiverId")));
+                        row.getString("receiverId"),
+                        row.getString("location")));
             } else {
                 posts.add(new Post(!columnDefinitions.contains("author_id")?null:row.getString("author_id"),
                         !columnDefinitions.contains("author_name")?null:row.getString("author_name"),
@@ -42,7 +43,8 @@ public class PostParser {
                         !columnDefinitions.contains("images")?null:row.getList("images", String.class),
                         !columnDefinitions.contains("voices")?null:row.getList("voices", String.class),
                         !columnDefinitions.contains("videos")?null:row.getList("videos",String.class),
-                        !columnDefinitions.contains("comments")?null:row.getList("comments", String.class)));
+                        !columnDefinitions.contains("comments")?null:row.getList("comments", String.class),
+                        row.getString("location")));
 
             }
         }

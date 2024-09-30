@@ -79,10 +79,11 @@ public class NotificationServerEndpoint {
         messageList.get(userId).add(notification);
     }
 
-    public void sendMessage(String userId, SingleMessage message) throws IOException {
+    public void sendMessage( SingleMessage message) throws IOException {
+        String userId = message.getUserId();
         Session session = sessionPool.get(userId);
         if (session.isOpen()) {session.getBasicRemote().sendText(JSON.toJSONString(message));
-            System.out.println("successfullly");}
+            System.out.println("successfully");}
 
         else {
             System.out.println("user" + userId + "do not exist!!!!!!");

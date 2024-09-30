@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.resps.Tuple;
 
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,6 @@ public class PostService {
 
     @Autowired
     Jedis jedis;
-
 
 
     private PreparedStatement getRangeArticlesByUserId;
@@ -73,20 +73,36 @@ public class PostService {
         savePostByUserId = session.prepare("insert into posts.posts_by_user_id (post_id, likes, author_id, author_name, comments, last_modified, images, videos, voices, content, access_rules, notice, location) values(?,?,?,?,?,?,?,?,?,?,?,?,?)");
         sendToMailbox =session.prepare("insert into posts.mail_box (receiver_id, last_modified, likes, comments,content, author_id,author_name,  images , videos , voices  , post_id , notice , access_rules , location) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
         getPostById = session.prepare("select * from posts.posts_by_post_id where post_id = ? ");
-        getPostByUserId = session.prepare("select * from posts.posts_by_user_id where author_id = ?");
-        getMailBox = session.prepare("select * from posts.posts_by_user_id where author_id = ?");
+        getPostByUserId = session.prepare("select * from posts.posts_by_user_id where author_id = ? order by last_modified  desc");
+        getMailBox = session.prepare("select * from posts.mail_box where receiver_id = ? order by last_modified desc;");
         pageSize = 10;
     }
 
 
     public JSONObject getPostsByUserID(String userEmail, String state) {
-        PagingState pagingState = PagingState.fromString(state);
-        ResultSet result = session.execute(getRangeArticlesByUserId.bind(":").setPageSize(pageSize).setPagingState(pagingState));
-        String newState = result.getExecutionInfo().getPagingState().toString();
+        ResultSet result;
+        if (state == null) {
+            result = session.execute(getRangeArticlesByUserId.bind(userEmail));
+        }
+        else {
+            PagingState pagingState = PagingState.fromString(state);
+            result = session.execute(getRangeArticlesByUserId.bind(userEmail).setPageSize(pageSize).setPagingState(pagingState));
+        }
+
+        JSONObject jsonObject  = processResults(result);
+        return jsonObject;
+    }
+
+    private JSONObject processResults(ResultSet result) {
+        ByteBuffer pagingState = result.getExecutionInfo().getPagingState();
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("posts", PostParser.userDetailParser(result));
-        jsonObject.put("pagingState", pagingState);
+        if (pagingState!= null) {
+            jsonObject.put("pagingState", pagingState.toString());
+        }
+
         jsonObject.put("code", 1);
+        System.out.println(jsonObject.toJSONString());
         return jsonObject;
     }
 
@@ -106,22 +122,35 @@ public class PostService {
         builder.addStatement(savePostByUserId.bind(post.getPostID(), post.getLikes(),post.getAuthorID(), post.getAuthorName(),
                 post.getComments(), post.getLastModified(), post.getImages(), post.getVideos(), post.getVoices(),
                 post.getContent(), post.getAccessRules(),post.getNotice(),post.getLocation()));
-//        List<Relationship> friends = friendsService.getFriends(userId);
-//        for (Relationship friend : friends) {
-//            String friendId = friend.getFriendId();
-//            builder.addStatement(sendToMailbox.bind());
-//        }
+        List<Relationship> friends = friendsService.getFriends(userId);
+        for (Relationship friend : friends) {
+            String friendId = friend.getFriendId();
+            builder.addStatement(sendToMailbox.bind(friendId, post.getLastModified(), post.getLikes(), post.getComments(), post.getContent(),
+                    post.getAuthorID(), post.getAuthorName(), post.getImages(), post.getVideos(), post.getVoices(), post.getPostID(),
+                    post.getNotice(), post.getAccessRules(), post.getLocation()));
+        }
+        session.execute(builder.build());
         return 1;
     }
 
-    public List<Post> getFriendsPosts(String userEmail) {
-        List<Relationship> friends = friendsService.getFriends(userEmail);
-        BatchStatementBuilder builder = BatchStatement.builder(DefaultBatchType.LOGGED);
-        for (Relationship friend : friends) {
-            builder.addStatement(getPostByUserId.bind(friend.getFriendId()));
+    public JSONObject getFriendsPosts(String userEmail, String pagingState) {
+        //        List<Relationship> friends = friendsService.getFriends(userEmail);
+//        BatchStatementBuilder builder = BatchStatement.builder(DefaultBatchType.LOGGED);
+//        for (Relationship friend : friends) {
+//            builder.addStatement(getPostByUserId.bind(friend.getFriendId()));
+//        }
+//        ResultSet execute = session.execute(builder.build());
+        ResultSet result;
+
+        if (pagingState == null) {
+             result = session.execute(getMailBox.bind(userEmail).setPageSize(pageSize));
         }
-        ResultSet execute = session.execute(builder.build());
-        return PostParser.userDetailParser(execute);
+        else {
+            PagingState pagingState1 = PagingState.fromString(pagingState);
+             result = session.execute(getMailBox.bind(userEmail).setPageSize(pageSize).setPagingState(pagingState1));
+        }
+        JSONObject jsonObject = processResults(result);
+        return jsonObject;
 
     }
 
