@@ -3,6 +3,7 @@ package com.chen.notification;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.chen.notification.endpoints.NotificationServerEndpoint;
+import com.chen.notification.entities.GroupMessage;
 import com.chen.notification.entities.Notification;
 import com.chen.notification.entities.SingleMessage;
 import com.chen.notification.service.SendNotificationService;
@@ -33,37 +34,70 @@ public class AutoRunner {
     @Autowired
     NotificationServerEndpoint service;
 
-    @Value("notification_topic")
-    String topic;
+    @Value("single_topic")
+    String single_topic;
 
+    @Value("group_topic")
+    String group_topic;
+    @Autowired
+    private SendNotificationService sendNotificationService;
 
     @PostConstruct
-    public void startListening() throws InterruptedException {
+    public void startListening() throws InterruptedException, IOException {
         Properties props = new Properties();
         props.setProperty("bootstrap. servers", "localhost:9092");
         props.setProperty("group.id", "test");
         props.setProperty("enable.auto.commit", "false");
         props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
-        consumer.subscribe(Arrays.asList(topic));
+        KafkaConsumer<Long, String> consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Arrays.asList(single_topic, group_topic));
         final int minBatchSize = 200;
-        List<ConsumerRecord<String, String>> buffer = new ArrayList<>();
         while (true) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(100));
-            for (ConsumerRecord<String, String> record : records) {
-                buffer.add(record);
+            ConsumerRecords<Long, String> records = consumer.poll(Duration. ofMillis(100));
+            Map<String, Map<Long, List<String>>> topicKeyMap = new HashMap<>();
+            for (ConsumerRecord<Long, String> record : records) {
+                String topic = record.topic();
+                Long key = record.key();
+                String value = record.value();
+
+                // 获取当前 topic 对应的 key -> list map，如果不存在则创建
+                topicKeyMap.putIfAbsent(topic, new HashMap<>());
+                Map<Long, List<String>> keyMap = topicKeyMap.get(topic);
+
+                // 获取当前 key 对应的 list，如果不存在则创建
+                keyMap.putIfAbsent(key, new ArrayList<>());
+                List<String> valueList = keyMap.get(key);
+
+                // 将消息的 value 添加到 list 中
+                valueList.add(value);
             }
-            buffer.forEach(record -> {
-                SingleMessage jsonObject = JSON.parseObject(record.value(),SingleMessage.class );
-                try {
-                    service.sendMessage(jsonObject);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+
+            for (Map.Entry<String, Map<Long, List<String>>> entry : topicKeyMap.entrySet()) {
+                String key = entry.getKey();
+                Map<Long, List<String>> keyMap = entry.getValue();
+                if (key.equals(single_topic)) {
+
+                    for (Long key1 : keyMap.keySet()) {
+                        List<SingleMessage> list = new ArrayList<>();
+                        for (String s: keyMap.get(key1)) {
+                            list.add(JSON.parseObject(s, SingleMessage.class));
+                        }
+                        service.sendMessages(list, key1);
+
+                    }
+                } else if (key.equals(group_topic)) {
+                    for (Long key1 : keyMap.keySet()) {
+                        List<GroupMessage> list = new ArrayList<>();
+                        for (String s: keyMap.get(key1)) {
+                            list.add(JSON.parseObject(s, GroupMessage.class));
+                        }
+                        service.sendMessages(list, key1);
+                    }
                 }
-            });
+            }
+
             consumer.commitSync();
-            buffer.clear();
         }
 
     }

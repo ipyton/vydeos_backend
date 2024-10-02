@@ -17,13 +17,5 @@ public class ServicesConfiguration {
         return jedis;
     }
 
-    @Bean
-    public static KafkaConsumer<String, String> configKafka() {
-        Property prop = new Property();
-
-
-    }
-
-
 
 }
