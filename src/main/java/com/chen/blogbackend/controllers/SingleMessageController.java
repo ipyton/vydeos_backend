@@ -77,7 +77,7 @@ public class SingleMessageController {
 
 
     @RequestMapping("getNewestMessages")
-    public LoginMessage getNewestRecords(String userId,Long timestamp) {
+    public LoginMessage getNewestRecords(Long userId,Long timestamp) {
         System.out.println(timestamp);
         List<SingleMessage> newRecords = service.getNewRecords(userId, timestamp);
         System.out.println(JSON.toJSONString(newRecords));

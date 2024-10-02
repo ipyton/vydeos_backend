@@ -1,4 +1,4 @@
-package com.chen.blogbackend.entities;
+package com.chen.notification.entities;
 
 import java.time.Instant;
 

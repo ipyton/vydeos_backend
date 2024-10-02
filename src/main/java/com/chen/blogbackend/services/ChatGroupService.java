@@ -4,10 +4,8 @@ import com.chen.blogbackend.DAO.ChatGroupDao;
 import com.chen.blogbackend.DAO.ChatGroupMemberDao;
 import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.InvitationDao;
-import com.chen.blogbackend.entities.ChatGroup;
-import com.chen.blogbackend.entities.ChatGroupMember;
-import com.chen.blogbackend.entities.GroupMessage;
-import com.chen.blogbackend.entities.Invitation;
+import com.chen.blogbackend.entities.*;
+import com.chen.blogbackend.mappers.MessageParser;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.util.RandomUtil;
@@ -47,7 +45,8 @@ public class ChatGroupService {
     PreparedStatement truncateChatGroupById;
     PreparedStatement getRecord;
     PreparedStatement getGroupDetails;
-    PreparedStatement recall;
+    PreparedStatement getRecordByGroupId;
+    PreparedStatement getRecordByMemberId;
     //PreparedStatement setChatRecordCache;
 
     //generate here.
@@ -70,12 +69,17 @@ public class ChatGroupService {
         delChatGroupByUser = session.prepare("delete from group_chat.chat_group_by_user where user_id = ? and group_id = ?");
         truncateChatGroupById = session.prepare("delete from group_chat.chat_group_by_id where group_id = ? and user_id = ?");
         getGroups = session.prepare("select * from group_chat.chat_group_by_user where user_id = ?");
-        getMembers = session.prepare("select * from group_chat.chat_group_by_id where group_id = ? and user_id = ?");
-        getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
-        recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
+        getMembers = session.prepare("select * from group_chat.chat_group_by_id where group_id = ? ");
+        //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
+        //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         chatGroupDao = null;
-
-        //setChatRecordCache = session.prepare("update group_chat.chat_record_cache set ");
+        getRecordByGroupId = session.prepare("select * from group_chat.group_chat_record_by_id where group_id= ? and message_id > ?");
+        getRecordByMemberId = session.prepare("select * from group_chat.chat_messages_mailbox where user_id= ? ");
+    }
+    public List<OnlineGroupMessage> getOnlineGroupMessageByUserID(long userID) {
+        ResultSet execute = session.execute(getRecordByMemberId.bind(userID));
+        List<OnlineGroupMessage> onlineGroupMessages = MessageParser.parseToOnlineGroupMessage(execute);
+        return onlineGroupMessages;
     }
 
     public boolean joinGroup(String userId, String groupId) {
@@ -132,24 +136,28 @@ public class ChatGroupService {
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
-
-    public boolean recall(String operatorId, String groupID, String messageId) {
-        BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.LOGGED);
-
-        BatchStatementBuilder batchStatementBuilder = builder.addStatements(getRecord.bind(groupID, messageId), getGroupDetails.bind(groupID));
-
-        ResultSet execute = session.execute(batchStatementBuilder.build());
-        String userId = execute.all().get(0).get("user_id", String.class);
-        String ownerId = execute.all().get(1).get("owner_id", String.class);
-        if (null == userId || null == ownerId) {
-            return false;
-        }
-        if (userId.equals(operatorId) || ownerId.equals(operatorId)) {
-            ResultSet execute1 = session.execute(recall.bind(messageId));
-            return true;
-        }
-        return false;
+    public List<GroupMessage> getGroupMessageByGroupID(String groupId) {
+        ResultSet execute = session.execute(getRecordByGroupId.bind(groupId));
+        return MessageParser.parseToGroupMessage(execute);
     }
+
+//    public boolean recall(String operatorId, String groupID, String messageId) {
+//        BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.LOGGED);
+//
+//        BatchStatementBuilder batchStatementBuilder = builder.addStatements(getRecord.bind(groupID, messageId), getGroupDetails.bind(groupID));
+//
+//        ResultSet execute = session.execute(batchStatementBuilder.build());
+//        String userId = execute.all().get(0).get("user_id", String.class);
+//        String ownerId = execute.all().get(1).get("owner_id", String.class);
+//        if (null == userId || null == ownerId) {
+//            return false;
+//        }
+//        if (userId.equals(operatorId) || ownerId.equals(operatorId)) {
+//            ResultSet execute1 = session.execute(recall.bind(messageId));
+//            return true;
+//        }
+//        return false;
+//    }
 
     public boolean removeUser(String operatorId, String groupId, String userId) {
         BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);

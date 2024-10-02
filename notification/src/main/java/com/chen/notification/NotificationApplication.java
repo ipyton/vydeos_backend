@@ -1,5 +1,5 @@
 package com.chen.notification;
-import java.io.*
+import java.io.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.boot.SpringApplication;

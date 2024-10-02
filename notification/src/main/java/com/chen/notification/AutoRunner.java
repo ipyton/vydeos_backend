@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Component
 public class AutoRunner {
@@ -34,6 +35,7 @@ public class AutoRunner {
 
     @Value("notification_topic")
     String topic;
+
 
     @PostConstruct
     public void startListening() throws InterruptedException {

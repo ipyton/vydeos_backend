@@ -1,10 +1,11 @@
 package com.chen.notification.entities;
 
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
 import java.time.Instant;
 import java.util.List;
 
-
+@Entity
 public class SingleMessage {
     private String messageId;
     private String userId;

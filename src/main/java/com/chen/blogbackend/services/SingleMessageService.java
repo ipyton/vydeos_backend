@@ -106,7 +106,7 @@ public class SingleMessageService {
 
     }
 
-    public List<SingleMessage> getNewRecords( String receiverId, Long timestamp) {
+    public List<SingleMessage> getNewRecords( long receiverId, Long timestamp) {
         System.out.println(receiverId);
         ResultSet execute;
         if (null == timestamp) {
