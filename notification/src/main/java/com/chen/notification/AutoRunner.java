@@ -1,13 +1,9 @@
 package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.chen.notification.endpoints.NotificationServerEndpoint;
 import com.chen.notification.entities.GroupMessage;
-import com.chen.notification.entities.Notification;
 import com.chen.notification.entities.SingleMessage;
-import com.chen.notification.service.SendNotificationService;
-import com.chen.notification.utils.ConfigUtil;
 import jakarta.annotation.PostConstruct;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -20,11 +16,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ThreadPoolExecutor;
 
 @Component
 public class AutoRunner {
@@ -39,8 +32,6 @@ public class AutoRunner {
 
     @Value("group_topic")
     String group_topic;
-    @Autowired
-    private SendNotificationService sendNotificationService;
 
     @PostConstruct
     public void startListening() throws InterruptedException, IOException {
@@ -96,7 +87,6 @@ public class AutoRunner {
                     }
                 }
             }
-
             consumer.commitSync();
         }
 
