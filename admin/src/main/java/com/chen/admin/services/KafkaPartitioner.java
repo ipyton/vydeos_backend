@@ -1,4 +1,4 @@
-package com.chen.admin.adminServices;
+package com.chen.admin.services;
 
 import org.apache.kafka.clients.producer.Partitioner;
 import org.apache.kafka.common.Cluster;
