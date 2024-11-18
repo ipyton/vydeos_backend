@@ -198,7 +198,7 @@ public class SearchService {
     public boolean setGroupMessage(GroupMessage message) throws IOException, InterruptedException {
         IndexResponse response = client.index(i -> i
                 .index("chat")
-                .id(message.getMessageId())
+                .id(String.valueOf(message.getMessageId()))
                 .document(message)
         );
         response.result().wait(2000);

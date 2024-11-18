@@ -20,6 +20,9 @@ public class ObservationServices {
     CqlSession session;
 
     public Map<String, PerformanceMeter> getBrokersPerformance(List<String> topics) {
+        if (topics == null || topics.isEmpty()) {
+            return null;
+        }
         String url = "";
         RestTemplate template = new RestTemplate();
         Map<String, PerformanceMeter> map = new HashMap<>();
@@ -29,7 +32,7 @@ public class ObservationServices {
 
         }
 
-
+        return new HashMap<>();
 
 
 

@@ -11,14 +11,13 @@
     <groupId>com.chen</groupId>
     <artifactId>blogBackend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <name>blogBackend</name>
     <description>blogBackend</description>
-    <modules>
-        <module>adminServices</module>
-    </modules>
     <properties>
         <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
     </properties>
     <dependencies>
 <!--        <dependency>-->
@@ -221,70 +220,73 @@
     </dependencies>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>16</source>
-                    <target>16</target>
-                </configuration>
-            </plugin>
+            <plugins>
 
-            <plugin>
-                <groupId>org.xolstice.maven.plugins</groupId>
-                <artifactId>protobuf-maven-plugin</artifactId>
-                <version>0.6.1</version>
-                <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:3.25.3:exe:${os.detected.classifier}</protocArtifact>
-                    <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.67.1:exe:${os.detected.classifier}</pluginArtifact>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>compile-custom</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                </plugin>
+
+                <plugin>
+                    <groupId>kr.motd.maven</groupId>
+                    <artifactId>os-maven-plugin</artifactId>
+                    <version>1.6.2</version>
+                    <executions>
+                        <execution>
+                            <phase>initialize</phase>
+                            <goals>
+                                <goal>detect</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.xolstice.maven.plugins</groupId>
+                    <artifactId>protobuf-maven-plugin</artifactId>
+                    <version>0.6.1</version>
+                    <configuration>
+                        <protocArtifact>com.google.protobuf:protoc:3.25.3:exe:windows-x86_64</protocArtifact>
+                        <pluginId>grpc-java</pluginId>
+                        <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.67.1:exe:windows-x86_64</pluginArtifact>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>compile</goal>
+                                <goal>compile-custom</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
 
 
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <source>17</source> <!-- (or higher) -->
-                    <target>17</target> <!-- (or higher) -->
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>com.scylladb</groupId>
-                            <artifactId>java-driver-mapper-processor</artifactId>
-                            <version>4.17.0.0</version>
-                        </path>
-                        <!-- Optional: add this if you want to avoid the SLF4J warning "Failed to load class
-                          StaticLoggerBinder, defaulting to no-operation implementation" when compiling. -->
-                        <path>
-                            <groupId>org.slf4j</groupId>
-                            <artifactId>slf4j-nop</artifactId>
-                            <version>1.7.26</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-        </plugins>
-        <extensions>
-            <extension>
-                <groupId>kr.motd.maven</groupId>
-                <artifactId>os-maven-plugin</artifactId>
-                <version>1.7.1</version>
-            </extension>
-        </extensions>
+
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.1</version>
+                    <configuration>
+                        <source>17</source> <!-- (or higher) -->
+                        <target>17</target> <!-- (or higher) -->
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>com.scylladb</groupId>
+                                <artifactId>java-driver-mapper-processor</artifactId>
+                                <version>4.17.0.0</version>
+                            </path>
+                            <!-- Optional: add this if you want to avoid the SLF4J warning "Failed to load class
+                              StaticLoggerBinder, defaulting to no-operation implementation" when compiling. -->
+                            <path>
+                                <groupId>org.slf4j</groupId>
+                                <artifactId>slf4j-nop</artifactId>
+                                <version>1.7.26</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+            </plugins>
+
+
+
     </build>
 
 </project>

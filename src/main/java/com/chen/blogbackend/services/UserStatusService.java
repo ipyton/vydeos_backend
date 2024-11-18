@@ -1,5 +1,6 @@
 package com.chen.blogbackend.services;
 
+
 import com.chen.blogbackend.NotificationSrvGrpc;
 import com.chen.blogbackend.UserStatus;
 import com.chen.blogbackend.entities.GroupMessage;
@@ -33,6 +34,7 @@ public class UserStatusService {
     @Component
     static
     class UserStatusImpl extends NotificationSrvGrpc.NotificationSrvImplBase {
+
         @Autowired
         SingleMessageService singleMessageService;
         @Autowired
@@ -54,24 +56,25 @@ public class UserStatusService {
                         .setSendTime(singleMessage.getSendTime().getEpochSecond())
                         .setContent(singleMessage.getContent())
                         .setReferMessageId(singleMessage.getReferMessageId())
-                        .addReferUserIds("user3")
+                        .addReferUserIds(null)
                         .build();
                 singleList.add(message);
             }
-            for (OnlineGroupMessage groupMessage : groupRecords) {
-                UserStatus.GroupMessage newGroupMessage = UserStatus.GroupMessage.newBuilder()
-                        .setMessageId("2")
-                        .setUserId("user1")
-                        .setGroupId("group1")
-                        .setType("text")
-                        .setTimestamp(groupMessage.getLatestTimestamp().getEpochSecond())
-                        .setContent("Hello Group1")
-                        .setMedia("image.png")
-                        .setReferMessageId("0")
-                        .setReferUserId("user4")
-                        .build();
-                groupList.add(newGroupMessage);
-            }
+//            for (OnlineGroupMessage groupMessage : groupRecords) {
+//                UserStatus.GroupMessage newGroupMessage = UserStatus.GroupMessage.newBuilder()
+//                        .setMessageId("2")
+//                        .setUserId("user1")
+//                        .setGroupId("group1")
+//                        .setType("text")
+//                        .setTimestamp(groupMessage.getLatestTimestamp().getEpochSecond())
+//                        .setContent("Hello " + "")
+//                        .setMedia("image.png")
+//                        .setReferMessageId("0")
+//                        .setReferUserId("user4")
+//                        .build();
+//                groupList.add(newGroupMessage);
+//            }
+
             UserStatus.MessageResponse.Builder builder = UserStatus.MessageResponse.newBuilder();
             builder.addAllGroupMessages(groupList);
             builder.addAllSingleMessages(singleList);

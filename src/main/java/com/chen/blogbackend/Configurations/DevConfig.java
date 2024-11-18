@@ -31,8 +31,7 @@ import java.util.Properties;
 @Configuration
 @Profile("dev")
 public class DevConfig {
-    @Bean
-    public static void setFilters(){
+     public static void setFilters(){
 
     }
 

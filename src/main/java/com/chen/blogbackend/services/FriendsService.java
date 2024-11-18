@@ -7,9 +7,7 @@ import com.chen.blogbackend.entities.Friend;
 import com.chen.blogbackend.entities.Relationship;
 import com.chen.blogbackend.entities.UserGroup;
 import com.chen.blogbackend.mappers.AccountParser;
-import com.chen.blogbackend.mappers.FriendMapperBuilder;
 import com.chen.blogbackend.mappers.RelationshipParser;
-import com.chen.blogbackend.mappers.UserGroupMapperBuilder;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.util.BloomFilterIOTool;
 import com.chen.blogbackend.util.RandomUtil;
@@ -76,20 +74,10 @@ public class FriendsService {
 
     @PostConstruct
     public void init() throws IOException {
-            //friendDao = new FriendMapperBuilder(session).build().getDao();
-            //userGroupDao = new UserGroupMapperBuilder(session).build().getDao();
-            // addUsersInGroups = session.prepare("insert into relationship.users_in_groups () values(?,?,?,?);");
-            // addUserOwnedGroups = session.prepare("insert into relationship.user_own_groups values(?,?,?,?);");
             delFriendByUserId = session.prepare("delete from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
             getFollowersByUserId = session.prepare("select * from relationship.followers_by_user_id where user_id=?;");
             initUsersIntro = session.prepare("insert into userInfo.user_information (user_id, user_name)  values (?,?) ");
             getUsersIntro = session.prepare("select * from userInfo.user_information where user_id=?;");
-//            delUsersInGroups = session.prepare("delete from relationship.users_in_groups where owner_id = ? and group_id = ? and user_id = ?");
-//            delOwnGroups = session.prepare("delete from relationship.user_owned_groups where user_id=? and group_id = ?");
-//            delUserGroup = session.prepare("delete from relationship.user_group where group_id = ?");
-//            updateFriendDirectionByIdolId = session.prepare("update relationship.followers_by_user_id set bi_direction=?;");
-//            updateFriendDirectionByUserId = session.prepare("update relationship.followers_by_idol_id set bi_direction=?;");
-            //getFollowersByIdolId = session.prepare("select * from followers_by_idol_id where idol_id=?;");
             follows = session.prepare("select * from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
             insertFollowRelationship = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?)");
             deleteFollowRelationship = session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");

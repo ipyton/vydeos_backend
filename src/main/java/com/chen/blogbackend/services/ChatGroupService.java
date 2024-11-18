@@ -173,6 +173,11 @@ public class ChatGroupService {
         return new PagingMessage<>(groups.all(), execute.getExecutionInfo().getPagingState().toString(), -1);
     }
 
+    public boolean recall(String operatorId, String groupID, String messageId) {
+        return true;
+    }
+
+
 //    @RequestMapping("setRequestCache")
 //    public LoginMessage setRequestCache(GroupMessage message) {
 //
