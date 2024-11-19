@@ -15,6 +15,7 @@ public class EndpointQueryService {
     public Endpoints queryEndpoint(long userId) {
 
         String s = redisClient.get(String.valueOf(userId / 2 << 16));
+
         Endpoints result = JSON.parseObject(s, Endpoints.class);
         return result;
 

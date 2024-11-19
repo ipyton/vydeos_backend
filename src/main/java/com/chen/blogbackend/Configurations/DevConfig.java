@@ -23,6 +23,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -80,6 +82,22 @@ public class DevConfig {
     }
 
     @Bean
+    public static JedisPool configJedisPool() {
+         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        jedisPoolConfig.setMaxTotal(8);
+        //最大空闲连接
+        jedisPoolConfig.setMaxIdle(8);
+        //最小空闲连接
+        jedisPoolConfig.setMinIdle(0);
+        //最长等待时间,ms
+        jedisPoolConfig.setMaxWaitMillis(200);
+        return new JedisPool(jedisPoolConfig,
+                "192.168.150.111",6379,1000,"123456");
+
+    }
+
+
+    @Bean
     public static ElasticsearchClient configElasticSearch() {
         String serverUrl = "https://localhost:9200";
         String apiKey = "VnVhQ2ZHY0JDZGJrU...";
@@ -101,6 +119,7 @@ public class DevConfig {
         SchedulerFactory factory = new StdSchedulerFactory();
         return factory.getScheduler();
     }
+
 
 
     @Bean

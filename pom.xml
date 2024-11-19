@@ -11,9 +11,10 @@
     <groupId>com.chen</groupId>
     <artifactId>blogBackend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
     <name>blogBackend</name>
     <description>blogBackend</description>
+
     <properties>
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>

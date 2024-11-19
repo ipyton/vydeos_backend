@@ -106,12 +106,12 @@ public class SingleMessageService {
 
     }
 
-    public List<SingleMessage> getNewRecords( long receiverId, Long timestamp) {
+    public List<SingleMessage> getNewRecords( long receiverId, Long timestamp, String pagingState) {
         System.out.println(receiverId);
         ResultSet execute;
         if (null == timestamp) {
             //get the things the user send
-            execute = session.execute(getNewestRecord.bind(receiverId, receiverId));
+            execute = session.execute(getNewestRecord.bind(receiverId, receiverId).setPagingState(PagingState.fromString(pagingState)).setPageSize(10));
         }
         else {
             execute = session.execute(getNewestRecord.bind(receiverId, receiverId + "_" + timestamp));

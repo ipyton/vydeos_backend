@@ -1,7 +1,6 @@
 package com.chen.blogbackend.services;
 
 
-import com.chen.blogbackend.NotificationSrvGrpc;
 import com.chen.blogbackend.UserStatus;
 import com.chen.blogbackend.entities.GroupMessage;
 import com.chen.blogbackend.entities.OnlineGroupMessage;
@@ -39,10 +38,11 @@ public class UserStatusService {
         SingleMessageService singleMessageService;
         @Autowired
         ChatGroupService chatGroupService;
+
         @Override
         public void onlineHandler(UserStatus.UserOnlineInformation request, StreamObserver<UserStatus.MessageResponse> responseObserver) {
             super.onlineHandler(request, responseObserver);
-            List<SingleMessage> singleRecords = singleMessageService.getNewRecords(request.getUserId(), request.getLastReceivedTimestamp());
+            List<SingleMessage> singleRecords = singleMessageService.getNewRecords(request.getUserId(), request.getLastReceivedTimestamp(), "");
             List<OnlineGroupMessage> groupRecords = chatGroupService.getOnlineGroupMessageByUserID(request.getUserId());
 
             List<UserStatus.SingleMessage> singleList = new ArrayList<>();
