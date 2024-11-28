@@ -6,11 +6,10 @@ import org.springframework.context.annotation.Profile;
 import redis.clients.jedis.Jedis;
 
 @Configuration
-@Profile("dev")
 public class DevConfig {
     @Bean
     public Jedis redisClient() {
-        Jedis jedis = new Jedis("192.168.2.236", 6379);
+        Jedis jedis = new Jedis("localhost", 6379);
         // 如果设置 Redis 服务的密码，需要进行验证，若没有则可以省去
 //        jedis.auth("123456");
         System.out.println("链接成功！");

@@ -1,14 +1,15 @@
 package com.chen.frontendserviceregistrationcenter.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.frontendserviceregistrationcenter.services.DiscoveryManagementService;
+import com.chen.frontendserviceregistrationcenter.entities.Endpoint;
 import com.chen.frontendserviceregistrationcenter.services.DiscoveryService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import redis.clients.jedis.Jedis;
+
+import java.util.Map;
 
 @Controller("/service")
 public class DiscoverServiceController {
@@ -21,13 +22,35 @@ public class DiscoverServiceController {
 
     @GetMapping("/get_endpoint")
     @ResponseBody
-    public String getEndpoint(@RequestParam String userId, @RequestParam String serviceType) {
-        if (serviceType.equals("notification_receive_endpoint")) {
-            return discoveryService.queryNotificationReceiverService(userId);
-        } else if (serviceType.equals("notification_send_endpoint")) {
-            return discoveryService.queryNotificationSenderService(userId);
+    public String getEndpoint(HttpServletRequest request, @RequestParam Long userId, @RequestParam String serviceType) {
+        //
+        System.out.println(userId);
+        System.out.println(serviceType);
+        System.out.println("notification_consumer");
+        Endpoint endpoint = new Endpoint();
+        //endpoint.setAddress(request.getRemoteAddr());
+        if (serviceType.equals("notification_consumer")) {
+            return JSON.toJSONString(discoveryService.queryNotificationConsumerService(userId));
+        } else if (serviceType.equals("notification_producer")) {
+            return JSON.toJSONString(discoveryService.queryNotificationProducerService(userId));
         } else {
-            return "";
+            return "error";
+        }
+    }
+
+    @PostMapping("/register_endpoint")
+    @ResponseBody
+    public String registerEndpoint(HttpServletRequest request, @RequestBody Map<String, Object> requestBody) {
+        String serviceType = (String) requestBody.get("serviceType");
+        Endpoint endpoint = new Endpoint();
+        endpoint.setAddress(request.getRemoteAddr());
+        System.out.println(serviceType);
+        if (serviceType.equals("notification_consumer")) {
+            return JSON.toJSONString(discoveryService.registerNotificationConsumerService(endpoint));
+        } else if (serviceType.equals("notification_producer")) {
+            return JSON.toJSONString(discoveryService.registerNotificationProducerService(endpoint));
+        } else {
+            return "error";
         }
     }
 
