@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.chen</groupId>
-    <artifactId>notification</artifactId>
+    <artifactId>notificationMessage</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>notification</name>
-    <description>notification</description>
+    <name>notificationMessage</name>
+    <description>notificationMessage</description>
     <properties>
         <java.version>17</java.version>
     </properties>

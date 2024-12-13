@@ -3,10 +3,8 @@ package com.chen.notification.endpoints;
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.NotificationSrvGrpc;
 import com.chen.blogbackend.UserStatus;
-import com.chen.blogbackend.entities.GroupMessage;
 import com.chen.notification.entities.Negotiation;
-import com.chen.notification.entities.Notification;
-import com.chen.notification.entities.SingleMessage;
+import com.chen.notification.entities.NotificationMessage;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import jakarta.annotation.PostConstruct;
@@ -20,7 +18,6 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,7 +39,7 @@ public class NotificationServerEndpoint {
     private final AtomicInteger closedConnections = new AtomicInteger();
 
     // It is used for only ask for users.
-    public static ConcurrentHashMap<Long, ConcurrentLinkedQueue<Notification>> messageList = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Long, ConcurrentLinkedQueue<NotificationMessage>> messageList = new ConcurrentHashMap<>();
 
     // If user do not online, just abandon the function.
 
@@ -72,7 +69,7 @@ public class NotificationServerEndpoint {
             session.getBasicRemote().sendText("success");
             UserStatus.UserOnlineInformation online = UserStatus.UserOnlineInformation.newBuilder().setStatus("online").setUserId(userId).setLastReceivedTimestamp(timestamp).build();
             UserStatus.MessageResponse messageResponse = stub.onlineHandler(online);
-            List<Notification> notificationList = new ArrayList<>();
+            List<NotificationMessage> notificationMessageList = new ArrayList<>();
             sendMessages(messageResponse.getGroupMessagesList(), messageResponse.getUserId());
             
 //            Thread thread = new Thread(()->{
@@ -104,8 +101,8 @@ public class NotificationServerEndpoint {
         }
     }
 
-    public void updateMessageList(String userId, Notification notification) {
-        messageList.get(userId).add(notification);
+    public void updateMessageList(String userId, NotificationMessage notificationMessage) {
+        messageList.get(userId).add(notificationMessage);
     }
 
     public <T> void sendMessages( List<T> messages, long userId) throws IOException {
@@ -145,8 +142,8 @@ public class NotificationServerEndpoint {
         String userName = negotiation.getUserID();
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < 5 && messageList.get(userName).size() > 0; i ++ ) {
-            Notification notification = messageList.get(userName).poll();
-            String s = JSON.toJSONString(notification);
+            NotificationMessage notificationMessage = messageList.get(userName).poll();
+            String s = JSON.toJSONString(notificationMessage);
             result.append(s);
             result.append(", ");
         }

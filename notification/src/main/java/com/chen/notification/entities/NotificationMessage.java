@@ -2,7 +2,7 @@ package com.chen.notification.entities;
 
 import java.time.Instant;
 
-public class Notification {
+public class NotificationMessage {
     private String avatar;
     private String senderId;
     private String receiverId;
@@ -36,7 +36,7 @@ public class Notification {
         this.messageType = messageType;
     }
 
-    public Notification(String avatar, String senderId, String receiverId, String senderName, String messageType, String type, String content, Instant time) {
+    public NotificationMessage(String avatar, String senderId, String receiverId, String senderName, String messageType, String type, String content, Instant time) {
         this.avatar = avatar;
         this.senderId = senderId;
         this.receiverId = receiverId;
@@ -87,7 +87,7 @@ public class Notification {
         this.time = time;
     }
 
-    public Notification(String avatar, String name, String title, String content, Instant time) {
+    public NotificationMessage(String avatar, String name, String title, String content, Instant time) {
         this.avatar = avatar;
         this.senderName = name;
         this.type = title;
@@ -95,7 +95,7 @@ public class Notification {
         this.time = time;
     }
 
-    public Notification() {
+    public NotificationMessage() {
 
 
     }
