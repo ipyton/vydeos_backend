@@ -1,5 +1,6 @@
 package com.chen.notification.configs;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import org.apache.kafka.clients.KafkaClient;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.Jedis;
 
+import java.net.InetSocketAddress;
 import java.util.Properties;
 
 
@@ -40,5 +42,15 @@ public class ServicesConfiguration {
         props.put("enable.auto.commit", "true");
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
         return consumer;
+    }
+
+    @Bean
+    public static CqlSession setScyllaSession(){
+
+        return CqlSession.builder()
+                .addContactPoint(new InetSocketAddress("192.168.2.75",9042))
+                .withAuthCredentials("cassandra", "cassandra")
+                .withLocalDatacenter("datacenter1").build();
+
     }
 }
