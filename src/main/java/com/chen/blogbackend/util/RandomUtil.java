@@ -1,10 +1,15 @@
 package com.chen.blogbackend.util;
 
+import java.util.Base64;
 import java.util.Random;
 
 public class RandomUtil {
     public static String getHash(String name){
         return Integer.toString(name.hashCode()).substring(0,2);
+    }
+
+    public static String getBase64(String content){
+        return Base64.getEncoder().encodeToString(content.getBytes());
     }
 
     int count = 0;

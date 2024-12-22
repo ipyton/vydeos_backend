@@ -8,9 +8,7 @@ import io.minio.MinioClient;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -37,19 +35,19 @@ public class DevConfig {
 
     }
 
-    @Bean
-    public static SqlSessionFactory sessionFactoryBean() throws IOException {
-        return new SqlSessionFactoryBuilder().build(
-                Resources.getResourceAsStream("mybatis-config.xml")
-        );
-    }
+//    @Bean
+//    public static SqlSessionFactory sessionFactoryBean() throws IOException {
+//        return new SqlSessionFactoryBuilder().build(
+//                Resources.getResourceAsStream("mybatis-config.xml")
+//        );
+//    }
 
     @Bean
     public static MinioClient setMinioClient(){
         return MinioClient.builder()
                 // api地址
-                .endpoint("http://192.168.2.75:9000")
-                .credentials("admin", "admin123")
+                .endpoint("http://192.168.31.75:9000")
+                .credentials("ROOTUSER", "CHANGEME123")
                 .build();
     }
 
@@ -63,7 +61,7 @@ public class DevConfig {
     public static CqlSession setScyllaSession(){
 
         return CqlSession.builder()
-                .addContactPoint(new InetSocketAddress("192.168.2.75",9042))
+                .addContactPoint(new InetSocketAddress("192.168.31.75",9042))
                 .withAuthCredentials("cassandra", "cassandra")
                 .withLocalDatacenter("datacenter1").build();
 
@@ -72,7 +70,7 @@ public class DevConfig {
 
     @Bean
     public static Jedis configRedis() {
-        Jedis jedis = new Jedis("192.168.2.236", 6379);
+        Jedis jedis = new Jedis("192.168.31.75", 6379);
         // 如果设置 Redis 服务的密码，需要进行验证，若没有则可以省去
 //        jedis.auth("123456");
         System.out.println("链接成功！");
@@ -88,18 +86,20 @@ public class DevConfig {
         //最大空闲连接
         jedisPoolConfig.setMaxIdle(8);
         //最小空闲连接
-        jedisPoolConfig.setMinIdle(0);
+        jedisPoolConfig.setMinIdle(4);
         //最长等待时间,ms
-        jedisPoolConfig.setMaxWaitMillis(200);
+        jedisPoolConfig.setMaxIdle(20);
+        jedisPoolConfig.setJmxEnabled(false);
+
         return new JedisPool(jedisPoolConfig,
-                "192.168.150.111",6379,1000,"123456");
+                "192.168.31.75",6379,1000);
 
     }
 
 
     @Bean
     public static ElasticsearchClient configElasticSearch() {
-        String serverUrl = "https://localhost:9200";
+        String serverUrl = "http://192.168.31.75:9200";
         String apiKey = "VnVhQ2ZHY0JDZGJrU...";
         RestClient restClient = RestClient
                 .builder(HttpHost.create(serverUrl))
@@ -133,10 +133,9 @@ public class DevConfig {
 //        ClientConfiguration config = builder.build();
 //        return provider.newProducerBuilder().setClientConfiguration(config).build();
         Properties props = new Properties();
-        props.put("bootstrap.servers", "localhost:9092");
+        props.put("bootstrap.servers", "192.168.31.75:9092");
         props.put("transactional.id", "my-transactional-id");
-        Producer<String, String> producer = new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
-        return producer;
+        return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
 
     }
 

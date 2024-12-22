@@ -13,7 +13,6 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
 import jakarta.annotation.PostConstruct;
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
@@ -27,8 +26,6 @@ import java.util.Set;
 
 @Service
 public class PostService {
-    @Autowired
-    SqlSessionFactory sqlSessionFactory;
 
     @Autowired
     CommentService commentService;

@@ -106,7 +106,7 @@ public class AccountService {
         }
         ResultSet execute = session.execute(getUserDetails.bind(userId));
         List<Account> account = AccountParser.userDetailParser(execute);
-        if (account.size() == 0) {
+        if (account.isEmpty()) {
             return null;
         }
         return account.get(0);

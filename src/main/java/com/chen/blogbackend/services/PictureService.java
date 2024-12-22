@@ -1,39 +1,57 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.util.RandomUtil;
-import com.chen.blogbackend.mappers.PictureMapper;
+import com.datastax.oss.driver.api.core.CqlSession;
 import io.minio.*;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
+
+import io.minio.errors.MinioException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
 @Service
 public class PictureService {
     @Autowired
-    SqlSessionFactory sqlSessionFactory;
+    CqlSession sqlSessionFactory;
 
     @Autowired
     MinioClient fileClient;
 
     public boolean uploadAvatarPicture(String userEmail, MultipartFile file) {
-        String hash = RandomUtil.getHash(userEmail);
-        System.out.println(hash);
-        String bucket = "avatar";
+        // 使用userEmail生成哈希值来作为文件名
+        System.out.println(userEmail);
+
+        String fileName = RandomUtil.getBase64(userEmail);
+        System.out.println(fileName);
+        // 计算bucket名和文件路径
+        String bucketName = "blogavatar";
+        String filePath =  fileName.substring(0, 2) + "/" + fileName;
+
         try {
-            boolean found = fileClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
+            // 检查bucket是否存在
+            boolean found = fileClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
             if (!found) {
-                fileClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
+                // 如果bucket不存在，创建bucket
+                fileClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
 
-            fileClient.putObject(PutObjectArgs.builder().bucket(bucket).object(userEmail).stream(file.getInputStream(), file.getSize(), -1).build());
-        } catch(Exception exception) {
-            System.out.println(exception);
+            // 将文件上传到MinIO
+            fileClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(filePath)
+                            .stream(file.getInputStream(), file.getSize(), -1)
+                            .build()
+            );
+
+        } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
+            System.out.println("Error occurred: " + e);
             return false;
         }
 
@@ -41,7 +59,7 @@ public class PictureService {
     }
 
     public boolean uploadPostPicture(String articleID, MultipartFile file, int number) {
-        String hash = RandomUtil.getHash(articleID);
+        String hash = RandomUtil.getBase64(articleID);
         String bucket = "articlePics";
         try {
             boolean found = fileClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
@@ -95,32 +113,37 @@ public class PictureService {
 
     }
 
-    public StreamingResponseBody getAvatar(String userEmail) {
-        StreamingResponseBody responseBody;
-        String hash = RandomUtil.getHash(userEmail);
+    public InputStream getAvatar(String userEmail) {
+        //StreamingResponseBody responseBody;
+        System.out.println(userEmail);
+        InputStream stream;
+        String fileName = RandomUtil.getBase64(userEmail);
+        System.out.println(fileName);
+        String filePath = fileName.substring(0, 2) + "/" + fileName;
+        System.out.println(filePath);
         try {
-            InputStream stream = fileClient.getObject(GetObjectArgs.builder().bucket("avatar").object(userEmail).build());
-            responseBody = inputStreamConverter(stream);
+            stream = fileClient.getObject(GetObjectArgs.builder().bucket("blogavatar").object(filePath).build());
+            //responseBody = inputStreamConverter(stream);
         }
         catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-        return responseBody;
+        return stream;
     }
 
-    public ArrayList<String> getPostPictureAddress(String articleId) {
-        SqlSession session = sqlSessionFactory.openSession();
-        PictureMapper mapper = session.getMapper(PictureMapper.class);
-        int amount = mapper.getPictureAmountByArticleID(articleId);
-        String hash = RandomUtil.getHash(articleId);
-        ArrayList<String> result = new ArrayList<>();
-        for (int i = 0; i < amount; i ++) {
-            String address = hash + "_" + i;
-            result.add(address);
-        }
-        return result;
-    }
+//    public ArrayList<String> getPostPictureAddress(String articleId) {
+//        SqlSession session = sqlSessionFactory.openSession();
+//        PictureMapper mapper = session.getMapper(PictureMapper.class);
+//        int amount = mapper.getPictureAmountByArticleID(articleId);
+//        String hash = RandomUtil.getHash(articleId);
+//        ArrayList<String> result = new ArrayList<>();
+//        for (int i = 0; i < amount; i ++) {
+//            String address = hash + "_" + i;
+//            result.add(address);
+//        }
+//        return result;
+//    }
 
     public void uploadChatPics(String fromId, String toId, String target){
 

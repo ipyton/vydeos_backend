@@ -2,7 +2,6 @@ package com.chen.blogbackend.services.ThreadPoolRunners;
 
 import com.chen.blogbackend.components.ConcurrentLatencyEstimator;
 import com.datastax.oss.driver.api.core.CqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;

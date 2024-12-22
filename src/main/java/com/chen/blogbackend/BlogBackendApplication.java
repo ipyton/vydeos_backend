@@ -12,9 +12,7 @@ import io.minio.MinioClient;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
-import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
 
 
 
@@ -38,7 +36,10 @@ import java.net.InetSocketAddress;
 public class BlogBackendApplication {
 
     public static void main(String[] args) throws IOException {
-        SpringApplication.run(BlogBackendApplication.class, args);
+        System.out.println("-==-");
+        SpringApplication app = new SpringApplication(BlogBackendApplication.class);
+        app.setAdditionalProfiles("dev"); // Activate 'dev' profile
+        app.run(args);
     }
 
 }

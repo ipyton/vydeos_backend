@@ -6,7 +6,6 @@ import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.chen.blogbackend.entities.*;
-import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +16,6 @@ import java.util.List;
 @Service
 public class SearchService {
 
-    @Autowired
-    private SqlSessionFactory sqlSessionFactory;
 
     @Autowired
     private ElasticsearchClient client;

@@ -47,7 +47,7 @@ public class Account {
         this.relationship = relationship;
     }
 
-    public Account(String userId, String userEmail, String userName, String introduction, String avatar, LocalDate dateOfBirth, String telephone, boolean gender, int relationship, List<String> apps) {
+    public Account(String userId, String userEmail, String userName, String introduction, String avatar, LocalDate dateOfBirth, String telephone, boolean gender, int relationship, String location,List<String> apps) {
         this.userId = userId;
         this.userEmail = userEmail;
         this.userName = userName;
@@ -58,6 +58,7 @@ public class Account {
         this.gender = gender;
         this.relationship = relationship;
         this.apps = apps;
+        this.location = location;
     }
 
     public Account(String userId, String userEmail, String userName, String introduction, String avatar, LocalDate dateOfBirth, String telephone, boolean gender, int relationship, String group, String address, List<String> apps) {

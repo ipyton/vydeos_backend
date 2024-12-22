@@ -12,21 +12,21 @@ import com.chen.blogbackend.entities.Account;
 import com.chen.blogbackend.entities.Token;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.PictureService;
+import com.chen.blogbackend.util.ValidationResult;
 import com.sun.tools.jconsole.JConsoleContext;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.ibatis.annotations.Param;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
@@ -72,10 +72,11 @@ public class AccountController {
 
     @PostMapping("/registerStep3")
     public LoginMessage registerStep3(String password, String userId) {
-        if (AccountInfoValidator.validateUserPassword(password)) {
+        ValidationResult validationResult = AccountInfoValidator.validateUserPassword(password);
+        if (validationResult.getCode() == 0) {
             if (accountService.insertStep3(password, userId)) return new LoginMessage(1, "Registered Successfully");
         }
-        return new LoginMessage(-1, "register error");
+        return new LoginMessage(-1, validationResult.getResult());
     }
 
     @PostMapping("/changePassword")
@@ -88,16 +89,28 @@ public class AccountController {
     @PostMapping(value = "/uploadAvatar")
     public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile,HttpServletRequest request) {
         System.out.println(request);
-        boolean result = pictureService.uploadAvatarPicture(request.getHeader("userEmail"), multipartFile);
-        if (!result) return new LoginMessage(-1, "hello");
+        boolean result = pictureService.uploadAvatarPicture((String) request.getAttribute("userEmail"), multipartFile);
+        if (!result) return new LoginMessage(-1, "error");
         else return new LoginMessage(1, "success");
     }
+
+    @GetMapping(value = "/getAvatar")
+    public String getAvatar(HttpServletRequest request) throws IOException {
+        System.out.println(request.getAttribute("userEmail"));
+        InputStream fileStream = pictureService.getAvatar((String) request.getAttribute("userEmail"));
+        byte[] bytes = fileStream.readAllBytes();
+        String encodedString = java.util.Base64.getEncoder().encodeToString(bytes);
+
+        // 返回 Base64 编码的图片数据 URI，用于前端渲染
+        return "data:image/jpeg;base64," + encodedString;
+    }
+
 
 
     //get a user's info.
     @PostMapping("/getinfo")
     public LoginMessage getAccountInformation(HttpServletRequest request) {
-        String userEmail = request.getHeader("userEmail");
+        String userEmail = (String) request.getAttribute("userEmail");
         Account result = accountService.getAccountDetailsById(userEmail);
         if (null == result) {
             return new LoginMessage(-1, "Do not have get any information.");
@@ -127,16 +140,16 @@ public class AccountController {
     }
 
 
-    @PostMapping("/getAvatar")
-    public ResponseEntity<StreamingResponseBody> getAvatar(HttpServletRequest request) {
-        String userEmail = request.getHeader("userEmail");
-        if (null == userEmail) {
-            return (ResponseEntity<StreamingResponseBody>) ResponseEntity.notFound();
-        }
-        System.out.println(userEmail);
-        StreamingResponseBody avatar = pictureService.getAvatar(userEmail);
-
-        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(avatar);
-    }
+//    @PostMapping("/getAvatar")
+//    public ResponseEntity<StreamingResponseBody> getAvatar(HttpServletRequest request) {
+//        String userEmail = request.getHeader("userEmail");
+//        if (null == userEmail) {
+//            return (ResponseEntity<StreamingResponseBody>) ResponseEntity.notFound();
+//        }
+//        System.out.println(userEmail);
+//        StreamingResponseBody avatar = pictureService.getAvatar(userEmail);
+//
+//        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(avatar);
+//    }
 
 }

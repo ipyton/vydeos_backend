@@ -11,11 +11,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.catalina.Globals;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-@WebFilter(filterName = "tokenChecker")
+@Component
 public class LoginTokenFilter implements Filter {
 
     @Autowired
@@ -34,13 +35,18 @@ public class LoginTokenFilter implements Filter {
         response.addHeader("Access-Control-Allow-Methods","*");
         response.addHeader("Access-Control-Allow-Headers","*");
         request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR, true);
-
-        if (request.getRequestURI().startsWith("/account") ) {
+        System.err.println(request.getRequestURI());
+        System.out.println(request.getRequestURI());
+        System.out.flush();
+        if (request.getRequestURI().startsWith("/account/register") || request.getRequestURI().startsWith("/account/login")
+                || request.getRequestURI().startsWith("/account/changePassword")
+                ||  request.getRequestURI().startsWith("/account/verifyToken" )) {
             chain.doFilter(request, response);
             return;
         }
 
-        String token = request.getHeader("token");
+        String token = request.getHeader("Token");
+        System.out.println("_____" + request.getHeader("Token"));
 //        request.getHeaderNames().asIterator().forEachRemaining(System.out::println);
 //        System.out.println(request.getHeader("token"));
         if (token == null) {

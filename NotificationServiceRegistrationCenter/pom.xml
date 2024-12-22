@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.chen</groupId>
-    <artifactId>FrontEndServiceRegistrationCenter</artifactId>
+    <artifactId>NotificationServiceRegistrationCenter</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>FrontEndServiceRegistrationCenter</name>
     <description>FrontEndServiceRegistrationCenter</description>
