@@ -2,14 +2,11 @@ package com.chen.blogbackend.controllers;
 
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.entities.Auth;
-import com.chen.blogbackend.entities.Friend;
+import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.util.AccountInfoValidator;
 import com.chen.blogbackend.util.TokenUtil;
-import com.chen.blogbackend.entities.Account;
-import com.chen.blogbackend.entities.Token;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.PictureService;
 import com.chen.blogbackend.util.ValidationResult;
@@ -31,6 +28,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Calendar;
+import java.util.List;
 
 @Controller
 @ResponseBody
@@ -45,9 +43,9 @@ public class AccountController {
 
     @PostMapping("/login")
     public LoginMessage login(@Param("email") String email, @Param("password") String password) {
-
-        if (accountService.validatePassword(email, password)) {
-            Token token = TokenUtil.createToken(new Token(email, Instant.now().plus(30 * 3600 * 24, ChronoUnit.SECONDS), null));
+        Auth auth = accountService.validatePassword(email, password);
+        if (auth != null) {
+            Token token = TokenUtil.createToken(new Token(email, auth.getRoleid(),Instant.now().plus(30 * 3600 * 24, ChronoUnit.SECONDS), email));
             System.out.println("account service");
             if (accountService.setToken(token)) {
                 return new LoginMessage(1, token.getTokenString());
@@ -105,13 +103,22 @@ public class AccountController {
         return "data:image/jpeg;base64," + encodedString;
     }
 
-
-
     //get a user's info.
     @PostMapping("/getinfo")
     public LoginMessage getAccountInformation(HttpServletRequest request) {
         String userEmail = (String) request.getAttribute("userEmail");
+
         Account result = accountService.getAccountDetailsById(userEmail);
+        if (null == result) {
+            return new LoginMessage(-1, "Do not have get any information.");
+        }
+        return new LoginMessage(1, JSON.toJSONString(result));
+    }
+
+    @GetMapping("/getAuthById")
+    public LoginMessage getInfoById(@Param("userEmail") String userEmail) {
+        System.out.println(userEmail);
+        Auth result = accountService.getAccountRoleById(userEmail);
         if (null == result) {
             return new LoginMessage(-1, "Do not have get any information.");
         }
@@ -138,6 +145,66 @@ public class AccountController {
         }
         return new LoginMessage(-1, "invalid token");
     }
+
+    @PostMapping("/reset_password")
+    public LoginMessage resetPassword(HttpServletRequest request,@Param("oldPassword") String oldPassword, @Param("newPassword") String newPassword ) {
+        Object email = request.getAttribute("userEmail");
+        boolean result = accountService.resetPassword(email, oldPassword, newPassword);
+        if (result) {
+            return new LoginMessage(1, "Success");
+        }
+        else {
+            return new LoginMessage(-1, "reset password error");
+        }
+    }
+
+    @PostMapping("/upsertRole")
+    public LoginMessage upsertRole(Role role) {
+        if (role == null) return new LoginMessage(-1, "role is null");
+        boolean result = accountService.upsertRole(role);
+        if (result) {
+            return new LoginMessage(1, "Success");
+        }
+        else {
+            return new LoginMessage(-1, "reset password error");
+        }
+    }
+
+    @GetMapping("/getRole")
+    public List<Role> getRole() {
+        return accountService.getRoles();
+    }
+
+    @PostMapping("/deleteRole")
+    public LoginMessage deleteRole(int roleId) {
+        boolean b = accountService.DeleteUserRole(roleId);
+        if (b) {
+            return new LoginMessage(1, "Success");
+        }
+        return new LoginMessage(-1, "delete error");
+    }
+
+    @PostMapping("/changeRole")
+    public LoginMessage changeRole(HttpServletRequest request,String userId, int roleId) {
+
+        boolean b = accountService.updateUserRole(userId, roleId);
+        if (b) {
+            return new LoginMessage(1, "Success");
+        } else {
+            return new LoginMessage(-1, "change role error");
+        }
+    }
+
+    @PostMapping("/deleteUser")
+    public LoginMessage deleteAccount(String userId) {
+        boolean result = accountService.deleteUser(userId);
+        if (result) {
+            return new LoginMessage(1, "Success");
+        } else {
+            return new LoginMessage(-1, "change role error");
+        }
+    }
+
 
 
 //    @PostMapping("/getAvatar")

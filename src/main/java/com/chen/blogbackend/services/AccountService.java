@@ -1,15 +1,15 @@
 package com.chen.blogbackend.services;
 
-import com.chen.blogbackend.entities.Auth;
-import com.chen.blogbackend.entities.Friend;
+import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.mappers.AccountParser;
 import com.chen.blogbackend.util.PasswordEncryption;
+import com.chen.blogbackend.util.RandomUtil;
 import com.chen.blogbackend.util.TokenUtil;
-import com.chen.blogbackend.entities.Account;
-import com.chen.blogbackend.entities.Token;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.*;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.querybuilder.insert.Insert;
+import com.datastax.oss.driver.api.querybuilder.select.Select;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -38,9 +39,12 @@ public class AccountService {
     PreparedStatement getAccount;
     PreparedStatement setToken;
     PreparedStatement getToken;
+    PreparedStatement getPassword;
+
 
     PreparedStatement insertUserDetails;
     PreparedStatement getUserDetails;
+
 
     PreparedStatement updateEmail;
     PreparedStatement updatePassword;
@@ -53,6 +57,7 @@ public class AccountService {
     PreparedStatement getIsTemp;
     PreparedStatement revertTempStat;
 
+    PreparedStatement getAuth;
     @PostConstruct
     public void init(){
 //        AppMapper appMapper = new AppMapperBuilder(session).withDefaultKeyspace("apps").build();
@@ -70,6 +75,8 @@ public class AccountService {
         getToken = session.prepare("select * from userinfo.user_tokens where user_token=?");
         searchResult = session.prepare("select user_id, user_name, intro, avatar from userinfo.user_information where user_id=?");
 
+        getPassword = session.prepare("select password from userinfo.user_auth where userid=?");
+        getAuth = session.prepare("select userid, roleid from userinfo.user_auth where userid=?");
 
         insertUserDetails = session.prepare("insert into userinfo.user_information (user_id, apps, avatar, " +
                 "birthdate, gender, intro, user_name,location) values(?,?,?,?,?,?,?,?);");
@@ -156,13 +163,14 @@ public class AccountService {
         return token1.getExpireDatetime().isAfter(Instant.now());
     }
 
-    public boolean validatePassword(String userId,String password){
-        password = PasswordEncryption.encryption(password);
+    public Auth validatePassword(String userId,String password){
+        password = RandomUtil.getMD5(password);
         ResultSet account = session.execute(getAccount.bind(userId));
         List<Auth> accounts = AccountParser.accountParser(account);
-        if (accounts.size() != 1) return false;
+        if (accounts.size() != 1) return null;
         System.out.println(accounts.get(0).getPassword());
-        return 1 == accounts.size() && accounts.get(0).getPassword().equals(password);
+        System.out.println(password);
+        return  accounts.get(0);
     }
 
     public boolean setToken(Token token) {
@@ -213,10 +221,192 @@ public class AccountService {
 
 
     public boolean insertStep3(String password,String userId) {
-        ResultSet execute = session.execute(insertPassword.bind(password, userId));
+        String encrypted = RandomUtil.getMD5(password);
+        ResultSet execute = session.execute(insertPassword.bind(encrypted, userId));
         if (friendsService.initUserIntro(userId)) {
             return execute.getExecutionInfo().getErrors().size()==0;
         }
         return false;
+    }
+
+    public boolean resetPassword(Object email, String oldPassword, String newPassword) {
+        ResultSet password = session.execute(getPassword.bind(email));
+        if (password.getExecutionInfo().getErrors().isEmpty()) {
+            List<Row> all = password.all();
+            if (all.isEmpty()) {
+                return false;
+            }
+            Row row = all.get(0);
+            String storedPassword = row.getString("password"); // 假设密码字段是 "password"
+            String encrypted = RandomUtil.getMD5(oldPassword);
+            // 假设你有一个方法来比较密码
+            if (storedPassword.equals(encrypted)) {
+                // 密码匹配，开始更新密码
+                ResultSet execute = session.execute(updatePassword.bind(email, RandomUtil.getMD5(newPassword))); // 假设 newPassword 是新的密码
+                if (execute.getExecutionInfo().getErrors().isEmpty()) {
+                    return true; // 密码更新成功
+                } else {
+                    // 更新密码失败，处理错误
+                    return false;
+                }
+            } else {
+                // 密码不匹配
+                return false;
+            }
+        } else {
+            // 查询密码时出错
+            return false;
+        }
+    }
+
+    public boolean upsertRole(Role role) {
+            // Prepare the CQL query to insert or update the role data
+        Insert insert = QueryBuilder.insertInto("userInfo", "roles")
+                .value("roleId", QueryBuilder.literal(role.getRoleId()))
+                .value("roleName", QueryBuilder.literal(role.getRoleName()))
+                .value("allowedPaths", QueryBuilder.literal(role.getAllowedPaths()));
+
+        // Execute the query
+        session.execute(insert.build());
+        System.out.println("Role upserted: " + role.getRoleName());
+        return true;
+    }
+    
+    public Role getRoleById(int roleId) {
+        Select select = QueryBuilder.selectFrom("userInfo", "roles")
+                .column("roleId")
+                .column("roleName")
+                .column("allowedPaths")
+                .whereColumn("roleId").isEqualTo(QueryBuilder.literal(roleId));
+
+        ResultSet resultSet = session.execute(select.build());
+        List<Row> all = resultSet.all();
+
+        if (all.isEmpty()) {
+            System.out.println("No role found with the given roleId: " + roleId);
+            return null;
+        }
+
+        // Extract the result from the ResultSet
+        var row = resultSet.one();
+        String roleName = row.getString("roleName");
+        List<String> allowedPaths = row.getList("allowedPaths", String.class);
+
+        return new Role(roleId, roleName, allowedPaths);
+    }
+
+    public List<Role> getRoles() {
+        Select select = QueryBuilder.selectFrom("userInfo", "roles")
+                .column("roleId")
+                .column("roleName")
+                .column("allowedPaths");
+
+        ResultSet resultSet = session.execute(select.build());
+
+        List<Role> roles = new ArrayList<>();
+
+        // Iterate over the result set and convert rows to Role objects
+        resultSet.forEach(row -> {
+            int roleId = row.getInt("roleId");
+            String roleName = row.getString("roleName");
+            List<String> allowedPaths = row.getList("allowedPaths", String.class);
+            roles.add(new Role(roleId, roleName, allowedPaths));
+        });
+
+        return roles;
+    }
+    public boolean updateUserRole( String userId, int newRoleId) {
+        // 1. 检查用户是否存在
+        ResultSet resultSet = session.execute("SELECT roleId FROM userinfo.user_auth WHERE userId = ?", userId);
+        if (resultSet.all().isEmpty()) {
+            // 如果没有找到该用户，返回 false
+            return false;
+        }
+        ResultSet resultSet1 = session.execute("SELECT roleId FROM userinfo.roles WHERE roleid = ?", newRoleId);
+        if (resultSet1.all().isEmpty()) {
+            return false;
+        }
+        // 2. 如果用户存在，执行更新操作
+        // 更新用户的 roleId
+        PreparedStatement updateRoleStmt = session.prepare("UPDATE userinfo.user_auth SET roleId = ? WHERE userId = ?");
+        BoundStatement boundStatement = updateRoleStmt.bind(newRoleId, userId);
+        session.execute(boundStatement);
+
+        // 3. 确认是否更新成功
+        resultSet = session.execute("SELECT roleId FROM userinfo.user_auth WHERE userId = ?", userId);
+        Row row = resultSet.one();
+        if (row != null && row.getInt("roleId") == newRoleId) {
+            return true; // 更新成功
+        }
+
+        return false; // 更新失败
+    }
+
+    public boolean DeleteUserRole(int roleId) {
+        String deleteQuery = "DELETE FROM userInfo.roles WHERE roleid = ?";
+        try {
+            session.execute(deleteQuery, roleId);
+            return true; // 删除成功
+        } catch (Exception e) {
+            System.err.println("Error deleting user role: " + e.getMessage());
+            return false; // 删除失败
+        }
+    }
+
+    // 根据角色ID和请求的路径检查权限
+    public boolean hasAccess(int roleId, String path) {
+        // 1. 查询角色权限
+        String query = "SELECT allowedPaths FROM userinfo.roles WHERE roleId = ?";
+        SimpleStatement statement = SimpleStatement.newInstance(query, roleId);
+
+        // 2. 执行查询并获取结果
+        Row row = session.execute(statement).one();
+
+        // 3. 如果没有找到角色，则返回没有权限
+        if (row == null) {
+            return false;
+        }
+
+        // 4. 获取该角色允许访问的路径列表
+        List<String> allowedPaths = row.getList("allowedPaths", String.class);
+
+        // 5. 检查路径是否在允许的路径列表中
+        if (allowedPaths != null && allowedPaths.contains(path)) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+    public Auth getAccountRoleById(String userEmail) {
+        ResultSet execute = session.execute(getAuth.bind(userEmail));
+        List<Auth> auths = AccountParser.accountParser(execute);
+        if (auths.isEmpty()) {
+            return null;
+        }
+        return auths.get(0);
+
+    }
+
+    public boolean deleteUser(String userId) {
+
+        try {
+            // Create a DELETE statement
+            String query = "DELETE FROM userinfo.user_auth WHERE userid = ?";
+
+            // Prepare the statement
+            PreparedStatement preparedStatement = session.prepare(query);
+
+            // Bind the userId value to the statement
+            session.execute(preparedStatement.bind(userId));
+
+            // Return true if the operation succeeded
+            return true;
+        } catch (Exception e) {
+            // Log the error (this can be improved with proper logging)
+            e.printStackTrace();
+            return false;
+        }
     }
 }

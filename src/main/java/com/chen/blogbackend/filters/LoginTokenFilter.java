@@ -1,6 +1,7 @@
 package com.chen.blogbackend.filters;
 
 import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.entities.Token;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.util.TokenUtil;
@@ -56,7 +57,19 @@ public class LoginTokenFilter implements Filter {
             return;
         }
         else {
-            System.out.printf("Success");
+            Token token1 = TokenUtil.resolveToken(token);
+            if (token1 == null) {
+                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "please login first")).getBytes(StandardCharsets.UTF_8));
+                return;
+            } else {
+                if (token1.getRoleId() == -1 || accountService.hasAccess(token1.getRoleId(), request.getRequestURI())) {
+                    request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
+                    chain.doFilter(request, response);
+                } else {
+                    servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "do not have permission")).getBytes(StandardCharsets.UTF_8));
+                }
+                return;
+            }
         }
 //        boolean result = accountService.haveValidLogin(request.getHeader("token"));
 //        if(null == token) {
@@ -77,9 +90,6 @@ public class LoginTokenFilter implements Filter {
 //                return;
 //            }
 //        }
-        System.out.printf(TokenUtil.resolveToken(token).getUserId());
-        request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
-        chain.doFilter(request, response);
     }
 
     @Override

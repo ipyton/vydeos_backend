@@ -17,8 +17,10 @@ public class AccountParser {
         ArrayList<Auth> list = new ArrayList<>();
         for (Row row:
              set.all()) {
-            list.add(new Auth(row.getString("userId"), row.getString("password"),
-                    row.getString("email"), row.getString("telephone")));
+            ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
+
+            list.add(new Auth(!columnDefinitions.contains("userId")?null:row.getString("userId"),!columnDefinitions.contains("password")?null: row.getString("password"),
+                    !columnDefinitions.contains("email")?null:row.getString("email"), !columnDefinitions.contains("telephone")?null:row.getString("telephone"), !columnDefinitions.contains("roleid")?null:row.getInt("roleid")));
         }
         return list;
 

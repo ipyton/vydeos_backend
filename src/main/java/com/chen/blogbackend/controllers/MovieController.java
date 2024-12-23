@@ -26,9 +26,10 @@ public class MovieController {
 
     }
 
-    @PostMapping("")
+    @PostMapping("uploadMovie")
     public LoginMessage getMovieMessages() {
-        return new LoginMessage(-1, "asdsda");
+
+        return new LoginMessage(-1, "success");
     }
 
 }

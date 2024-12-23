@@ -1,5 +1,7 @@
 package com.chen.blogbackend.util;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Random;
 
@@ -25,7 +27,28 @@ public class RandomUtil {
 
         return sb.toString();
     }
+    public static String getMD5(String input) {
+        try {
+            // 获取 MD5 算法的 MessageDigest 实例
+            MessageDigest md = MessageDigest.getInstance("MD5");
 
+            // 对输入的字符串进行哈希运算
+            byte[] messageDigest = md.digest(input.getBytes());
+
+            // 将字节数组转换为十六进制字符串
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : messageDigest) {
+                // 将每个字节转换为两位十六进制
+                hexString.append(String.format("%02x", b));
+            }
+
+            // 返回十六进制字符串
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     public static String generate6RandomInt() {
         String characters = "1234567890";
         StringBuilder sb = new StringBuilder(6);

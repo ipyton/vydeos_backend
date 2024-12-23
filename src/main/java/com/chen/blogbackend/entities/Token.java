@@ -6,9 +6,25 @@ import java.util.Date;
 public class Token {
     private String userId;
     private Instant expireDatetime;
+    private int roleId;
 
     public String getTokenString() {
         return tokenString;
+    }
+
+    public Token(String tokenString, int role, Instant expireDatetime, String userId) {
+        this.tokenString = tokenString;
+        this.roleId = role;
+        this.expireDatetime = expireDatetime;
+        this.userId = userId;
+    }
+
+    public int getRoleId() {
+        return roleId;
+    }
+
+    public void setRole(int role) {
+        this.roleId = role;
     }
 
     public void setTokenString(String tokenString) {

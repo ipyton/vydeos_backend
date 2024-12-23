@@ -5,12 +5,22 @@ public class Auth {
     private String password;
     private String email;
     private String telephone;
+    private int roleid;
 
-    public Auth(String userId, String password, String email, String telephone) {
+    public Auth(String userId, String password, String email, String telephone, int roleid) {
         this.userId = userId;
         this.password = password;
         this.email = email;
         this.telephone = telephone;
+        this.roleid = roleid;
+    }
+
+    public int getRoleid() {
+        return roleid;
+    }
+
+    public void setRoleid(int roleid) {
+        this.roleid = roleid;
     }
 
     public String getUserId() {
