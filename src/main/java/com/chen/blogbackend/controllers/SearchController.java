@@ -9,6 +9,7 @@ import com.chen.blogbackend.services.AuthorityService;
 import com.chen.blogbackend.services.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -37,6 +38,11 @@ public class SearchController {
         System.out.println(JSON.toJSONString(userDetails));
 
         return new LoginMessage(1, JSON.toJSONString(userDetails, SerializerFeature.SkipTransientField, SerializerFeature.WriteMapNullValue));
+    }
+
+    @GetMapping("getProfileById")
+    public Account getProfileById(String userId) {
+        return accountService.getProfileById(userId);
     }
 
     @PostMapping("contactByName")

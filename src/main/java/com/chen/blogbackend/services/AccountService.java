@@ -99,6 +99,16 @@ public class AccountService {
         return AccountParser.userDetailParser(execute);
     }
 
+    public Account getProfileById(String userId) {
+        ResultSet execute = session.execute(searchResult.bind(userId));
+
+        List<Account> accounts = AccountParser.userDetailParser(execute);
+        if (accounts.isEmpty()) {
+            return null;
+        }
+        return accounts.get(0);
+    }
+
 
     public boolean insertUserDetails(Account userDetail) {
         ResultSet execute = session.execute(insertUserDetails.bind(userDetail.getUserId(), userDetail.getApps(),

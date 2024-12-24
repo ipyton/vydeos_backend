@@ -62,6 +62,7 @@ public class LoginTokenFilter implements Filter {
                 servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "please login first")).getBytes(StandardCharsets.UTF_8));
                 return;
             } else {
+                System.out.println(token1.toString());
                 if (token1.getRoleId() == -1 || accountService.hasAccess(token1.getRoleId(), request.getRequestURI())) {
                     request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
                     chain.doFilter(request, response);

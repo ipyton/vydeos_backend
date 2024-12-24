@@ -11,6 +11,7 @@ import org.apache.http.message.BasicHeader;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.elasticsearch.client.RestClient;
 import org.quartz.Scheduler;
@@ -134,7 +135,9 @@ public class DevConfig {
 //        return provider.newProducerBuilder().setClientConfiguration(config).build();
         Properties props = new Properties();
         props.put("bootstrap.servers", "192.168.31.75:9092");
-        props.put("transactional.id", "my-transactional-id");
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+
+//        props.put("transactional.id", "my-transactional-id");
         return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
 
     }

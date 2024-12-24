@@ -6,19 +6,22 @@ import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.mappers.MessageParser;
-import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.querybuilder.select.Select;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ChatGroupService {
@@ -28,6 +31,9 @@ public class ChatGroupService {
 
     @Autowired
     PictureService service;
+
+    @Autowired
+    KeyService keyService;
 
     PreparedStatement insertChatGroupById;
     PreparedStatement insertChatGroupByUser;
@@ -167,14 +173,66 @@ public class ChatGroupService {
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
-    public PagingMessage<ChatGroup> getGroups(String userId, String pagingState) {
+    public List<ChatGroup> getGroups(String userId, String pagingState) {
         ResultSet execute = session.execute(getGroups.bind(userId).setPagingState(PagingState.fromString(pagingState)));
         PagingIterable<ChatGroup> groups = chatGroupDao.convert(execute);
-        return new PagingMessage<>(groups.all(), execute.getExecutionInfo().getPagingState().toString(), -1);
+        return groups.all();
     }
 
     public boolean recall(String operatorId, String groupID, String messageId) {
         return true;
+    }
+
+    public boolean createGroup(String creatorId, String groupName, List<String> members) {
+        long groupId = keyService.getIntKey("chatGroup"); // 你需要实现如何生成群组 ID
+
+        // 1. 插入群组信息到 `chat_group_by_id`
+        String insertGroupQuery = "INSERT INTO group_chat.chat_group_by_id (group_id, user_id, user_name) VALUES (?, ?, ?)";
+        session.execute(SimpleStatement.builder(insertGroupQuery)
+                .addPositionalValues(groupId, creatorId, "Creator") // 假设创建者名称是"Creator"
+                .build());
+
+        // 2. 插入群成员到 `chat_group_by_user`
+        for (String memberId : members) {
+            String insertMemberQuery = "INSERT INTO group_chat.chat_group_by_user (user_id, group_id, group_name) VALUES (?, ?, ?)";
+            session.execute(SimpleStatement.builder(insertMemberQuery)
+                    .addPositionalValues(memberId, groupId, groupName)
+                    .build());
+        }
+
+        // 3. 为了群组创建者，插入到 `chat_group_by_user` 表中
+        String insertCreatorQuery = "INSERT INTO group_chat.chat_group_by_user (user_id, group_id, group_name) VALUES (?, ?, ?)";
+        session.execute(SimpleStatement.builder(insertCreatorQuery)
+                .addPositionalValues(creatorId, groupId, groupName)
+                .build());
+
+        return true; // 如果没有异常发生，返回 true
+    }
+
+    public ChatGroup getGroupDetail(long groupId) {
+        Select select = QueryBuilder.selectFrom("chat_group_details").all()
+                .whereColumn("group_id").isEqualTo(QueryBuilder.literal(groupId));
+
+        SimpleStatement build = select.build();
+
+        // 执行查询并获取结果
+        Row row = session.execute(build).one();
+
+        if (row != null) {
+            // 映射查询结果到 ChatGroupDetails 对象
+            long groupIdLong = row.getLong("group_id");
+            String groupName = row.getString("group_name");
+            String groupDescription = row.getString("group_description");
+            String owner = row.getString("owner");
+            Map<String, String> config = row.getMap("config", String.class, String.class);
+            String avatar = row.getString("avatar");
+            Instant createDatetime = row.getInstant("createDatetime");
+
+            return new ChatGroup(groupIdLong , groupName, groupDescription, createDatetime,owner, config, avatar);
+        } else {
+            // 如果没有找到对应的群组，返回 null 或抛出异常
+            return null;
+        }
     }
 
 

@@ -2,46 +2,38 @@ package com.chen.blogbackend.entities;
 
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.Map;
 
 @Entity
 public class ChatGroup {
-    String groupId;
-    String userId;
+    long groupId;
     String groupName;
     String groupDescription;
-    Date createDatetime;
+    Instant createDatetime;
     Map<String, String> config;
     String avatar;
+    String ownerId;
 
-    public ChatGroup(String groupId, String userId, String groupName, String groupDescription, Date createDatetime, Map<String, String> config, String avatar) {
+    public ChatGroup(long groupId, String groupName, String groupDescription, Instant createDatetime, String ownerId, Map<String, String> config, String avatar) {
         this.groupId = groupId;
-        this.userId = userId;
         this.groupName = groupName;
         this.groupDescription = groupDescription;
         this.createDatetime = createDatetime;
         this.config = config;
         this.avatar = avatar;
+        this.ownerId = ownerId;
     }
 
     public ChatGroup() {
     }
 
-    public String getGroupId() {
+    public long getGroupId() {
         return groupId;
     }
 
-    public void setGroupId(String groupId) {
+    public void setGroupId(long groupId) {
         this.groupId = groupId;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
     }
 
     public String getGroupName() {
@@ -60,11 +52,11 @@ public class ChatGroup {
         this.groupDescription = groupDescription;
     }
 
-    public Date getCreateDatetime() {
+    public Instant getCreateDatetime() {
         return createDatetime;
     }
 
-    public void setCreateDatetime(Date createDatetime) {
+    public void setCreateDatetime(Instant createDatetime) {
         this.createDatetime = createDatetime;
     }
 

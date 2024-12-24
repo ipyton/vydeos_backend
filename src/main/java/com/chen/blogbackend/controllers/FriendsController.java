@@ -12,6 +12,7 @@ import com.chen.blogbackend.services.FriendsService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -117,7 +118,7 @@ public class FriendsController {
     }
 
     //get user introduction from searching/friend list
-    @PostMapping("getUserIntro")
+    @RequestMapping("/getUserIntro")
     public LoginMessage getIntro(HttpServletRequest request,String userIdToFollow) throws Exception {
         String userId = (String) request.getAttribute("userEmail");
         Account friendDetailsById = accountService.getFriendDetailsById(userId, userIdToFollow);
