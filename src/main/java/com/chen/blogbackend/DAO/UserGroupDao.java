@@ -37,7 +37,7 @@ public interface UserGroupDao {
     PagingIterable<Friend> selectFriendsByGroupId(String userId, String groupId);
 
     @Query("insert into user_group values(:group_id, :group_name, :group_avatar, :count)")
-    void insert(String group_id, String group_name, String group_avatar, int count);
+    void insert(int group_id, String group_name, String group_avatar, int count);
 
     @Query("update user_group set count=count+1 where group_id=:groupID")
     void incrementCountForGroup(String groupID);

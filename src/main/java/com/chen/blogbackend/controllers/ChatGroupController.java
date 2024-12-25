@@ -27,6 +27,9 @@ public class ChatGroupController {
     @PostMapping("create")
     public LoginMessage createGroup(HttpServletRequest req, String groupName ,List<String> users) {
         String email = (String) req.getAttribute("userEmail");
+        if (email == null || email.equals("") || groupName == null || groupName.equals("") || users == null || users.size() == 0) {
+            return new LoginMessage(-1, "no sufficient data provided")
+        }
         boolean result = service.createGroup(email,groupName, users);
         if (result) {
             return new LoginMessage(1, "Success");
@@ -97,8 +100,7 @@ public class ChatGroupController {
 
     @RequestMapping("get_groups")
     public List<ChatGroup> getGroups(String userId, String pagingState){
-        List<ChatGroup> result = service.getGroups(userId, pagingState);
-        return result;
+        return service.getGroups(userId, pagingState);
     }
 
     @RequestMapping("get_members")

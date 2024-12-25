@@ -2,10 +2,7 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.UserGroupDao;
-import com.chen.blogbackend.entities.Account;
-import com.chen.blogbackend.entities.Friend;
-import com.chen.blogbackend.entities.Relationship;
-import com.chen.blogbackend.entities.UserGroup;
+import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.mappers.AccountParser;
 import com.chen.blogbackend.mappers.RelationshipParser;
 import com.chen.blogbackend.responseMessage.PagingMessage;
@@ -14,6 +11,8 @@ import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
+import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
+import com.datastax.oss.driver.api.querybuilder.select.Select;
 import com.datastax.oss.driver.shaded.guava.common.hash.BloomFilter;
 import com.datastax.oss.driver.shaded.guava.common.hash.Funnels;
 import jakarta.annotation.PostConstruct;
@@ -27,7 +26,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Service
@@ -39,8 +40,9 @@ public class FriendsService {
     @Autowired
     Jedis redisClient;
 
-    FriendDao friendDao;
-    UserGroupDao userGroupDao;
+    @Autowired
+    KeyService keyService;
+
 
     private PreparedStatement addUsersInGroups;
     private PreparedStatement addUserOwnedGroups;
@@ -49,45 +51,45 @@ public class FriendsService {
     private PreparedStatement delOwnGroups;
     private PreparedStatement delUserGroup;
     private PreparedStatement getFollowersByUserId;
-    private PreparedStatement getFollowersByIdolId;
     private PreparedStatement getUsersIntro;
     private PreparedStatement initUsersIntro;
 //  private   PreparedStatement updateFriendDirectionByIdolId;
 //  private   PreparedStatement updateFriendDirectionByUserId;
+    private PreparedStatement getFollowRelationship;
     private PreparedStatement block;
     private PreparedStatement unBlock;
     private PreparedStatement deleteFriend;
-    private PreparedStatement follows;
     private PreparedStatement insertFollowRelationship;
     private PreparedStatement deleteFollowRelationship;
     private PreparedStatement addFriend;
     private PreparedStatement getAllFriends;
     private PreparedStatement getIdolsById;
-    private PreparedStatement addIdol;
-    private PreparedStatement deleteIdol;
+
+    private PreparedStatement createGroup;
 
 
     ThreadPoolExecutor executor;
 
 
-
+    private static boolean stringLessThan(String str1, String str2) {
+        // 使用compareTo方法进行比较
+        return str1.compareTo(str2) < 0;
+    }
 
     @PostConstruct
     public void init() throws IOException {
             delFriendByUserId = session.prepare("delete from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
-            getFollowersByUserId = session.prepare("select * from relationship.followers_by_user_id where user_id=?;");
             initUsersIntro = session.prepare("insert into userInfo.user_information (user_id, user_name)  values (?,?) ");
             getUsersIntro = session.prepare("select * from userInfo.user_information where user_id=?;");
-            follows = session.prepare("select * from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
             insertFollowRelationship = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?)");
             deleteFollowRelationship = session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");
             deleteFriend= session.prepare("delete from relationship.friends_by_user_id where user_id = ? and friend_id = ?");
             addFriend = session.prepare("insert into relationship.friends_by_user_id (user_id, friend_id, name) values(?, ?, ?);");
-            getAllFriends = session.prepare("select * from relationship.friends_by_user_id where user_id = ?;");
-            getIdolsById = session.prepare("select * from relationship.idol_by_user_id where user_id = ?");
-            addIdol = session.prepare("insert into relationship.idol_by_user_id (user_id, friend_id) values (?,?) ");
-            deleteIdol = session.prepare("delete from relationship.idol_by_user_id  where user_id=? and friend_id=?");
+            getIdolsById = session.prepare("select * from relationship.following_relationship where user_id = ?");
+            getFollowersByUserId = session.prepare("select * from relationship.following_relationship where friend_id =?;");
+            getFollowRelationship = session.prepare("select * from relationship.following_relationship where user_id = ? and friend_id = ?");
 
+            ///createGroup = session.prepare("INSERT INTO group_chat.chat_group_details (group_id, group_name, group_description, owner, config, avatar) VALUES (?,?,?,?,?,?);");
     }
 
     public List<Relationship> getFollowersByUserId(String userId) {
@@ -95,13 +97,34 @@ public class FriendsService {
         return RelationshipParser.parseToRelationship(execute);
     }
 
+    public List<Relationship> getFriendsByUserId(String userId) {
+        ArrayList<Relationship> result = new ArrayList<>();
+
+        ResultSet execute = session.execute(getFollowersByUserId.bind(userId));
+        List<Relationship> relationships = RelationshipParser.parseToRelationship(execute);
+        HashSet<String> hashSet = new HashSet<>();
+        for (Relationship relationship : relationships) {
+            hashSet.add(relationship.getFriendId());
+        }
+        ResultSet execute1 = session.execute(getIdolsById.bind(userId));
+        List<Relationship> relationships1 = RelationshipParser.parseToRelationship(execute1);
+        for (Relationship relationship : relationships1) {
+            if (hashSet.contains(relationship.getUserId())) {
+                result.add(relationship);
+            }
+        }
+
+
+        return result;
+    }
+
     public int getRelationship(String userid, String userIdToFollow) throws Exception {
         boolean flag = false;
-        System.out.println(follows);
-        ResultSet follow = session.execute(follows.bind(userid, userIdToFollow));
+
+        ResultSet follow = session.execute(getFollowRelationship.bind(userid, userIdToFollow));
         if (follow.all().size() > 0) flag = true;
 
-        ResultSet reverseFollow = session.execute(follows.bind(userIdToFollow, userid));
+        ResultSet reverseFollow = session.execute(getFollowRelationship.bind(userIdToFollow, userid));
         List<Row> all = reverseFollow.all();
         if (all.size() == 0) {
             if (flag) return 10;
@@ -125,38 +148,17 @@ public class FriendsService {
 
 
 
-    public List<Friend> getFriendsByGroupId(String userId, String groupId) {
-        PagingIterable<Friend> userGroups = userGroupDao.selectFriendsByGroupId(userId, groupId);
-        return userGroups.all();
-    }
 
-    public List<String> getFriendIdsByGroupId(String groupId) {
-        PagingIterable<String> strings = userGroupDao.selectUserIdByGroupID(groupId);
-        return strings.all();
-    }
-
-    public List<UserGroup> getGroupById(String userId) {
-        PagingIterable<UserGroup> userGroups = userGroupDao.selectGroupByGroupID(userId);
-        return userGroups.all();
-    }
 
     public boolean follow(String fanId, String idolId, String name) throws Exception {
         if (fanId == null || idolId == null) return false;
+//        if (compareStrings(fanId,idolId))
+//        String smaller = ;
+//        String bigger = ;
         ResultSet execute = session.execute(insertFollowRelationship.bind(fanId,idolId));
-        ResultSet set3 = session.execute(addIdol.bind(idolId,fanId));
-        int relationship = getRelationship(fanId, idolId);
-        if (relationship == 11) {
-            ResultSet set1 = session.execute(addFriend.bind(fanId, idolId, name));
-            ResultSet set2 = session.execute(addFriend.bind(idolId, fanId, name));
+        //int relationship = getRelationship(fanId, idolId);
 
-            return execute.getExecutionInfo().getErrors().size() == 0 &&
-                    set1.getExecutionInfo().getErrors().size() == 0 &&
-                    set2.getExecutionInfo().getErrors().size() == 0 &&
-                    set3.getExecutionInfo().getErrors().size() == 0;
-
-        }
-        return execute.getExecutionInfos().get(0).getErrors().size() == 0 &&
-                set3.getExecutionInfo().getErrors().size() == 0;
+        return execute.getExecutionInfos().get(0).getErrors().size() == 0;
     }
 
 
@@ -172,56 +174,57 @@ public class FriendsService {
 //         modify
 
         ResultSet execute = session.execute(deleteFollowRelationship.bind(fanId, idolId));
-        ResultSet set1 = session.execute(deleteFriend.bind(fanId, idolId));
-        ResultSet set2 = session.execute(deleteFriend.bind(idolId, fanId));
-        ResultSet set3 = session.execute(deleteIdol.bind(idolId,fanId));
+        ResultSet execute1 = session.execute(deleteFollowRelationship.bind(idolId, fanId));
+
+//        ResultSet set3 = session.execute(deleteIdol.bind(idolId,fanId));
         return execute.getExecutionInfo().getErrors().size() == 0 &&
-                set1.getExecutionInfo().getErrors().size() == 0 &&
-                set2.getExecutionInfo().getErrors().size() == 0 &&
-                set3.getExecutionInfo().getErrors().size() == 0;
+                execute1.getExecutionInfo().getErrors().size() == 0;
+
     }
 
-    public boolean createGroup(UserGroup group) {
-        userGroupDao.insert(group.getGroupId(), group.getName(), group.getGroup_avatar(), group.getCount());
-        return true;
-    }
+    // user group not group chat.
+//    public boolean createGroup(UserGroup group) {
+//        group.setGroupId(keyService.getIntKey("group_id"));
+//        userGroupDao.insert(group.getGroupId(), group.getName(), group.getGroup_avatar(), group.getCount());
+//        return true;
+//    }
+//
+//    public boolean removeGroup(String groupId) {
+//        List<String> friendIdsByGroupId = getFriendIdsByGroupId(groupId);
+//        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
+//        for (String userId : friendIdsByGroupId) {
+//            batchStatementBuilder.addStatements(delUsersInGroups.bind(userId, groupId), delOwnGroups.bind(groupId, userId));
+//        }
+//        batchStatementBuilder.addStatements(delUserGroup.bind(groupId));
+//        ResultSet execute = session.execute(batchStatementBuilder.build());
+//        // modify
+//        return execute.getExecutionInfo().getErrors().size() == 0;
+//    }
+//
+//    public List<Friend> batchGetUsers(List<String> users) {
+//        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
+//        for (String userId : users) {
+//            batchStatementBuilder.addStatement(getUsersIntro.bind(userId));
+//        }
+//        ResultSet execute = session.execute(batchStatementBuilder.build());
+//        return friendDao.getEntity(execute).all();
+//    }
 
-    public boolean removeGroup(String groupId) {
-        List<String> friendIdsByGroupId = getFriendIdsByGroupId(groupId);
-        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
-        for (String userId : friendIdsByGroupId) {
-            batchStatementBuilder.addStatements(delUsersInGroups.bind(userId, groupId), delOwnGroups.bind(groupId, userId));
-        }
-        batchStatementBuilder.addStatements(delUserGroup.bind(groupId));
-        ResultSet execute = session.execute(batchStatementBuilder.build());
-        // modify
-        return execute.getExecutionInfo().getErrors().size() == 0;
-    }
+//    public boolean moveToGroup(String userId, List<String> friendId, String groupId) {
+//        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
+//        List<Friend> friends = batchGetUsers(friendId);
+//        for (Friend friend: friends) {
+//            batchStatementBuilder.addStatements(addUsersInGroups.bind(userId, groupId, friend.getUserId(), friend.getName(),friend.getAvatar()));
+//        }
+//        ResultSet execute = session.execute(batchStatementBuilder.build());
+//        return execute.getExecutionInfo().getErrors().size() == 0;
+//    }
 
-    public List<Friend> batchGetUsers(List<String> users) {
-        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
-        for (String userId : users) {
-            batchStatementBuilder.addStatement(getUsersIntro.bind(userId));
-        }
-        ResultSet execute = session.execute(batchStatementBuilder.build());
-        return friendDao.getEntity(execute).all();
-    }
-
-    public boolean moveToGroup(String userId, List<String> friendId, String groupId) {
-        BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
-        List<Friend> friends = batchGetUsers(friendId);
-        for (Friend friend: friends) {
-            batchStatementBuilder.addStatements(addUsersInGroups.bind(userId, groupId, friend.getUserId(), friend.getName(),friend.getAvatar()));
-        }
-        ResultSet execute = session.execute(batchStatementBuilder.build());
-        return execute.getExecutionInfo().getErrors().size() == 0;
-    }
-
-    public boolean moveToGroup(String userId, String friendId, String groupId) {
-        ArrayList<String> friendsId = new ArrayList<>();
-        friendsId.add(friendId);
-        return moveToGroup(userId, friendsId, groupId);
-    }
+//    public boolean moveToGroup(String userId, String friendId, String groupId) {
+//        ArrayList<String> friendsId = new ArrayList<>();
+//        friendsId.add(friendId);
+//        return moveToGroup(userId, friendsId, groupId);
+//    }
 
     public boolean deleteFromGroup(String user, List<String> usersToRemove, String groupFrom) {
         BatchStatementBuilder batchStatementBuilder = BatchStatement.builder(BatchType.UNLOGGED);
@@ -243,11 +246,16 @@ public class FriendsService {
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
-    public List<Relationship> getFriends(String userId) {
-        System.out.println(userId);
-        ResultSet execute = session.execute(getAllFriends.bind(userId));
-        return RelationshipParser.parseToRelationship(execute);
+    public boolean sendInvitation(Invitation invitation) {
+        return true;
+    }
 
+    public boolean approveInvitation(int invitationId) {
+        return true;
+    }
+
+    public List<Invitation> getInvitations(String userId) {
+        return new ArrayList<Invitation>() ;
     }
 
 

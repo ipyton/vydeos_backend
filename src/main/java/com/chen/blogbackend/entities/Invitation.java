@@ -6,29 +6,30 @@ import java.util.Date;
 
 @Entity
 public class Invitation {
-    String groupId;
-    Date expire_time;
-    String userId;
-    int limit;
+    private int invitation_id;
+    private String receiverId;
+    private String targetId;
+    private Date expire_time;
+    private String senderId ;
+    private String message;
+    private int limit;
     public Invitation() {
     }
 
-    public Invitation(String groupId, Date expire_time, String userId, int limit) {
-        this.groupId = groupId;
-        this.expire_time = expire_time;
-        this.userId = userId;
-        this.limit = limit;
+    public String getReceiverId() {
+        return receiverId;
     }
 
-
-
-
-    public String getGroupId() {
-        return groupId;
+    public void setReceiverId(String receiverId) {
+        this.receiverId = receiverId;
     }
 
-    public void setGroupId(String groupId) {
-        this.groupId = groupId;
+    public String getTargetId() {
+        return targetId;
+    }
+
+    public void setTargetId(String targetId) {
+        this.targetId = targetId;
     }
 
     public Date getExpire_time() {
@@ -39,12 +40,20 @@ public class Invitation {
         this.expire_time = expire_time;
     }
 
-    public String getGroupName() {
-        return userId;
+    public String getSenderId() {
+        return senderId;
     }
 
-    public void setGroupName(String groupName) {
-        this.userId = groupName;
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public int getLimit() {
@@ -54,5 +63,15 @@ public class Invitation {
     public void setLimit(int limit) {
         this.limit = limit;
     }
+
+    public Invitation(String receiverId, Date expire_time, String userId, int limit) {
+        this.receiverId = receiverId;
+        this.expire_time = expire_time;
+        this.senderId = userId;
+        this.limit = limit;
+    }
+
+
+
 
 }

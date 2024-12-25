@@ -119,7 +119,7 @@ public class PostService {
         builder.addStatement(savePostByUserId.bind(post.getPostID(), post.getLikes(),post.getAuthorID(), post.getAuthorName(),
                 post.getComments(), post.getLastModified(), post.getImages(), post.getVideos(), post.getVoices(),
                 post.getContent(), post.getAccessRules(),post.getNotice(),post.getLocation()));
-        List<Relationship> friends = friendsService.getFriends(userId);
+        List<Relationship> friends = friendsService.getFriendsByUserId(userId);
         for (Relationship friend : friends) {
             String friendId = friend.getFriendId();
             builder.addStatement(sendToMailbox.bind(friendId, post.getLastModified(), post.getLikes(), post.getComments(), post.getContent(),

@@ -1,10 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.entities.Account;
-import com.chen.blogbackend.entities.Friend;
-import com.chen.blogbackend.entities.Relationship;
-import com.chen.blogbackend.entities.UserGroup;
+import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.services.AccountService;
@@ -54,7 +51,7 @@ public class FriendsController {
     @RequestMapping("get_friends")
     public LoginMessage getFriends(HttpServletRequest request) {
         String userId = (String) request.getAttribute("userEmail");
-        List<Relationship> friends = friendsService.getFriends(userId);
+        List<Relationship> friends = friendsService.getFriendsByUserId(userId);
         return new LoginMessage(1, JSON.toJSONString(friends));
     }
 
@@ -70,52 +67,55 @@ public class FriendsController {
         String userId = (String) request.getAttribute("userEmail");
         return new LoginMessage(1,JSON.toJSONString(friendsService.getIdolsByUserId(userId)));
     }
-
-    @RequestMapping("get_groups")
-    public LoginMessage getGroups(HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userEmail");
-        return new LoginMessage(1, JSON.toJSONString(friendsService.getGroupById(userId)));
-    }
-
-    @RequestMapping("get_group_users")
-    public PagingMessage<Friend> getGroupFriends(String userId,String groupId) {
-        List<Friend> friendIdsByGroupId = friendsService.getFriendsByGroupId(userId, groupId);
-        PagingMessage<Friend> message = new PagingMessage<>();
-        message.items = friendIdsByGroupId;
-        return message;
-    }
-
-
-    @RequestMapping("move_to_group")
-    public LoginMessage moveTo(String userId, String friendId,String groupId) {
-        boolean b = friendsService.moveToGroup(userId, friendId, groupId);
-
-        return new LoginMessage(-1, "");
-    }
-
-    @RequestMapping("create_group")
-    public LoginMessage createGroup(String userId, UserGroup group) {
-        friendsService.createGroup(group);
-        return new LoginMessage(-1, "");
-    }
-
-
-    @RequestMapping("remove_group")
-    public LoginMessage removeGroup(String userId, String group) {
-        boolean result = friendsService.removeGroup(group);
-        if (result) {
-            return new LoginMessage(1, "");
-        }
-        else {
-            return new LoginMessage(-1, " ");
-        }
-    }
-
-    @RequestMapping("delete_from_group")
-    public LoginMessage deleteFromGroup(String user, String usrToRemove, String groupFrom) {
-        boolean result = friendsService.deleteFromGroup(user, usrToRemove, groupFrom);
-        return new LoginMessage(-1, "");
-    }
+//
+//    @RequestMapping("get_groups")
+//    public LoginMessage getGroups(HttpServletRequest request) {
+//        String userId = (String) request.getAttribute("userEmail");
+//        return new LoginMessage(1, JSON.toJSONString(friendsService.getGroupById(userId)));
+//    }
+//
+//    @RequestMapping("get_group_users")
+//    public PagingMessage<Friend> getGroupFriends(String userId,String groupId) {
+//        List<Friend> friendIdsByGroupId = friendsService.getFriendsByGroupId(userId, groupId);
+//        PagingMessage<Friend> message = new PagingMessage<>();
+//        message.items = friendIdsByGroupId;
+//        return message;
+//    }
+//
+//
+//    @RequestMapping("move_to_group")
+//    public LoginMessage moveTo(String userId, String friendId,String groupId) {
+//        boolean b = friendsService.moveToGroup(userId, friendId, groupId);
+//
+//        return new LoginMessage(-1, "");
+//    }
+//
+//    @RequestMapping("create_group")
+//    public LoginMessage createGroup(HttpServletRequest request, UserGroup group) {
+//        boolean result = friendsService.createGroup(group);
+//        if (result) {
+//            return new LoginMessage(1, "SUCCESS");
+//        }
+//        return new LoginMessage(-1, "FAILED");
+//    }
+//
+//
+//    @RequestMapping("remove_group")
+//    public LoginMessage removeGroup(String userId, String group) {
+//        boolean result = friendsService.removeGroup(group);
+//        if (result) {
+//            return new LoginMessage(1, "");
+//        }
+//        else {
+//            return new LoginMessage(-1, " ");
+//        }
+//    }
+//
+//    @RequestMapping("delete_from_group")
+//    public LoginMessage deleteFromGroup(String user, String usrToRemove, String groupFrom) {
+//        boolean result = friendsService.deleteFromGroup(user, usrToRemove, groupFrom);
+//        return new LoginMessage(-1, "");
+//    }
 
     //get user introduction from searching/friend list
     @RequestMapping("/getUserIntro")
@@ -139,12 +139,23 @@ public class FriendsController {
 
     @PostMapping("get_invitations")
     public LoginMessage getInvitations(String userId) {
-        return new LoginMessage(1, "[]");
+        List<Invitation> invitations = friendsService.getInvitations(userId);
+        return new LoginMessage(1, JSON.toJSONString(invitations));
+    }
+
+    @PostMapping("send_invitations")
+    public LoginMessage sendInvitations(Invitation invitation) {
+        boolean result = friendsService.sendInvitation(invitation);
+        if (result) {
+            return new LoginMessage(1, "failed");
+        }
+        return new LoginMessage(-1, "success");
+
     }
 
     @PostMapping("get_black_list")
     public LoginMessage getBlackList(String userId) {
-        return new LoginMessage(1, "");
+        return new LoginMessage(1, "[]");
     }
 
 }

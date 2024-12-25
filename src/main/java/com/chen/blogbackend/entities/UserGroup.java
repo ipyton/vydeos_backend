@@ -4,7 +4,7 @@ import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
 @Entity
 public class UserGroup {
-    String groupId;
+    int groupId;
     String name;
     String group_avatar;
     int count;
@@ -33,11 +33,11 @@ public class UserGroup {
         this.count = count;
     }
 
-    public String getGroupId() {
+    public int getGroupId() {
         return groupId;
     }
 
-    public void setGroupId(String groupId) {
+    public void setGroupId(int groupId) {
         this.groupId = groupId;
     }
 

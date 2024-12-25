@@ -11,10 +11,10 @@ public class KeyService {
     @Autowired
     JedisPool jedisPool;
 
-    public long getIntKey(String key) {
+    public int getIntKey(String key) {
         try (Jedis jedis = jedisPool.getResource()) {
             // 递增键的值
-            long incrementedValue = jedis.incr(key);
+            int incrementedValue = (int)jedis.incr(key);
 
             // 打印递增后的值
             System.out.println("Key: " + key + ", Incremented Value: " + incrementedValue);

@@ -18,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +126,7 @@ public class ChatGroupService {
         Invitation select = invitationDao.select(invitationID);
         BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
         builder.addStatements(insertChatGroupById.bind(groupId, userId, userId),insertChatGroupByUser.bind(userId, groupId));
-        return select.getGroupId().equals(groupId) && System.currentTimeMillis() < select.getExpire_time().getTime();
+        return select.getReceiverId().equals(groupId) && System.currentTimeMillis() < select.getExpire_time().getTime();
     }
 
     public PagingMessage<ChatGroupMember> getMembers(String userId, String groupId, String pagingState) {
