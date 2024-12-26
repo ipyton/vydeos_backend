@@ -9,25 +9,59 @@ public class NotificationMessage {
     private String receiverName;
     private String senderName;
     private String type;
-    private String messageType;
     private String content;
     private Instant time;
+    private long messageId;
+    private long referMessageId;
+
+    @Override
+    public String toString() {
+        return "NotificationMessage{" +
+                "avatar='" + avatar + '\'' +
+                ", senderId='" + senderId + '\'' +
+                ", receiverId='" + receiverId + '\'' +
+                ", receiverName='" + receiverName + '\'' +
+                ", senderName='" + senderName + '\'' +
+                ", type='" + type + '\'' +
+                ", content='" + content + '\'' +
+                ", time=" + time +
+                ", messageId=" + messageId +
+                ", referMessageId=" + referMessageId +
+                '}';
+    }
 
     public String getReceiverName() {
         return receiverName;
     }
 
     public NotificationMessage(String avatar, String senderId, String receiverId, String receiverName, String senderName,
-                               String type, String messageType, String content, Instant time) {
+                               String type, String content, long messageId, Instant time, long referMessageId) {
         this.avatar = avatar;
         this.senderId = senderId;
         this.receiverId = receiverId;
         this.receiverName = receiverName;
         this.senderName = senderName;
         this.type = type;
-        this.messageType = messageType;
         this.content = content;
         this.time = time;
+        this.messageId = messageId;
+        this.referMessageId = referMessageId;
+    }
+
+    public long getReferMessageId() {
+        return referMessageId;
+    }
+
+    public void setReferMessageId(long referMessageId) {
+        this.referMessageId = referMessageId;
+    }
+
+    public long getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(long messageId) {
+        this.messageId = messageId;
     }
 
     public void setReceiverName(String receiverName) {
@@ -50,24 +84,7 @@ public class NotificationMessage {
         this.receiverId = receiverId;
     }
 
-    public String getMessageType() {
-        return messageType;
-    }
 
-    public void setMessageType(String messageType) {
-        this.messageType = messageType;
-    }
-
-    public NotificationMessage(String avatar, String senderId, String receiverId, String senderName, String messageType, String type, String content, Instant time) {
-        this.avatar = avatar;
-        this.senderId = senderId;
-        this.receiverId = receiverId;
-        this.senderName = senderName;
-        this.type = type;
-        this.content = content;
-        this.time = time;
-        this.messageType = messageType;
-    }
 
     public String getAvatar() {
         return avatar;

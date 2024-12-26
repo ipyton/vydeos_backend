@@ -1,20 +1,17 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.entities.ChatGroup;
-import com.chen.blogbackend.entities.GroupUser;
-import com.chen.blogbackend.entities.Invitation;
-import com.chen.blogbackend.entities.UserGroup;
+import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.services.ChatGroupService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RequestMapping("group_chat")
@@ -22,17 +19,22 @@ import java.util.List;
 @ResponseBody
 public class ChatGroupController {
 
+
+
+
     @Autowired
     ChatGroupService service;
 
 
     @PostMapping("create")
-    public LoginMessage createGroup(HttpServletRequest req, String groupName ,List<String> users) {
+    public LoginMessage createGroup(HttpServletRequest req, @RequestBody() GroupRequest groupRequest) {
         String email = (String) req.getAttribute("userEmail");
-        if (email == null || email.equals("") || groupName == null || groupName.equals("") || users == null || users.size() == 0) {
+        String groupName = groupRequest.getGroupName();
+        List<String> members = groupRequest.getMembers();
+        if (email == null || email.equals("") || groupName == null || groupName.equals("") || members == null || members.size() == 0) {
             return new LoginMessage(-1, "no sufficient data provided");
         }
-        boolean result = service.createGroup(email,groupName, users);
+        boolean result = service.createGroup(email,groupName, members);
         if (result) {
             return new LoginMessage(1, "Success");
         }
@@ -51,7 +53,7 @@ public class ChatGroupController {
 
 
 
-    @PostMapping("getDetail")
+    @GetMapping("getDetail")
     public ChatGroup getDetail(long groupId) {
         return service.getGroupDetail(groupId);
     }
@@ -101,13 +103,17 @@ public class ChatGroupController {
     }
 
     @RequestMapping("get_groups")
-    public LoginMessage getGroups(String userId, String pagingState){
-        List<GroupUser> groups = service.getGroups(userId, pagingState);
+    public LoginMessage getGroups(HttpServletRequest request){
+        String userId = (String) request.getAttribute("userEmail");
+        if (userId == null || userId.isBlank()) {
+            return new LoginMessage(-1, "no sufficient data provided");
+        }
+        List<GroupUser> groups = service.getGroups(userId, null);
         return new LoginMessage(1, JSON.toJSONString(groups));
     }
 
-    @RequestMapping("get_members")
-    public LoginMessage getMembers(String userId, String groupId, String pagingState) {
+    @GetMapping("get_members")
+    public LoginMessage getMembers(String userId, long groupId, String pagingState) {
         List<GroupUser> result = service.getMembers(userId, groupId, pagingState);
         return new LoginMessage(-1, JSON.toJSONString(result));
     }
@@ -120,7 +126,7 @@ public class ChatGroupController {
     }
 
     @RequestMapping("recall_message")
-    public LoginMessage recallMessage(String operatorId, String groupID, String messageId) {
+    public LoginMessage recallMessage(String operatorId, long groupID, String messageId) {
         boolean result = service.recall(operatorId, groupID, messageId);
         return new LoginMessage(-1, "");
     }

@@ -12,18 +12,19 @@ public class KeyService {
     JedisPool jedisPool;
 
     public int getIntKey(String key) {
-        try (Jedis jedis = jedisPool.getResource()) {
+        try  {
             // 递增键的值
+            Jedis jedis = jedisPool.getResource();
             int incrementedValue = (int)jedis.incr(key);
 
             // 打印递增后的值
             System.out.println("Key: " + key + ", Incremented Value: " + incrementedValue);
+            jedis.close();
             return incrementedValue;
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            // 关闭连接池（如果不再需要使用）
-            jedisPool.close();
+
         }
         return -1;
 

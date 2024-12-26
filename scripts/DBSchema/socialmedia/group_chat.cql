@@ -10,8 +10,8 @@ create table group_chat_record_by_id(group_id bigint, message_id bigint,type tex
 
 
 
-create table chat_group_details(group_id bigint primary key, group_name text, group_description text, owner text,config map<text,text>, avatar text);
-create table chat_group_by_id (group_id bigint, user_id bigint , user_name text, primary key (group_id, user_id));
+create table chat_group_details (group_id bigint primary key, group_name text, group_description text, owner text,config map<text,text>, avatar text, create_time timestamp);
+create table chat_group_members (group_id bigint, user_id bigint , user_name text, group_name text,primary key (group_id, user_id));
 
 create table chat_messages_mailbox (user_id bigint , group_id bigint, type text, content text, count text, latest_timestamp timestamp, primary key ( user_id,group_id ));
 create table chat_group_by_user(user_id bigint, group_id bigint, group_name text, primary key (user_id, group_id));
