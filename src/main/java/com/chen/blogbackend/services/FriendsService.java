@@ -78,13 +78,13 @@ public class FriendsService {
 
     @PostConstruct
     public void init() throws IOException {
-            delFriendByUserId = session.prepare("delete from relationship.followers_by_user_id where user_id=? and friend_id = ?;");
+            delFriendByUserId = session.prepare("delete from relationship.following_relationship where user_id=? and friend_id = ?;");
             initUsersIntro = session.prepare("insert into userInfo.user_information (user_id, user_name)  values (?,?) ");
             getUsersIntro = session.prepare("select * from userInfo.user_information where user_id=?;");
-            insertFollowRelationship = session.prepare("insert into relationship.followers_by_user_id (user_id, friend_id) values(?, ?)");
-            deleteFollowRelationship = session.prepare("delete from relationship.followers_by_user_id where user_id = ? and friend_id = ?");
-            deleteFriend= session.prepare("delete from relationship.friends_by_user_id where user_id = ? and friend_id = ?");
-            addFriend = session.prepare("insert into relationship.friends_by_user_id (user_id, friend_id, name) values(?, ?, ?);");
+            insertFollowRelationship = session.prepare("insert into relationship.following_relationship (user_id, friend_id) values(?, ?)");
+            deleteFollowRelationship = session.prepare("delete from relationship.following_relationship where user_id = ? and friend_id = ?");
+            deleteFriend= session.prepare("delete from relationship.following_relationship where user_id = ? and friend_id = ?");
+            addFriend = session.prepare("insert into relationship.following_relationship (user_id, friend_id, name) values(?, ?, ?);");
             getIdolsById = session.prepare("select * from relationship.following_relationship where user_id = ?");
             getFollowersByUserId = session.prepare("select * from relationship.following_relationship where friend_id =?;");
             getFollowRelationship = session.prepare("select * from relationship.following_relationship where user_id = ? and friend_id = ?");
@@ -122,7 +122,7 @@ public class FriendsService {
         boolean flag = false;
 
         ResultSet follow = session.execute(getFollowRelationship.bind(userid, userIdToFollow));
-        if (follow.all().size() > 0) flag = true;
+        if (!follow.all().isEmpty()) flag = true;
 
         ResultSet reverseFollow = session.execute(getFollowRelationship.bind(userIdToFollow, userid));
         List<Row> all = reverseFollow.all();

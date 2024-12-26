@@ -2,7 +2,7 @@ package com.chen.notification.entities;
 
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
-@Entity
+
 public class ActiveStatus {
     public String userId;
     public String partitionId;

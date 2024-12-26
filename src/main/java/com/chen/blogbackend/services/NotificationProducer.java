@@ -1,8 +1,8 @@
 package com.chen.blogbackend.services;
 
 import com.alibaba.fastjson2.JSON;
-import com.chen.blogbackend.entities.Notification;
-import com.chen.blogbackend.entities.SingleMessage;
+import com.chen.blogbackend.entities.NotificationMessage;
+import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +29,7 @@ public class NotificationProducer {
         executorService = new ThreadPoolExecutor(2,4, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
-    public void sendNotification(SingleMessage message ) {
+    public void sendNotification(NotificationMessage message ) {
 //        int partitions = 0;
 //        MessageBuilder builder = new MessageBuilderImpl();
 //        int i = message.getUserId().hashCode();
@@ -40,7 +39,7 @@ public class NotificationProducer {
 //        SendReceipt send = producer.send(messageToSend);
 //        MessageId messageId = send.getMessageId();
 //        System.out.println("message Id" + messageId);
-    producer.send(new ProducerRecord<>("single",message.getReceiverId() ,JSON.toJSONString(message)));
+    producer.send(new ProducerRecord<>("dispatch", message.getReceiverId() ,JSON.toJSONString(message)));
     }
 
 

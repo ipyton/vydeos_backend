@@ -1,4 +1,4 @@
-package com.chen.notification.entities;
+package com.chen.blogbackend.entities.deprecated;
 
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
@@ -14,9 +14,9 @@ public class SingleMessage {
     private Instant sendTime;
     private String content;
     private String referMessageId;
-    private List<String> referUserIds;
+    private String referUserIds;
 
-    public SingleMessage(String messageId, String userId, String receiverId, String type, Instant sendTime, String content, String referMessageId, List<String> referUserIds, String messageType) {
+    public SingleMessage(String messageId, String userId, String receiverId, String type, Instant sendTime, String content, String referMessageId, String referUserIds, String messageType) {
         this.messageId = messageId;
         this.userId = userId;
         this.receiverId = receiverId;
@@ -52,7 +52,6 @@ public class SingleMessage {
         this.sendTime = timestamp;
         this.content = content;
         this.referMessageId = referMessageId;
-        this.referUserIds = referUserIds;
     }
 
 
@@ -114,13 +113,7 @@ public class SingleMessage {
         this.referMessageId = referMessageId;
     }
 
-    public List<String> getReferUserIds() {
-        return referUserIds;
-    }
 
-    public void setReferUserIds(List<String> referUserIds) {
-        this.referUserIds = referUserIds;
-    }
 
     @Override
     public String toString() {

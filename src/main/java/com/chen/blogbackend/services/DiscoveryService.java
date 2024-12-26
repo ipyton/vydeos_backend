@@ -1,7 +1,7 @@
-package com.chen.frontendserviceregistrationcenter.services;
+package com.chen.blogbackend.services;
 
 import com.alibaba.fastjson2.JSON;
-import com.chen.frontendserviceregistrationcenter.entities.Endpoint;
+import com.chen.blogbackend.entities.Endpoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;

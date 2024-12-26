@@ -1,25 +1,49 @@
 package com.chen.blogbackend.mappers;
 
-import com.chen.blogbackend.entities.GroupMessage;
+import com.chen.blogbackend.entities.NotificationMessage;
+import com.chen.blogbackend.entities.deprecated.GroupMessage;
 import com.chen.blogbackend.entities.OnlineGroupMessage;
-import com.chen.blogbackend.entities.SingleMessage;
+import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MessageParser {
-    public static List<SingleMessage> parseToSingleMessage(ResultSet set) {
-        ArrayList<SingleMessage> result = new ArrayList<>();
-        for (Row row: set.all()) {
-            result.add(new SingleMessage(row.getString("message_id"), row.getString("user_id"), row.getString("receiver_id"),
-            row.getString("type"), row.getInstant("send_time"), row.getString("content"),
-                    row.getString("refer_message_id"), row.getList("refer_user_id", String.class), row.getString("messageType")));
+    public static List<NotificationMessage> parseToNotificationMessage(ResultSet set) {
+        ArrayList<NotificationMessage> result = new ArrayList<>();
+        for (Row row : set.all()) { // 假设 resultSet 是某种支持 all() 的类型
+            String senderId = row.getString("user_id");
+            String receiverId = row.getString("receiver_id");
+            long messageId = row.getLong("message_id");
+            String content = row.getString("content");
+            Instant sendTime = row.getInstant("send_time");  // Convert timestamp to Instant
+            String type = row.getString("type");
+            String messageType = row.getString("messageType");
+            String referMessageId = row.getString("refer_message_id");
+
+            // 创建 NotificationMessage 对象
+            NotificationMessage message = new NotificationMessage(
+                    "",  // Assuming avatar is not provided by the database, set to null or default
+                    senderId,
+                    receiverId,
+                    "",  // receiverName can be set to null or fetched if available
+                    "",  // senderName can be set to null or fetched if available
+                    type,
+                    content,
+                    messageId,
+                    sendTime,
+                    0l
+            );
+
+            // 将解析的消息添加到结果列表中
+            result.add(message);
         }
-        System.out.println(result.size());
         return result;
     }
+
     public static List<OnlineGroupMessage> parseToOnlineGroupMessage(ResultSet set) {
         ArrayList<OnlineGroupMessage> result = new ArrayList<>();
         for (Row row : set.all()) {

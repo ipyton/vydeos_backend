@@ -1,4 +1,4 @@
-package com.chen.blogbackend.entities;
+package com.chen.blogbackend.entities.deprecated;
 
 import java.time.Instant;
 

@@ -1,8 +1,9 @@
-package com.chen.frontendserviceregistrationcenter.controllers;
+package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.frontendserviceregistrationcenter.entities.Endpoint;
-import com.chen.frontendserviceregistrationcenter.services.DiscoveryService;
+
+import com.chen.blogbackend.entities.Endpoint;
+import com.chen.blogbackend.services.DiscoveryService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,7 +25,6 @@ public class DiscoverServiceController {
     @ResponseBody
     public String getEndpoint(HttpServletRequest request, @RequestParam Long userId, @RequestParam String serviceType) {
         //
-        System.out.println(userId);
         System.out.println(serviceType);
         System.out.println("notification_consumer");
         Endpoint endpoint = new Endpoint();

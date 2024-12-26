@@ -1,8 +1,10 @@
 package com.chen.blogbackend.controllers;
 
+import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.ChatGroup;
-import com.chen.blogbackend.entities.ChatGroupMember;
+import com.chen.blogbackend.entities.GroupUser;
 import com.chen.blogbackend.entities.Invitation;
+import com.chen.blogbackend.entities.UserGroup;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.services.ChatGroupService;
@@ -28,7 +30,7 @@ public class ChatGroupController {
     public LoginMessage createGroup(HttpServletRequest req, String groupName ,List<String> users) {
         String email = (String) req.getAttribute("userEmail");
         if (email == null || email.equals("") || groupName == null || groupName.equals("") || users == null || users.size() == 0) {
-            return new LoginMessage(-1, "no sufficient data provided")
+            return new LoginMessage(-1, "no sufficient data provided");
         }
         boolean result = service.createGroup(email,groupName, users);
         if (result) {
@@ -99,14 +101,15 @@ public class ChatGroupController {
     }
 
     @RequestMapping("get_groups")
-    public List<ChatGroup> getGroups(String userId, String pagingState){
-        return service.getGroups(userId, pagingState);
+    public LoginMessage getGroups(String userId, String pagingState){
+        List<GroupUser> groups = service.getGroups(userId, pagingState);
+        return new LoginMessage(1, JSON.toJSONString(groups));
     }
 
     @RequestMapping("get_members")
     public LoginMessage getMembers(String userId, String groupId, String pagingState) {
-        PagingMessage<ChatGroupMember> result = service.getMembers(userId, groupId, pagingState);
-        return new LoginMessage(-1, "");
+        List<GroupUser> result = service.getMembers(userId, groupId, pagingState);
+        return new LoginMessage(-1, JSON.toJSONString(result));
     }
 
     @RequestMapping("send_message_group")

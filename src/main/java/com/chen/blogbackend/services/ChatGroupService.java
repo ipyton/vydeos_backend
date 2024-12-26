@@ -1,15 +1,14 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.ChatGroupDao;
-import com.chen.blogbackend.DAO.ChatGroupMemberDao;
 import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.*;
+import com.chen.blogbackend.entities.deprecated.GroupMessage;
+import com.chen.blogbackend.mappers.GroupUserParser;
 import com.chen.blogbackend.mappers.MessageParser;
-import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.PagingIterable;
 import com.datastax.oss.driver.api.core.cql.*;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
@@ -58,7 +57,6 @@ public class ChatGroupService {
     InvitationDao invitationDao;
     ChatGroupDao chatGroupDao;
     FriendDao friendDao;
-    ChatGroupMemberDao chatGroupMemberDao;
 
 
 
@@ -74,7 +72,7 @@ public class ChatGroupService {
         delChatGroupByUser = session.prepare("delete from group_chat.chat_group_by_user where user_id = ? and group_id = ?");
         truncateChatGroupById = session.prepare("delete from group_chat.chat_group_by_id where group_id = ? and user_id = ?");
         getGroups = session.prepare("select * from group_chat.chat_group_by_user where user_id = ?");
-        getMembers = session.prepare("select * from group_chat.chat_group_by_id where group_id = ? ");
+        getMembers = session.prepare("select * from group_chat.chat_group_by_user where group_id = ? ");
         //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         chatGroupDao = null;
@@ -83,8 +81,7 @@ public class ChatGroupService {
     }
     public List<OnlineGroupMessage> getOnlineGroupMessageByUserID(long userID) {
         ResultSet execute = session.execute(getRecordByMemberId.bind(userID));
-        List<OnlineGroupMessage> onlineGroupMessages = MessageParser.parseToOnlineGroupMessage(execute);
-        return onlineGroupMessages;
+        return MessageParser.parseToOnlineGroupMessage(execute);
     }
 
     public boolean joinGroup(String userId, String groupId) {
@@ -92,7 +89,7 @@ public class ChatGroupService {
         builder.addStatements(insertChatGroupById.bind(userId, groupId),
                 insertChatGroupByUser.bind(groupId, userId));
         ResultSet execute = session.execute(builder.build());
-        return execute.getExecutionInfo().getErrors().size() == 0;
+        return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
     public boolean quitGroup(String userId, String groupId) {
@@ -100,7 +97,7 @@ public class ChatGroupService {
         builder.addStatements(delChatGroupById.bind(groupId, userId),
                 delChatGroupByUser.bind(userId, groupId));
         ResultSet execute = session.execute(builder.build());
-        return execute.getExecutionInfo().getErrors().size() == 0;
+        return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
     public Invitation generateInvitation(String operator, String userId, String groupId) {
@@ -119,7 +116,7 @@ public class ChatGroupService {
         }
         builder.addStatement(delAllChatGroupById.bind(groupId));
         ResultSet execute1 = session.execute(builder.build());
-        return execute1.getExecutionInfo().getErrors().size() == 0;
+        return execute1.getExecutionInfo().getErrors().isEmpty();
     }
 
     public boolean joinByInvitation(String userId, String username, String groupId, String invitationID) {
@@ -129,10 +126,11 @@ public class ChatGroupService {
         return select.getReceiverId().equals(groupId) && System.currentTimeMillis() < select.getExpire_time().getTime();
     }
 
-    public PagingMessage<ChatGroupMember> getMembers(String userId, String groupId, String pagingState) {
+    public List<GroupUser> getMembers(String userId, String groupId, String pagingState) {
         ResultSet execute = session.execute(getMembers.bind(groupId));
-        PagingIterable<ChatGroupMember> convert = chatGroupMemberDao.convert(execute);
-        return new PagingMessage<>(convert.all(), pagingState, -1);
+
+        return GroupUserParser.groupUserParser(execute);
+
     }
 
     public boolean sendMessage(String userId, String groupId, String message, String referId, List<String> objects) {
@@ -172,10 +170,9 @@ public class ChatGroupService {
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
-    public List<ChatGroup> getGroups(String userId, String pagingState) {
-        ResultSet execute = session.execute(getGroups.bind(userId).setPagingState(PagingState.fromString(pagingState)));
-        PagingIterable<ChatGroup> groups = chatGroupDao.convert(execute);
-        return groups.all();
+    public List<GroupUser> getGroups(String userId, String pagingState) {
+        ResultSet execute = session.execute(getGroups.bind(userId));
+        return GroupUserParser.groupUserParser(execute);
     }
 
     public boolean recall(String operatorId, String groupID, String messageId) {

@@ -2,8 +2,6 @@ package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.notification.endpoints.NotificationServerEndpoint;
-import com.chen.notification.entities.GroupMessage;
-import com.chen.notification.entities.SingleMessage;
 import jakarta.annotation.PostConstruct;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -13,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -24,9 +23,10 @@ this class is used for changing the
 
  */
 @Component
-public class AutoRunner {
+@Profile("endpoint")
+public class EndpointAutoRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(AutoRunner.class);
+    private static final Logger logger = LoggerFactory.getLogger(EndpointAutoRunner.class);
 
     @Autowired
     NotificationServerEndpoint service;
@@ -47,7 +47,6 @@ public class AutoRunner {
         props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         KafkaConsumer<Long, String> consumer = new KafkaConsumer<>(props);
         consumer.subscribe(Arrays.asList(single_topic, group_topic));
-        final int minBatchSize = 200;
         while (true) {
             ConsumerRecords<Long, String> records = consumer.poll(Duration. ofMillis(100));
             Map<String, Map<Long, List<String>>> topicKeyMap = new HashMap<>();
@@ -68,29 +67,29 @@ public class AutoRunner {
                 valueList.add(value);
             }
 
-            for (Map.Entry<String, Map<Long, List<String>>> entry : topicKeyMap.entrySet()) {
-                String key = entry.getKey();
-                Map<Long, List<String>> keyMap = entry.getValue();
-                if (key.equals(single_topic)) {
-
-                    for (Long key1 : keyMap.keySet()) {
-                        List<SingleMessage> list = new ArrayList<>();
-                        for (String s: keyMap.get(key1)) {
-                            list.add(JSON.parseObject(s, SingleMessage.class));
-                        }
-                        service.sendMessages(list, key1);
-
-                    }
-                } else if (key.equals(group_topic)) {
-                    for (Long key1 : keyMap.keySet()) {
-                        List<GroupMessage> list = new ArrayList<>();
-                        for (String s: keyMap.get(key1)) {
-                            list.add(JSON.parseObject(s, GroupMessage.class));
-                        }
-                        service.sendMessages(list, key1);
-                    }
-                }
-            }
+//            for (Map.Entry<String, Map<Long, List<String>>> entry : topicKeyMap.entrySet()) {
+//                String key = entry.getKey();
+//                Map<Long, List<String>> keyMap = entry.getValue();
+//                if (key.equals(single_topic)) {
+//
+//                    for (Long key1 : keyMap.keySet()) {
+//                        List<SingleMessage> list = new ArrayList<>();
+//                        for (String s: keyMap.get(key1)) {
+//                            list.add(JSON.parseObject(s, SingleMessage.class));
+//                        }
+//                        service.sendMessages(list, key1);
+//
+//                    }
+//                } else if (key.equals(group_topic)) {
+//                    for (Long key1 : keyMap.keySet()) {
+//                        List<GroupMessage> list = new ArrayList<>();
+//                        for (String s: keyMap.get(key1)) {
+//                            list.add(JSON.parseObject(s, GroupMessage.class));
+//                        }
+//                        service.sendMessages(list, key1);
+//                    }
+//                }
+//            }
             consumer.commitSync();
         }
 

@@ -2,13 +2,14 @@ package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.MessageSendingReceipt;
-import com.chen.blogbackend.entities.SingleMessage;
+import com.chen.blogbackend.entities.NotificationMessage;
+import com.chen.blogbackend.entities.SendingReceipt;
+import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.FriendsService;
 import com.chen.blogbackend.services.SearchService;
 import com.chen.blogbackend.services.SingleMessageService;
 import com.chen.blogbackend.util.RandomUtil;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,12 +40,9 @@ public class SingleMessageController {
     }
 
     @RequestMapping("sendMessage")
-    public LoginMessage sendMessage(String userId, String receiverId, String content, String messageType) throws Exception {
+    public SendingReceipt sendMessage(String userId, String receiverId, String content) throws Exception {
         Instant instant = Instant.now();
-        String messageId = RandomUtil.generateMessageId(userId);
-        SingleMessage singleMessage =  new SingleMessage(messageId, userId, receiverId, "single", instant,content,null,new ArrayList<>(), messageType);
-        service.sendMessage(singleMessage);
-        return new LoginMessage(1, JSON.toJSONString(new MessageSendingReceipt(messageId, instant)));
+        return service.sendMessage(userId, receiverId, content, "single");
     }
 
     @RequestMapping("block")
@@ -80,7 +78,7 @@ public class SingleMessageController {
     @RequestMapping("getNewestMessages")
     public LoginMessage getNewestRecords(Long userId,Long timestamp, String pageState) {
         System.out.println(timestamp);
-        List<SingleMessage> newRecords = service.getNewRecords(userId, timestamp,pageState);
+        List<NotificationMessage> newRecords = service.getNewRecords(userId, timestamp,pageState);
         System.out.println(JSON.toJSONString(newRecords));
         return new LoginMessage(1, JSON.toJSONString(newRecords));
 

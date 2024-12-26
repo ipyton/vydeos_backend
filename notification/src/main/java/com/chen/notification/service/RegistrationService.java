@@ -8,6 +8,7 @@ import redis.clients.jedis.Jedis;
 
 @Service
 public class RegistrationService {
+
     @Autowired
     Jedis redisClient;
     enum CapacityStatus {

@@ -6,6 +6,8 @@ import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.chen.blogbackend.entities.*;
+import com.chen.blogbackend.entities.deprecated.GroupMessage;
+import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

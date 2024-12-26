@@ -1,8 +1,9 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.SingleMessageDao;
-import com.chen.blogbackend.entities.Notification;
-import com.chen.blogbackend.entities.SingleMessage;
+import com.chen.blogbackend.entities.NotificationMessage;
+import com.chen.blogbackend.entities.SendingReceipt;
+import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.mappers.MessageParser;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -31,6 +33,8 @@ public class SingleMessageService {
     @Autowired
     FriendsService friendsService;
 
+    @Autowired
+    KeyService keyService;
 
     PreparedStatement getRecord;
     PreparedStatement setRecordById;
@@ -45,7 +49,7 @@ public class SingleMessageService {
     @PostConstruct
     public void init(){
         setRecordById = session.prepare("insert into chat.chat_records (user_id, receiver_id, message_id, content, " +
-                "send_time, type, messageType, count, refer_message_id, refer_user_id ) values (?,?,?,?,?,?,?,?, ?, ?);");
+                "send_time, type, refer_message_id, refer_user_id ) values (?,?,?,?,?,?,?,?);");
         getRecord = session.prepare("select * from chat.chat_records where user_id = ? and receiver_id = ?");
         block = session.prepare("insert into userinfo.black_list (user_id, black_user_id, black_user_name, black_user_avatar) values(?, ?, ?, ?)");
         unBlock = session.prepare("delete from userInfo.black_list where user_id = ? and black_user_id = ?");
@@ -73,18 +77,23 @@ public class SingleMessageService {
         return new PagingMessage<>(convert.all(), state.toString(), 1);
     }
 
-    public boolean sendMessage(SingleMessage singleMessage) throws Exception {
-        System.out.println(singleMessage);
+    public SendingReceipt sendMessage(String userId, String receiverId, String content, String messageType) throws Exception {
+
+        long messageId = keyService.getIntKey("singleMessage");
+        Instant now = Instant.now();
+        SendingReceipt receipt = new SendingReceipt();
+        receipt.sequenceId = messageId;
+        NotificationMessage singleMessage =  new NotificationMessage(null, userId, receiverId, null, null, "single", content, messageId, now,-1);
+
         //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
-        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getUserId(),
+        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getSenderId(),
                 singleMessage.getReceiverId(), singleMessage.getMessageId(), singleMessage.getContent(),
-                singleMessage.getSendTime(), singleMessage.getType(), singleMessage.getMessageType(), 0,
-                singleMessage.getReferMessageId(), singleMessage.getReferUserIds()));
+                singleMessage.getTime(), singleMessage.getType(),
+                singleMessage.getReferMessageId(), new ArrayList<>()));
         //judge if a user can send message
         producer.sendNotification(singleMessage);
-        if (friendsService.getRelationship(singleMessage.getUserId(), singleMessage.getReceiverId()) != 11) {
+        if (friendsService.getRelationship(singleMessage.getSenderId(), singleMessage.getReceiverId()) != 11) {
             System.out.println("they are not friends");
-            return false;
         }
         //    private String userId;
         //    private String title;
@@ -94,10 +103,9 @@ public class SingleMessageService {
         //producer.sendNotification(singleMessage);
         if (execute.getExecutionInfo().getErrors().size()!=0) {
             System.out.println(execute.getExecutionInfo().getErrors());
-            return false;
         }
         //producer.sendNotification(new Notification());
-        return true;
+        return receipt;
     }
 
     public boolean recall(String userId, String receiverId, String messageId){
@@ -106,7 +114,7 @@ public class SingleMessageService {
 
     }
 
-    public List<SingleMessage> getNewRecords( long receiverId, Long timestamp, String pagingState) {
+    public List<NotificationMessage> getNewRecords( long receiverId, Long timestamp, String pagingState) {
         System.out.println(receiverId);
         ResultSet execute;
         if (null == timestamp) {
@@ -117,7 +125,7 @@ public class SingleMessageService {
             execute = session.execute(getNewestRecord.bind(receiverId, receiverId + "_" + timestamp));
         }
 
-        return MessageParser.parseToSingleMessage(execute);
+        return MessageParser.parseToNotificationMessage(execute);
     }
 
 

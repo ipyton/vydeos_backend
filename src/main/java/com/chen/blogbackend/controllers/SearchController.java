@@ -3,6 +3,8 @@ package com.chen.blogbackend.controllers;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.chen.blogbackend.entities.*;
+import com.chen.blogbackend.entities.deprecated.GroupMessage;
+import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.AuthorityService;

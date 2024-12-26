@@ -1,4 +1,4 @@
-package com.chen.frontendserviceregistrationcenter.entities;
+package com.chen.blogbackend.entities;
 
 
 public class Endpoint {

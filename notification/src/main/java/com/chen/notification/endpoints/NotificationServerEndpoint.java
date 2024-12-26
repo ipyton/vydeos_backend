@@ -1,7 +1,6 @@
 package com.chen.notification.endpoints;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.NotificationSrvGrpc;
 import com.chen.blogbackend.UserStatus;
 import com.chen.notification.entities.Negotiation;
 import com.chen.notification.entities.NotificationMessage;
@@ -14,7 +13,8 @@ import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
-import org.apache.ibatis.annotations.Param;
+import org.springframework.context.annotation.Profile;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 // | when the user comes to online, the system check the unread information to send.
 @Component
 @ServerEndpoint("/notification/{userId}/{latest_timestamp}")
+@Profile("endpoint")
 public class NotificationServerEndpoint {
 
     private static final ConcurrentHashMap<Long,Session> sessionPool = new ConcurrentHashMap();
@@ -43,7 +44,6 @@ public class NotificationServerEndpoint {
 
     // If user do not online, just abandon the function.
 
-    NotificationSrvGrpc.NotificationSrvBlockingStub stub;
     @PostConstruct
     public void init() {
         ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 8080)
@@ -51,7 +51,6 @@ public class NotificationServerEndpoint {
                 .build();
 
         // Create a blocking stub
-        stub = NotificationSrvGrpc.newBlockingStub(channel);
     }
 
 
@@ -68,9 +67,9 @@ public class NotificationServerEndpoint {
 
             session.getBasicRemote().sendText("success");
             UserStatus.UserOnlineInformation online = UserStatus.UserOnlineInformation.newBuilder().setStatus("online").setUserId(userId).setLastReceivedTimestamp(timestamp).build();
-            UserStatus.MessageResponse messageResponse = stub.onlineHandler(online);
+//            UserStatus.MessageResponse messageResponse = stub.onlineHandler(online);
             List<NotificationMessage> notificationMessageList = new ArrayList<>();
-            sendMessages(messageResponse.getGroupMessagesList(), messageResponse.getUserId());
+//            sendMessages(messageResponse.getGroupMessagesList(), messageResponse.getUserId());
             
 //            Thread thread = new Thread(()->{
 //                while(true) {
