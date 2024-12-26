@@ -17,6 +17,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /*
 this class is used for changing the
@@ -26,7 +28,6 @@ this class is used for changing the
 @Profile("endpoint")
 public class EndpointAutoRunner {
 
-    private static final Logger logger = LoggerFactory.getLogger(EndpointAutoRunner.class);
 
     @Autowired
     NotificationServerEndpoint service;
@@ -37,8 +38,16 @@ public class EndpointAutoRunner {
     @Value("group_topic")
     String group_topic;
 
+    private ExecutorService executorService;
+
+
     @PostConstruct
     public void startListening() throws InterruptedException, IOException {
+        executorService = Executors.newSingleThreadExecutor();
+        executorService.submit(this::consumeMessages);  // 提交消费消息的任务
+    }
+
+    private void consumeMessages() {
         Properties props = new Properties();
         props.setProperty("bootstrap. servers", "localhost:9092");
         props.setProperty("group.id", "test");
@@ -66,33 +75,7 @@ public class EndpointAutoRunner {
                 // 将消息的 value 添加到 list 中
                 valueList.add(value);
             }
-
-//            for (Map.Entry<String, Map<Long, List<String>>> entry : topicKeyMap.entrySet()) {
-//                String key = entry.getKey();
-//                Map<Long, List<String>> keyMap = entry.getValue();
-//                if (key.equals(single_topic)) {
-//
-//                    for (Long key1 : keyMap.keySet()) {
-//                        List<SingleMessage> list = new ArrayList<>();
-//                        for (String s: keyMap.get(key1)) {
-//                            list.add(JSON.parseObject(s, SingleMessage.class));
-//                        }
-//                        service.sendMessages(list, key1);
-//
-//                    }
-//                } else if (key.equals(group_topic)) {
-//                    for (Long key1 : keyMap.keySet()) {
-//                        List<GroupMessage> list = new ArrayList<>();
-//                        for (String s: keyMap.get(key1)) {
-//                            list.add(JSON.parseObject(s, GroupMessage.class));
-//                        }
-//                        service.sendMessages(list, key1);
-//                    }
-//                }
-//            }
-            consumer.commitSync();
         }
-
     }
 
 }

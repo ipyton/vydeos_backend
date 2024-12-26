@@ -23,12 +23,13 @@ public class MessageParser {
             String type = row.getString("type");
             String messageType = row.getString("messageType");
             String referMessageId = row.getString("refer_message_id");
-
+            long groupId = row.getLong("group_id");
             // 创建 NotificationMessage 对象
             NotificationMessage message = new NotificationMessage(
                     "",  // Assuming avatar is not provided by the database, set to null or default
                     senderId,
                     receiverId,
+                    groupId,
                     "",  // receiverName can be set to null or fetched if available
                     "",  // senderName can be set to null or fetched if available
                     type,

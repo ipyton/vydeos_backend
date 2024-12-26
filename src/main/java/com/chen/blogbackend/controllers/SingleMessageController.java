@@ -6,6 +6,7 @@ import com.chen.blogbackend.entities.NotificationMessage;
 import com.chen.blogbackend.entities.SendingReceipt;
 import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.services.ChatGroupService;
 import com.chen.blogbackend.services.FriendsService;
 import com.chen.blogbackend.services.SearchService;
 import com.chen.blogbackend.services.SingleMessageService;
@@ -28,6 +29,8 @@ public class SingleMessageController {
     SingleMessageService service;
 
     @Autowired
+    ChatGroupService groupService;
+    @Autowired
     FriendsService friendsService;
 
     @Autowired
@@ -40,9 +43,23 @@ public class SingleMessageController {
     }
 
     @RequestMapping("sendMessage")
-    public SendingReceipt sendMessage(String userId, String receiverId, String content) throws Exception {
-        Instant instant = Instant.now();
-        return service.sendMessage(userId, receiverId, content, "single");
+    public SendingReceipt sendMessage(String userId, String receiverId,long groupId, String content,String type) throws Exception {
+        if (type.equals("single")) {
+            System.out.println(userId);
+            System.out.println(receiverId);
+            System.out.println(content);
+            System.out.println(type);
+            System.out.println(groupId);
+            return service.sendMessage(userId, receiverId, content, type);
+        } else if (type.equals("group")) {
+            System.out.println(userId);
+            System.out.println(receiverId);
+            System.out.println(content);
+            System.out.println(type);
+            System.out.println(groupId);
+            return groupService.sendGroupMessage(userId, groupId, content, type);
+        }
+        return new SendingReceipt(false, -1);
     }
 
     @RequestMapping("block")

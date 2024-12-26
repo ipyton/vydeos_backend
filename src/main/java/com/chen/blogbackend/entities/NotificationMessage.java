@@ -6,6 +6,7 @@ public class NotificationMessage {
     private String avatar;
     private String senderId;
     private String receiverId;
+    private long groupId;
     private String receiverName;
     private String senderName;
     private String type;
@@ -19,7 +20,7 @@ public class NotificationMessage {
         return receiverName;
     }
 
-    public NotificationMessage(String avatar, String senderId, String receiverId, String receiverName, String senderName,
+    public NotificationMessage(String avatar, String senderId, String receiverId, long groupId, String receiverName, String senderName,
                                String type, String content,long messageId, Instant time, long referMessageId) {
         this.avatar = avatar;
         this.senderId = senderId;
@@ -31,6 +32,15 @@ public class NotificationMessage {
         this.time = time;
         this.messageId = messageId;
         this.referMessageId = referMessageId;
+        this.groupId = groupId;
+    }
+
+    public long getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(long groupId) {
+        this.groupId = groupId;
     }
 
     public long getReferMessageId() {

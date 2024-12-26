@@ -77,40 +77,47 @@ public class SingleMessageService {
         return new PagingMessage<>(convert.all(), state.toString(), 1);
     }
 
+
+
     public SendingReceipt sendMessage(String userId, String receiverId, String content, String messageType) throws Exception {
 
-        long messageId = keyService.getIntKey("singleMessage");
         Instant now = Instant.now();
         SendingReceipt receipt = new SendingReceipt();
-        receipt.sequenceId = messageId;
-        NotificationMessage singleMessage =  new NotificationMessage(null, userId, receiverId, null, null, "single", content, messageId, now,-1);
-
-        //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
-        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getSenderId(),
-                singleMessage.getReceiverId(), singleMessage.getMessageId(), singleMessage.getContent(),
-                singleMessage.getTime(), singleMessage.getType(),
-                singleMessage.getReferMessageId(), new ArrayList<>()));
-        //judge if a user can send message
-        producer.sendNotification(singleMessage);
+        NotificationMessage singleMessage =  new NotificationMessage(null, userId, receiverId,0, null, null, "single", content, -1, now,-1);
         if (friendsService.getRelationship(singleMessage.getSenderId(), singleMessage.getReceiverId()) != 11) {
             System.out.println("they are not friends");
+            receipt.sequenceId = -1;
+            receipt.result = false;
+            return receipt;
         }
+
+        receipt.sequenceId = keyService.getIntKey("singleMessage");
+
+        //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
+//        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getSenderId(),
+//                singleMessage.getReceiverId(), singleMessage.getMessageId(), singleMessage.getContent(),
+//                singleMessage.getTime(), singleMessage.getType(),
+//                singleMessage.getReferMessageId(), new ArrayList<>()));
+//        if (!execute.getExecutionInfo().getErrors().isEmpty()) {
+//            System.out.println(execute.getExecutionInfo().getErrors());
+//        }
+        //judge if a user can send message
+        producer.sendNotification(singleMessage);
+
         //    private String userId;
         //    private String title;
         //    private String content;
         //    private String type;
         //    private String time;
         //producer.sendNotification(singleMessage);
-        if (execute.getExecutionInfo().getErrors().size()!=0) {
-            System.out.println(execute.getExecutionInfo().getErrors());
-        }
+
         //producer.sendNotification(new Notification());
         return receipt;
     }
 
     public boolean recall(String userId, String receiverId, String messageId){
         ResultSet set = session.execute(recall.bind(userId, receiverId, messageId));
-        return set.getExecutionInfo().getErrors().size() == 0;
+        return set.getExecutionInfo().getErrors().isEmpty();
 
     }
 

@@ -31,6 +31,10 @@ public class ChatGroupService {
     @Autowired
     KeyService keyService;
 
+    @Autowired
+    NotificationProducer notificationProducer;
+
+
     PreparedStatement insertChatRecordById;
 
     PreparedStatement getGroups;
@@ -48,6 +52,8 @@ public class ChatGroupService {
     //PreparedStatement setChatRecordCache;
     PreparedStatement createChatGroup;
     PreparedStatement insertGroupMember;
+    PreparedStatement getGroupMember;
+
     //generate here.
     InvitationDao invitationDao;
 
@@ -68,6 +74,7 @@ public class ChatGroupService {
         getRecordByGroupId = session.prepare("select * from group_chat.group_chat_record_by_id where group_id= ? and message_id > ?");
         getRecordByMemberId = session.prepare("select * from group_chat.chat_messages_mailbox where user_id= ? ");
         insertGroupMember = session.prepare("insert into group_chat.chat_group_members (group_id, user_id, user_name, group_name) values (?, ?, ?, ?)");
+        getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
     }
     public List<OnlineGroupMessage> getOnlineGroupMessageByUserID(long userID) {
         ResultSet execute = session.execute(getRecordByMemberId.bind(userID));
@@ -116,7 +123,6 @@ public class ChatGroupService {
 
     public List<GroupUser> getMembers(String userId, long groupId, String pagingState) {
         ResultSet execute = session.execute(getMembers.bind(groupId));
-
         return GroupUserParser.groupUserParser(execute);
 
     }
@@ -186,6 +192,32 @@ public class ChatGroupService {
         }
 
         return result; // 如果没有异常发生，返回 true
+    }
+
+    public boolean isInGroup(String userId, long groupId) {
+        ResultSet execute = session.execute(getGroupMember.bind(groupId, userId));
+        if (execute.getExecutionInfo().getErrors().isEmpty()) {
+            if (execute.all().isEmpty()) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public SendingReceipt sendGroupMessage(String userId, long groupId, String content, String messageType) throws Exception {
+        Instant now = Instant.now();
+        SendingReceipt receipt = new SendingReceipt();
+        NotificationMessage singleMessage =  new NotificationMessage(null, userId, "",groupId, null, null, "group", content, -1, now,-1);
+        if (isInGroup(userId, groupId)) {
+            receipt.sequenceId = keyService.getIntKey("groupMessage");
+            receipt.result = true;
+            notificationProducer.sendNotification(singleMessage);
+            return receipt;
+        }
+
+        receipt.result = false;
+        return receipt;
     }
 
     public ChatGroup getGroupDetail(long groupId) {
