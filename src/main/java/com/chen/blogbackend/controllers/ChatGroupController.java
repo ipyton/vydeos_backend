@@ -118,12 +118,6 @@ public class ChatGroupController {
         return new LoginMessage(-1, JSON.toJSONString(result));
     }
 
-    @RequestMapping("send_message_group")
-    public LoginMessage sendMessage(HttpServletRequest request, String userId,String groupId, String message,String referId,
-                                    List<String> objects) {
-        boolean result = service.sendMessage(userId, groupId, message, referId, objects);
-        return new LoginMessage(-1, "");
-    }
 
     @RequestMapping("recall_message")
     public LoginMessage recallMessage(String operatorId, long groupID, String messageId) {

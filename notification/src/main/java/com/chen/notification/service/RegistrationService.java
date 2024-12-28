@@ -6,10 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import redis.clients.jedis.Jedis;
 
-@Service
 public class RegistrationService {
 
-    @Autowired
     Jedis redisClient;
     enum CapacityStatus {
         AVAILABLE, NEEDED, EMERGENCY

@@ -10,10 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
 import redis.clients.jedis.Jedis;
 
-@Controller("notification")
 public class ClientRegistrationController {
 
-    @Autowired
+
     RegistrationService registrationService;
 
     @RequestMapping("/register")

@@ -17,10 +17,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Properties;
 
-@Service
+
 public class NotificationSendingServiceStep1 {
 
-    @Autowired
     KafkaProducer<String, String> producer;
 
 

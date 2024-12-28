@@ -84,6 +84,8 @@ public class SingleMessageService {
         Instant now = Instant.now();
         SendingReceipt receipt = new SendingReceipt();
         NotificationMessage singleMessage =  new NotificationMessage(null, userId, receiverId,0, null, null, "single", content, -1, now,-1);
+        System.out.println(singleMessage.getSenderId());
+        System.out.println(singleMessage.getReceiverId());
         if (friendsService.getRelationship(singleMessage.getSenderId(), singleMessage.getReceiverId()) != 11) {
             System.out.println("they are not friends");
             receipt.sequenceId = -1;
@@ -92,7 +94,7 @@ public class SingleMessageService {
         }
 
         receipt.sequenceId = keyService.getIntKey("singleMessage");
-
+        singleMessage.setMessageId(receipt.sequenceId);
         //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
 //        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getSenderId(),
 //                singleMessage.getReceiverId(), singleMessage.getMessageId(), singleMessage.getContent(),
@@ -103,6 +105,7 @@ public class SingleMessageService {
 //        }
         //judge if a user can send message
         producer.sendNotification(singleMessage);
+        receipt.result = true;
 
         //    private String userId;
         //    private String title;

@@ -35,7 +35,7 @@ public class ChatGroupService {
     NotificationProducer notificationProducer;
 
 
-    PreparedStatement insertChatRecordById;
+    //PreparedStatement insertChatRecordById;
 
     PreparedStatement getGroups;
     PreparedStatement getMembers;
@@ -63,7 +63,7 @@ public class ChatGroupService {
     @PostConstruct
     public void init() {
 
-        insertChatRecordById = session.prepare("insert into group_chat.group_chat_record_by_id (group_id , message_id ,type ,  user_id  ,content , referUserID , referMessageId , send_time, media, recall) values(?,?,?,?,?,?,?,?,?,?)");
+        //insertChatRecordById = session.prepare("insert into group_chat.group_chat_record_by_id (group_id , message_id ,type ,  user_id  ,content , referUserID , referMessageId , send_time, media, recall) values(?,?,?,?,?,?,?,?,?,?)");
         getGroupDetails = session.prepare("select * from group_chat.chat_group_details where group_id = ?");
         removeMember = session.prepare("delete from group_chat.chat_group_members where group_id = ? and user_id = ?");
         createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, group_description, group_name, owner,create_time) values(?, ?, ?, ?, ?, ?, ?)");
@@ -71,7 +71,7 @@ public class ChatGroupService {
         getMembers = session.prepare("select * from group_chat.chat_group_members where group_id = ? ");
         //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
-        getRecordByGroupId = session.prepare("select * from group_chat.group_chat_record_by_id where group_id= ? and message_id > ?");
+        getRecordByGroupId = session.prepare("select * from group_chat.group_chat_records where group_id= ? and message_id > ?");
         getRecordByMemberId = session.prepare("select * from group_chat.chat_messages_mailbox where user_id= ? ");
         insertGroupMember = session.prepare("insert into group_chat.chat_group_members (group_id, user_id, user_name, group_name) values (?, ?, ?, ?)");
         getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
@@ -127,11 +127,6 @@ public class ChatGroupService {
 
     }
 
-    public boolean sendMessage(String userId, String groupId, String message, String referId, List<String> objects) {
-        ResultSet execute = session.execute(insertChatRecordById.bind(groupId, RandomUtil.generateRandomString(10), userId,
-                message, referId, new Date(System.currentTimeMillis()), objects, false));
-        return execute.getExecutionInfo().getErrors().size() == 0;
-    }
 
     public List<GroupMessage> getGroupMessageByGroupID(String groupId) {
         ResultSet execute = session.execute(getRecordByGroupId.bind(groupId));
@@ -211,6 +206,7 @@ public class ChatGroupService {
         NotificationMessage singleMessage =  new NotificationMessage(null, userId, "",groupId, null, null, "group", content, -1, now,-1);
         if (isInGroup(userId, groupId)) {
             receipt.sequenceId = keyService.getIntKey("groupMessage");
+            singleMessage.setMessageId(receipt.sequenceId);
             receipt.result = true;
             notificationProducer.sendNotification(singleMessage);
             return receipt;

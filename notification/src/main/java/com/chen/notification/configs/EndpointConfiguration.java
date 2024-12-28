@@ -35,15 +35,7 @@ public class EndpointConfiguration {
         return new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
     }
 
-    @Bean
-    public static CqlSession setScyllaSession(){
 
-        return CqlSession.builder()
-                .addContactPoint(new InetSocketAddress("192.168.31.75",9042))
-                .withAuthCredentials("cassandra", "cassandra")
-                .withLocalDatacenter("datacenter1").build();
-
-    }
 
 
 }

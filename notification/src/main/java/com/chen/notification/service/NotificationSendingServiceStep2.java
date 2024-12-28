@@ -27,7 +27,6 @@ import org.springframework.web.client.RestTemplate;
 import redis.clients.jedis.Jedis;
 
 
-@Service
 public class NotificationSendingServiceStep2 {
     private static final String KAFKA_BROKER = "localhost:9092"; // Update with your Kafka broker
     private static final String TOPIC_ALL_MESSAGES = "all_messages";
@@ -39,10 +38,8 @@ public class NotificationSendingServiceStep2 {
     private KafkaProducer<String, String> producer;
     private KafkaProducer<String, String> singleMessageProducer;
 
-    @Autowired
     Jedis jedis;
 
-    @Autowired
     CqlSession session;
 
     PreparedStatement prepare;

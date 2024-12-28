@@ -11,6 +11,7 @@ import com.chen.blogbackend.services.FriendsService;
 import com.chen.blogbackend.services.SearchService;
 import com.chen.blogbackend.services.SingleMessageService;
 import com.chen.blogbackend.util.RandomUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,21 +44,21 @@ public class SingleMessageController {
     }
 
     @RequestMapping("sendMessage")
-    public SendingReceipt sendMessage(String userId, String receiverId,long groupId, String content,String type) throws Exception {
+    public SendingReceipt sendMessage(HttpServletRequest request, String receiverId, Long groupId, String content, String type) throws Exception {
+        String senderId = (String) request.getAttribute("userEmail");
+
         if (type.equals("single")) {
-            System.out.println(userId);
             System.out.println(receiverId);
             System.out.println(content);
             System.out.println(type);
             System.out.println(groupId);
-            return service.sendMessage(userId, receiverId, content, type);
+            return service.sendMessage(senderId, receiverId, content, type);
         } else if (type.equals("group")) {
-            System.out.println(userId);
             System.out.println(receiverId);
             System.out.println(content);
             System.out.println(type);
             System.out.println(groupId);
-            return groupService.sendGroupMessage(userId, groupId, content, type);
+            return groupService.sendGroupMessage(senderId, groupId, content, type);
         }
         return new SendingReceipt(false, -1);
     }

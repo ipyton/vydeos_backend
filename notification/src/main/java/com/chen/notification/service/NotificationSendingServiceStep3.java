@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Properties;
 
-@Service
+
 public class NotificationSendingServiceStep3 {
     private static final String TOPIC_SINGLE_MESSAGE = "singleMessage";
     private KafkaConsumer<String, String> consumer;

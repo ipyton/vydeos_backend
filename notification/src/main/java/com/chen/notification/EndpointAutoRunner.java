@@ -2,8 +2,10 @@ package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.notification.endpoints.NotificationServerEndpoint;
+import com.chen.notification.entities.NotificationMessage;
 import jakarta.annotation.PostConstruct;
 
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -32,6 +34,9 @@ public class EndpointAutoRunner {
     @Autowired
     NotificationServerEndpoint service;
 
+    @Autowired
+    KafkaConsumer<String, String> consumer;
+
     @Value("single_topic")
     String single_topic;
 
@@ -41,40 +46,26 @@ public class EndpointAutoRunner {
     private ExecutorService executorService;
 
 
+
     @PostConstruct
-    public void startListening() throws InterruptedException, IOException {
-        executorService = Executors.newSingleThreadExecutor();
-        executorService.submit(this::consumeMessages);  // 提交消费消息的任务
-    }
-
     private void consumeMessages() {
-        Properties props = new Properties();
-        props.setProperty("bootstrap. servers", "localhost:9092");
-        props.setProperty("group.id", "test");
-        props.setProperty("enable.auto.commit", "false");
-        props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        KafkaConsumer<Long, String> consumer = new KafkaConsumer<>(props);
-        consumer.subscribe(Arrays.asList(single_topic, group_topic));
+
+        consumer.subscribe(Arrays.asList("single"));
         while (true) {
-            ConsumerRecords<Long, String> records = consumer.poll(Duration. ofMillis(100));
-            Map<String, Map<Long, List<String>>> topicKeyMap = new HashMap<>();
-            for (ConsumerRecord<Long, String> record : records) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(100));
+            Map<String, List<NotificationMessage>> topicKeyMap = new HashMap<>();
+            for (ConsumerRecord<String, String> record : records) {
                 String topic = record.topic();
-                Long key = record.key();
+                String key = record.key();
                 String value = record.value();
+                System.out.println(value);
+                topicKeyMap.putIfAbsent(key, new ArrayList<>());
+                topicKeyMap.get(key).add(JSON.parseObject(value, NotificationMessage.class));
 
-                // 获取当前 topic 对应的 key -> list map，如果不存在则创建
-                topicKeyMap.putIfAbsent(topic, new HashMap<>());
-                Map<Long, List<String>> keyMap = topicKeyMap.get(topic);
 
-                // 获取当前 key 对应的 list，如果不存在则创建
-                keyMap.putIfAbsent(key, new ArrayList<>());
-                List<String> valueList = keyMap.get(key);
-
-                // 将消息的 value 添加到 list 中
-                valueList.add(value);
             }
+
+            consumer.commitSync();
         }
     }
 

@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 // | discard the unconnected receiver's notifications.
 // | when the user comes to online, the system check the unread information to send.
 @Component
-@ServerEndpoint("/notification/{userId}/{latest_timestamp}")
+@ServerEndpoint("/notification/{userId}")
 @Profile("endpoint")
 public class NotificationServerEndpoint {
 

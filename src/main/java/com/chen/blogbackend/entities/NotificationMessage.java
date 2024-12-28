@@ -14,6 +14,7 @@ public class NotificationMessage {
     private Instant time;
     private long messageId;
     private long referMessageId;
+    private String messageType;
 
 
     public String getReceiverName() {
@@ -33,6 +34,14 @@ public class NotificationMessage {
         this.messageId = messageId;
         this.referMessageId = referMessageId;
         this.groupId = groupId;
+    }
+
+    public String getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
     }
 
     public long getGroupId() {
