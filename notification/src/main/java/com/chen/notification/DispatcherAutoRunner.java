@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component
 @Profile("dispatcher")
@@ -32,15 +34,24 @@ public class DispatcherAutoRunner {
     @Autowired
     CqlSession cqlSession;
 
+    private ExecutorService executorService;
 
     @PostConstruct
-    public void run() throws Exception {
+    private void run(){
+        executorService = Executors.newFixedThreadPool(4); // 根据需要调整线程池大小
+
+        // 使用新线程异步启动 Kafka 消费
+        new Thread(this::consumeMessage).start();
+    }
+
+
+    private void consumeMessage() {
         System.out.println("This is a dispatcher service");
         PreparedStatement insertMessage = cqlSession.prepare("insert into chat.chat_records (user_id," +
-                " message_id, content, del, messagetype, receiver_id, refer_message_id,refer_user_id, send_time, type)" +
-                "values(?,?,?,?,?,?,?,?,?,?)");
-        PreparedStatement groupMessage = cqlSession.prepare("insert into group_chat.group_chat_records (group_id," +
-                " message_id, content, del, messagetype, refer_message_id,refer_user_id, send_time, type, user_id)" +
+                " message_id, content, del, messagetype, receiver_id, group_id, refer_message_id,refer_user_id, send_time, type)" +
+                "values(?,?,?,?,?,?,?,?,?,?,?)");
+        PreparedStatement groupMessage = cqlSession.prepare("insert into chat.group_chat_records (user_id,"+
+                " message_id, content, del, messagetype, group_id,refer_message_id,refer_user_id, send_time, type)" +
                 "values(?,?,?,?,?,?,?,?,?,?)");
 
         PreparedStatement getMembers = cqlSession.prepare("select * from group_chat.chat_group_members where group_id = ?");
@@ -68,11 +79,16 @@ public class DispatcherAutoRunner {
                     System.out.println("group message");
                     ResultSet execute = cqlSession.execute(getMembers.bind(notificationMessage.getGroupId()));
                     List<Row> all = execute.all();
+                    cqlSession.execute(groupMessage.bind(notificationMessage.getSenderId(),notificationMessage.getMessageId(),
+                            notificationMessage.getContent(),false, "text", notificationMessage.getGroupId(),0l,new ArrayList<String>(),
+                            notificationMessage.getTime(), "group"));
+
                     for (Row row : all) {
                         String user_id = row.getString("user_id");
                         if (user_id.equals(notificationMessage.getSenderId())) {
                             continue;
                         }
+
                         System.out.println(user_id);
                         notificationMessage.setReceiverId(user_id);
                         producer.send(new ProducerRecord<String, String>("single",user_id, JSON.toJSONString(notificationMessage)));

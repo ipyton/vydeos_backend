@@ -35,12 +35,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Profile("endpoint")
 public class NotificationServerEndpoint {
 
-    private static final ConcurrentHashMap<Long,Session> sessionPool = new ConcurrentHashMap();
+    private static final ConcurrentHashMap<String,Session> sessionPool = new ConcurrentHashMap();
     private final AtomicInteger integer = new AtomicInteger();
     private final AtomicInteger closedConnections = new AtomicInteger();
 
     // It is used for only ask for users.
-    public static ConcurrentHashMap<Long, ConcurrentLinkedQueue<NotificationMessage>> messageList = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<String, ConcurrentLinkedQueue<NotificationMessage>> messageList = new ConcurrentHashMap<>();
 
     // If user do not online, just abandon the function.
 
@@ -56,7 +56,7 @@ public class NotificationServerEndpoint {
 
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("userId") long userId, @Param("latest_timestamp") long timestamp) {
+    public void onOpen(Session session, @PathParam("userId") String userId) {
         try {
 
             sessionPool.put(userId, session);
@@ -66,7 +66,7 @@ public class NotificationServerEndpoint {
             System.out.println(userId);
 
             session.getBasicRemote().sendText("success");
-            UserStatus.UserOnlineInformation online = UserStatus.UserOnlineInformation.newBuilder().setStatus("online").setUserId(userId).setLastReceivedTimestamp(timestamp).build();
+            //UserStatus.UserOnlineInformation online = UserStatus.UserOnlineInformation.newBuilder().setStatus("online").setUserId(userId).setLastReceivedTimestamp(timestamp).build();
 //            UserStatus.MessageResponse messageResponse = stub.onlineHandler(online);
             List<NotificationMessage> notificationMessageList = new ArrayList<>();
 //            sendMessages(messageResponse.getGroupMessagesList(), messageResponse.getUserId());

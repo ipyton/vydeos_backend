@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MessageParser {
+
+
     public static List<NotificationMessage> parseToNotificationMessage(ResultSet set) {
         ArrayList<NotificationMessage> result = new ArrayList<>();
         for (Row row : set.all()) { // 假设 resultSet 是某种支持 all() 的类型

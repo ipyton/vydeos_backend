@@ -18,9 +18,11 @@ import java.util.Properties;
 @Profile("dispatcher")
 public class DispatcherConfiguration {
 
+    private static String ipAddress = "192.168.1.11";
+
     @Bean
     public static Jedis configRedis() {
-        Jedis jedis = new Jedis("192.168.31.75",6379);
+        Jedis jedis = new Jedis(ipAddress,6379);
         System.out.println("redis启动成功" + jedis.ping());
         return jedis;
     }
@@ -28,14 +30,14 @@ public class DispatcherConfiguration {
     @Bean
     public static KafkaProducer<String, String> configKafkaProducer() {
         Properties props = new Properties();
-        props.put("bootstrap.servers", "192.168.31.75:9092");
+        props.put("bootstrap.servers", ipAddress + ":9092");
         return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
     }
 
     @Bean
     public static KafkaConsumer<String, String> configKafkaConsumer() {
         Properties props = new Properties();
-        props.put("bootstrap.servers", "192.168.31.75:9092");
+        props.put("bootstrap.servers", ipAddress + ":9092");
         props.setProperty("group.id", "dispatcher");
         props.setProperty("enable.auto.commit", "false");
 
@@ -46,7 +48,7 @@ public class DispatcherConfiguration {
     public static CqlSession setScyllaSession(){
 
         return CqlSession.builder()
-                .addContactPoint(new InetSocketAddress("192.168.31.75",9042))
+                .addContactPoint(new InetSocketAddress(ipAddress,9042))
                 .withAuthCredentials("cassandra", "cassandra")
                 .withLocalDatacenter("datacenter1").build();
 

@@ -96,6 +96,9 @@ public class AccountController {
     public String getAvatar(HttpServletRequest request) throws IOException {
         System.out.println(request.getAttribute("userEmail"));
         InputStream fileStream = pictureService.getAvatar((String) request.getAttribute("userEmail"));
+        if (fileStream == null) {
+            return "data:image/jpeg;base64," + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/08FHiYAAAAASUVORK5CYII=";
+        }
         byte[] bytes = fileStream.readAllBytes();
         String encodedString = java.util.Base64.getEncoder().encodeToString(bytes);
 

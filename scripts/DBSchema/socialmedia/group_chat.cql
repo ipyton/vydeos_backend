@@ -5,7 +5,6 @@ CREATE KEYSPACE group_chat
         };
 
 use group_chat;
-create table group_chat_records(group_id bigint, message_id bigint,type text,  user_id bigint ,content text, refer_user_id list<text>, refer_message_id bigint, send_time timestamp, del boolean, messsagetype text, primary key (group_id, message_id));
 //create table group_chat_record_by_message_id(message_id int, group_id text , user_id text ,groupMessage text, send_time timestamp, object_id text, primary key ( group_id ));
 
 

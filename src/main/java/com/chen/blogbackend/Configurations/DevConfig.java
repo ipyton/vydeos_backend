@@ -32,6 +32,7 @@ import java.util.Properties;
 @Configuration
 @Profile("dev")
 public class DevConfig {
+    static String ipAddress = "192.168.1.11";
      public static void setFilters(){
 
     }
@@ -47,7 +48,7 @@ public class DevConfig {
     public static MinioClient setMinioClient(){
         return MinioClient.builder()
                 // api地址
-                .endpoint("http://192.168.31.75:9000")
+                .endpoint("http://" + ipAddress + ":9000")
                 .credentials("ROOTUSER", "CHANGEME123")
                 .build();
     }
@@ -62,7 +63,7 @@ public class DevConfig {
     public static CqlSession setScyllaSession(){
 
         return CqlSession.builder()
-                .addContactPoint(new InetSocketAddress("192.168.31.75",9042))
+                .addContactPoint(new InetSocketAddress(ipAddress,9042))
                 .withAuthCredentials("cassandra", "cassandra")
                 .withLocalDatacenter("datacenter1").build();
 
@@ -71,7 +72,7 @@ public class DevConfig {
 
     @Bean
     public static Jedis configRedis() {
-        Jedis jedis = new Jedis("192.168.31.75", 6379);
+        Jedis jedis = new Jedis(ipAddress, 6379);
         // 如果设置 Redis 服务的密码，需要进行验证，若没有则可以省去
 //        jedis.auth("123456");
         System.out.println("链接成功！");
@@ -93,14 +94,14 @@ public class DevConfig {
         jedisPoolConfig.setJmxEnabled(false);
 
         return new JedisPool(jedisPoolConfig,
-                "192.168.31.75",6379,1000);
+                ipAddress,6379,1000);
 
     }
 
 
     @Bean
     public static ElasticsearchClient configElasticSearch() {
-        String serverUrl = "http://192.168.31.75:9200";
+        String serverUrl = "http://" + ipAddress + ":9200";
         String apiKey = "VnVhQ2ZHY0JDZGJrU...";
         RestClient restClient = RestClient
                 .builder(HttpHost.create(serverUrl))
@@ -134,7 +135,7 @@ public class DevConfig {
 //        ClientConfiguration config = builder.build();
 //        return provider.newProducerBuilder().setClientConfiguration(config).build();
         Properties props = new Properties();
-        props.put("bootstrap.servers", "192.168.31.75:9092");
+        props.put("bootstrap.servers", ipAddress + ":9092");
         props.put(ProducerConfig.ACKS_CONFIG, "all");
 
 //        props.put("transactional.id", "my-transactional-id");

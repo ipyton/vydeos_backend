@@ -1,9 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.entities.MessageSendingReceipt;
-import com.chen.blogbackend.entities.NotificationMessage;
-import com.chen.blogbackend.entities.SendingReceipt;
+import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.ChatGroupService;
@@ -13,8 +11,12 @@ import com.chen.blogbackend.services.SingleMessageService;
 import com.chen.blogbackend.util.RandomUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.time.Instant;
@@ -38,9 +40,15 @@ public class SingleMessageController {
     SearchService searchService;
 
     @RequestMapping("get_messages")
-    public LoginMessage getMessagesByUserId(String userId, String receiverId, String pageState){
-        service.getMessageByUserId(userId, receiverId,pageState);
-        return new LoginMessage(-1, "");
+    public List<NotificationMessage> getMessagesByUserId(HttpServletRequest httpServletRequest, @RequestParam(value = "receiverId", required = false) String receiverId,
+                                                         @RequestParam(value = "groupId", required = false) Long groupId, @RequestParam("type") String type,
+                                                         @RequestParam("timestamp") Long timestamp, String pageState){
+        String userId = (String) httpServletRequest.getAttribute("userEmail");
+        System.out.println(groupId);
+        System.out.println(timestamp);
+        System.out.println(receiverId);
+        System.out.println(type);
+        return service.getMessageByUserId(userId, receiverId, type, groupId, timestamp);
     }
 
     @RequestMapping("sendMessage")
@@ -76,11 +84,11 @@ public class SingleMessageController {
 
     }
 
-    @RequestMapping("recall")
-    public LoginMessage recall(String userId, String receiverId, String messageId) {
-        service.recall(userId, receiverId, messageId);
-        return new LoginMessage(-1, "");
-    }
+//    @RequestMapping("recall")
+//    public LoginMessage recall(String userId, String receiverId, String messageId) {
+//        service.recall(userId, receiverId, messageId);
+//        return new LoginMessage(-1, "");
+//    }
 
 
 //    /*
@@ -92,17 +100,64 @@ public class SingleMessageController {
 //    }
 
 
-    ///get all
+    ///get the newest message and it count.
     @RequestMapping("getNewestMessages")
     public LoginMessage getNewestRecords(Long userId,Long timestamp, String pageState) {
         System.out.println(timestamp);
-        List<NotificationMessage> newRecords = service.getNewRecords(userId, timestamp,pageState);
-        System.out.println(JSON.toJSONString(newRecords));
+        if (userId== null|| timestamp ==null ) {
+            return new LoginMessage(-1, "insufficient data");
+        }
+        List<NotificationMessage> newRecords = service.getNewestMessages(userId, timestamp,pageState);
+//        System.out.println(JSON.toJSONString(newRecords));
         return new LoginMessage(1, JSON.toJSONString(newRecords));
 
     }
 
+    @RequestMapping("getUnreadCount")
+    public ResponseEntity<?> getUnreadCount(String receiverId) {
+        if (receiverId == null) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body("Receiver ID is required");
+        }
 
+        try {
+            List<NotificationMessage> unreadCount = service.getUnreadCount(receiverId);
+            return ResponseEntity.ok(unreadCount);
+        } catch (Exception e) {
+            // Logging the error can be helpful
+            e.printStackTrace();
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An error occurred while fetching unread count");
+        }
+    }
+
+
+
+    @RequestMapping("registerWebPushEndpoints")
+    public LoginMessage registerWebPush(HttpServletRequest request,  @RequestBody WebPushRequest webPushRequest){
+        System.out.println("----------------------");
+        System.out.println(webPushRequest.getEndpoint());
+        System.out.println(webPushRequest.getP256dh());
+        System.out.println(webPushRequest.getAuth());
+
+        String email = (String) request.getAttribute("userEmail");
+        boolean b = service.addOrUpdateEndpoint(email, webPushRequest.getEndpoint(), webPushRequest.getP256dh(), webPushRequest.getAuth());
+        if (!b) {
+            return new LoginMessage(-1, "Failed");
+        }
+        return new LoginMessage(1, "Success");
+    }
+
+    @RequestMapping("getWebPushEndpoints")
+    public List<String> getWebPushEndpoints(HttpServletRequest request) {
+        String email = (String) request.getAttribute("userEmail");
+        if (email == null) {
+            return new ArrayList<>();
+        }
+        return service.getEndpoints(email);
+    }
 //    @RequestMapping("getRequestCache")
 //    public LoginMessage getRequestCache(String userId) {
 //

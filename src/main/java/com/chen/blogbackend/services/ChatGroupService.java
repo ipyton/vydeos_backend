@@ -48,7 +48,7 @@ public class ChatGroupService {
     PreparedStatement getRecord;
     PreparedStatement getGroupDetails;
     PreparedStatement getRecordByGroupId;
-    PreparedStatement getRecordByMemberId;
+//    PreparedStatement getRecordByMemberId;
     //PreparedStatement setChatRecordCache;
     PreparedStatement createChatGroup;
     PreparedStatement insertGroupMember;
@@ -71,15 +71,12 @@ public class ChatGroupService {
         getMembers = session.prepare("select * from group_chat.chat_group_members where group_id = ? ");
         //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
-        getRecordByGroupId = session.prepare("select * from group_chat.group_chat_records where group_id= ? and message_id > ?");
-        getRecordByMemberId = session.prepare("select * from group_chat.chat_messages_mailbox where user_id= ? ");
+        getRecordByGroupId = session.prepare("select * from chat.group_chat_records where group_id= ? and send_time > ?");
+        //getRecordByMemberId = session.prepare("select * from chat.chat_messages_mailbox where user_id= ? ");
         insertGroupMember = session.prepare("insert into group_chat.chat_group_members (group_id, user_id, user_name, group_name) values (?, ?, ?, ?)");
         getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
     }
-    public List<OnlineGroupMessage> getOnlineGroupMessageByUserID(long userID) {
-        ResultSet execute = session.execute(getRecordByMemberId.bind(userID));
-        return MessageParser.parseToOnlineGroupMessage(execute);
-    }
+
 
     public boolean joinGroup(String userId, String groupId) {
         BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
@@ -128,9 +125,9 @@ public class ChatGroupService {
     }
 
 
-    public List<GroupMessage> getGroupMessageByGroupID(String groupId) {
-        ResultSet execute = session.execute(getRecordByGroupId.bind(groupId));
-        return MessageParser.parseToGroupMessage(execute);
+    public List<NotificationMessage> getGroupMessageByGroupIDAndTimestamp(Long groupId, long timestamp) {
+        ResultSet execute = session.execute(getRecordByGroupId.bind(groupId, Instant.ofEpochMilli(timestamp)));
+        return MessageParser.parseToNotificationMessage(execute);
     }
 
 //    public boolean recall(String operatorId, String groupID, String messageId) {
@@ -240,6 +237,22 @@ public class ChatGroupService {
             // 如果没有找到对应的群组，返回 null 或抛出异常
             return null;
         }
+    }
+
+    public List<NotificationMessage> getNewestMessages(Long userId, long timestamp) {
+        ResultSet execute = session.execute(getGroups.bind(userId));
+        List<NotificationMessage> notificationMessages = new ArrayList<>();
+        if (!execute.getExecutionInfo().getErrors().isEmpty()) {
+            return notificationMessages;
+        }
+        List<Row> all = execute.all();
+        for (Row row : all) {
+            Long groupId = row.getLong("group_id");
+            List<NotificationMessage> groupMessageByGroupID = getGroupMessageByGroupIDAndTimestamp(groupId, timestamp);
+            notificationMessages.addAll(groupMessageByGroupID);
+
+        }
+        return notificationMessages;
     }
 
 
