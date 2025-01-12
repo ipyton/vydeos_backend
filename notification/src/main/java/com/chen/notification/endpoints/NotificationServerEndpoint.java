@@ -1,9 +1,11 @@
 package com.chen.notification.endpoints;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.chen.blogbackend.UserStatus;
 import com.chen.notification.entities.Negotiation;
 import com.chen.notification.entities.NotificationMessage;
+import com.google.api.Http;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import jakarta.annotation.PostConstruct;
@@ -13,11 +15,17 @@ import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.repository.query.Param;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 // | discard the unconnected receiver's notifications.
 // | when the user comes to online, the system check the unread information to send.
 @Component
-@ServerEndpoint("/notification/{userId}")
+@ServerEndpoint("/notification/{token}")
 @Profile("endpoint")
 public class NotificationServerEndpoint {
 
@@ -41,24 +49,45 @@ public class NotificationServerEndpoint {
 
     // It is used for only ask for users.
     public static ConcurrentHashMap<String, ConcurrentLinkedQueue<NotificationMessage>> messageList = new ConcurrentHashMap<>();
+    private final String targetUrl = "http://localhost:8080/account/verifyToken";
+
+    @Autowired
+    private HttpClient httpClient;
+
+
+    public NotificationServerEndpoint() {
+    }
 
     // If user do not online, just abandon the function.
 
     @PostConstruct
     public void init() {
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 8080)
-                .usePlaintext()
-                .build();
-
+//        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 8080)
+//                .usePlaintext()
+//                .build();
+//        httpClient = HttpClient.newHttpClient();
+        System.out.println("init success" + httpClient);
         // Create a blocking stub
     }
 
 
+    private String getUserId(String token) throws IOException, InterruptedException {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(targetUrl))
+                .header("Content-Type",  "application/json")
+                .header("token", token)
+                .POST(HttpRequest.BodyPublishers.ofString("{\"token\":\""+token+"\"}")).build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
+        JSONObject jsonObject = JSON.parseObject(response.body());
+        return (String) jsonObject.get("message");
+    }
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("userId") String userId) {
+    public void onOpen(Session session, @PathParam("token") String token) throws IOException, InterruptedException {
+        System.out.println(token);
+        String userId = getUserId(token);
         try {
-
             sessionPool.put(userId, session);
             if (!messageList.contains(userId)) {
                 messageList.put(userId, new ConcurrentLinkedQueue<>());
@@ -104,34 +133,29 @@ public class NotificationServerEndpoint {
         messageList.get(userId).add(notificationMessage);
     }
 
-    public <T> void sendMessages( List<T> messages, long userId) throws IOException {
+    public <T> void sendMessages(List<NotificationMessage> messages) throws IOException {
+        messages.forEach(message -> {
+            String receiverId = message.getReceiverId();
+            if (receiverId == null || receiverId.isEmpty()) {
+                System.out.println("err : connection Not specified");
+                return;
+            }
+            Session session = sessionPool.get(receiverId);
+            if (session != null && session.isOpen()) {
+                try{
+                    System.out.println("send to receiver" + receiverId);
+                    session.getBasicRemote().sendText(JSON.toJSONString(message));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            else {
+                sessionPool.remove(receiverId);
+            }
 
-        Session session = sessionPool.get(userId);
-        if (session.isOpen() && messages.size() > 0) {
-            session.getBasicRemote().sendText(JSON.toJSONString(messages));
-//            if (messages.get(0) instanceof SingleMessage) {
-//                List<SingleMessage> list = new ArrayList<>();
-//                for (Object singleMessage : messages) {
-//                    SingleMessage singleMessage1 = (SingleMessage) singleMessage;
-//                    list.add(singleMessage1);
-//                }
-//                session.getBasicRemote().sendText(JSON.toJSONString(list));
-//            }
-//            else if (messages.get(0) instanceof GroupMessage) {
-//                List<GroupMessage> list = new ArrayList<>();
-//                for (Object singleMessage : messages) {
-//                    GroupMessage groupMessage1 = (GroupMessage) singleMessage;
-//                    list.add(groupMessage1);
-//                }
-//                session.getBasicRemote().sendText(JSON.toJSONString(list));
-//            }
+        });
 
-            System.out.println("successfully");}
 
-        else {
-            System.out.println("user" + userId + "do not exist!!!!!!");
-            sessionPool.remove(userId);
-        }
     }
 
     // heart beat.

@@ -46,7 +46,7 @@ public class DispatcherAutoRunner {
 
 
     private void consumeMessage() {
-        System.out.println("This is a dispatcher service");
+        //System.out.println("This is a dispatcher service");
         PreparedStatement insertMessage = cqlSession.prepare("insert into chat.chat_records (user_id," +
                 " message_id, content, del, messagetype, receiver_id, refer_message_id,refer_user_id, send_time, type)" +
                 "values(?,?,?,?,?,?,?,?,?,?)");

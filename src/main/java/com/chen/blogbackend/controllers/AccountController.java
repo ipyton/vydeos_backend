@@ -29,6 +29,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @ResponseBody
@@ -139,10 +140,13 @@ public class AccountController {
     }
 
     @PostMapping("/verifyToken")
-    public LoginMessage verifyToken(@Param("token") String token) {
-        System.out.println(token);
+    public LoginMessage verifyToken(@RequestBody Map<String, String> requestBody) {
+        String token = requestBody.get("token");
+
+        System.out.println("------=======-----" +token);
         if (null != token) {
             if (accountService.haveValidLogin(token)) {
+                System.out.println("---------------------return");
                 return new LoginMessage(1, TokenUtil.resolveToken(token).getUserId());
             }
         }

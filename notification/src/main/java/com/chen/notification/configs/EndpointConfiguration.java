@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Profile;
 import redis.clients.jedis.Jedis;
 
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.security.Security;
 import java.util.Properties;
 
@@ -60,6 +61,10 @@ public class EndpointConfiguration {
                 .withAuthCredentials("cassandra", "cassandra")
                 .withLocalDatacenter("datacenter1").build();
 
+    }
+    @Bean
+    public static HttpClient setClient() {
+        return HttpClient.newHttpClient();
     }
 
 

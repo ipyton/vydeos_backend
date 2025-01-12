@@ -22,12 +22,4 @@ public class ClientRegistrationController {
 
     }
 
-//    @RequestMapping("")
-//    public ActiveStatus login() {
-//
-//    }
-
-
-
-
 }

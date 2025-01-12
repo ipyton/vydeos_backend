@@ -166,10 +166,13 @@ public class AccountService {
     public boolean haveValidLogin(String token) {
         if (null == token || 0 == token.length()) return false;
         Token token1 = TokenUtil.resolveToken(token);
+        System.out.println(token1);
         //token1.getUserId().equals(userId)
         if( null == token1.getUserId()){
+            System.out.println("not find userId");
             return false;
         }
+        System.out.println(token1.getExpireDatetime().isAfter(Instant.now()));
         return token1.getExpireDatetime().isAfter(Instant.now());
     }
 

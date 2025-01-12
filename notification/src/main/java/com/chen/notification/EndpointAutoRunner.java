@@ -138,8 +138,8 @@ public class EndpointAutoRunner {
 //                        System.out.println(send.toString());
 //                        int statusCode = send.getStatusLine().getStatusCode();
                         restTemplate.postForObject("http://localhost:5000/send", webPushMessage, String.class);
-
                     }
+                    service.sendMessages(List.of(notificationMessage));
 
                 }
                 else {
