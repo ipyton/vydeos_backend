@@ -48,8 +48,8 @@ public class DispatcherAutoRunner {
     private void consumeMessage() {
         System.out.println("This is a dispatcher service");
         PreparedStatement insertMessage = cqlSession.prepare("insert into chat.chat_records (user_id," +
-                " message_id, content, del, messagetype, receiver_id, group_id, refer_message_id,refer_user_id, send_time, type)" +
-                "values(?,?,?,?,?,?,?,?,?,?,?)");
+                " message_id, content, del, messagetype, receiver_id, refer_message_id,refer_user_id, send_time, type)" +
+                "values(?,?,?,?,?,?,?,?,?,?)");
         PreparedStatement groupMessage = cqlSession.prepare("insert into chat.group_chat_records (user_id,"+
                 " message_id, content, del, messagetype, group_id,refer_message_id,refer_user_id, send_time, type)" +
                 "values(?,?,?,?,?,?,?,?,?,?)");
@@ -65,11 +65,12 @@ public class DispatcherAutoRunner {
                 String key = record.key();
                 String value = record.value();
 
+                System.out.println(value);
                 NotificationMessage notificationMessage = JSON.parseObject(value, NotificationMessage.class);
                 if (notificationMessage.getType().equals("single")) {
                     System.out.println("single message");
                     cqlSession.execute(insertMessage.bind(notificationMessage.getSenderId(),notificationMessage.getMessageId(),
-                            notificationMessage.getContent(),false, "text", notificationMessage.getReceiverId(), 0L,new ArrayList<String>(),
+                            notificationMessage.getContent(),false, "text", notificationMessage.getReceiverId(), 0l,new ArrayList<String>(),
                             notificationMessage.getTime(), "single"));
                     producer.send(new ProducerRecord<String, String>("single",notificationMessage.getSenderId(), JSON.toJSONString(notificationMessage)));
 

@@ -14,14 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RequestMapping("chat")
 @Controller()
@@ -39,22 +37,22 @@ public class SingleMessageController {
     @Autowired
     SearchService searchService;
 
-    @RequestMapping("get_messages")
-    public List<NotificationMessage> getMessagesByUserId(HttpServletRequest httpServletRequest, @RequestParam(value = "receiverId", required = false) String receiverId,
-                                                         @RequestParam(value = "groupId", required = false) Long groupId, @RequestParam("type") String type,
-                                                         @RequestParam("timestamp") Long timestamp, String pageState){
-        String userId = (String) httpServletRequest.getAttribute("userEmail");
-        System.out.println(groupId);
-        System.out.println(timestamp);
-        System.out.println(receiverId);
-        System.out.println(type);
-        return service.getMessageByUserId(userId, receiverId, type, groupId, timestamp);
-    }
+    //by single sender.
+//    @RequestMapping("get_messages")
+//    public List<NotificationMessage> getMessagesByUserId(HttpServletRequest httpServletRequest, @RequestParam(value = "receiverId", required = false) String receiverId,
+//                                                         @RequestParam(value = "groupId", required = false) Long groupId, @RequestParam("type") String type,
+//                                                         @RequestParam("timestamp") Long timestamp, String pageState){
+//        String userId = (String) httpServletRequest.getAttribute("userEmail");
+//        System.out.println(groupId);
+//        System.out.println(timestamp);
+//        System.out.println(receiverId);
+//        System.out.println(type);
+//        return service.getMessageByUserId(userId, receiverId, type, groupId, timestamp);
+//    }
 
     @RequestMapping("sendMessage")
     public SendingReceipt sendMessage(HttpServletRequest request, String receiverId, Long groupId, String content, String type) throws Exception {
         String senderId = (String) request.getAttribute("userEmail");
-
         if (type.equals("single")) {
             System.out.println(receiverId);
             System.out.println(content);
@@ -68,7 +66,7 @@ public class SingleMessageController {
             System.out.println(groupId);
             return groupService.sendGroupMessage(senderId, groupId, content, type);
         }
-        return new SendingReceipt(false, -1);
+        return new SendingReceipt(false, -1, -1);
     }
 
     @RequestMapping("block")
@@ -100,15 +98,19 @@ public class SingleMessageController {
 //    }
 
 
-    ///get the newest message and it count.
-    @RequestMapping("getNewestMessages")
-    public LoginMessage getNewestRecords(Long userId,Long timestamp, String pageState) {
+    ///get the newest message and it count. all newest messages
+    @PostMapping("getNewestMessages")
+    public LoginMessage getNewestRecords(HttpServletRequest request, @RequestBody Map<String, Object> payload) {
+        String email = (String) request.getAttribute("userEmail");
+        Long timestamp = null;
+        if (payload.get("timestamp") != null) {
+            timestamp = Long.valueOf(payload.get("timestamp").toString());
+        }
         System.out.println(timestamp);
-        if (userId== null|| timestamp ==null ) {
+        if (email== null|| timestamp ==null ) {
             return new LoginMessage(-1, "insufficient data");
         }
-        List<NotificationMessage> newRecords = service.getNewestMessages(userId, timestamp,pageState);
-//        System.out.println(JSON.toJSONString(newRecords));
+        List<NotificationMessage> newRecords = service.getNewestMessages(email, timestamp,null);
         return new LoginMessage(1, JSON.toJSONString(newRecords));
 
     }

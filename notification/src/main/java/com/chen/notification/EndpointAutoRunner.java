@@ -58,7 +58,7 @@ public class EndpointAutoRunner {
 //    KafkaProducer<String, String> DLQ;
 
     @Autowired
-    CqlSession session;
+    private  CqlSession session;
 
     PreparedStatement getEndpoints;
 

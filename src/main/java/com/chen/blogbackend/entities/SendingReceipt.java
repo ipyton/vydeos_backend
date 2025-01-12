@@ -1,13 +1,25 @@
 package com.chen.blogbackend.entities;
 
 
+import java.time.Instant;
+
 public class SendingReceipt {
     public boolean result;
     public long sequenceId;
+    public long timestamp;
 
-    public SendingReceipt(boolean result, long sequenceId) {
+    public SendingReceipt(boolean result, long sequenceId, long timestamp) {
         this.result = result;
         this.sequenceId = sequenceId;
+        this.timestamp = timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public boolean isResult() {

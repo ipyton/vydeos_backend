@@ -48,8 +48,9 @@ public class SingleMessageService {
     JedisPool pool;
 
 
-    PreparedStatement getRecord;
+    //PreparedStatement getRecord; //Caused by: com.datastax.oss.driver.api.core.servererrors.InvalidQueryException: Only EQ and IN relation are supported on the partition key (unless you use the token() function or allow filtering)
     PreparedStatement setRecordById;
+    PreparedStatement getAllRecords;
     PreparedStatement block;
     PreparedStatement unBlock;
 //    PreparedStatement recall;
@@ -69,7 +70,7 @@ public class SingleMessageService {
     public void init(){
         setRecordById = session.prepare("insert into chat.chat_records (user_id, receiver_id, message_id, content, " +
                 "send_time, type, refer_message_id, refer_user_id ) values (?,?,?,?,?,?,?,?);");
-        getRecord = session.prepare("select * from chat.chat_records where user_id = ? and receiver_id = ? and send_time>?");
+        //getRecord = session.prepare("select * from chat.chat_records where user_id = ? and  send_time>? and receiver_id = ?");
         block = session.prepare("insert into userinfo.black_list (user_id, black_user_id, black_user_name, black_user_avatar) values(?, ?, ?, ?)");
         unBlock = session.prepare("delete from userInfo.black_list where user_id = ? and black_user_id = ?");
         //recall = session.prepare("update chat.chat_records set del=true where user_id = ? and message_id= ?");
@@ -78,6 +79,7 @@ public class SingleMessageService {
         addEndpoint = session.prepare("INSERT INTO chat.web_push_endpoints (user_id, endpoint, expiration_time, p256dh, auth) VALUES (?, ?, ?, ?, ?);");
 //        updateEndpoint = session.prepare("UPDATE chat.web_push_endpoints SET endpoint = ?, p256dh = ?, auth = ? WHERE user_id = ?;");
         getEndpoints = session.prepare("select * from chat.web_push_endpoints where user_id = ?");
+        getAllRecords = session.prepare("select * from chat.chat_records where receiver_id = ? and send_time>?");
     }
 
     public boolean blockUser(String userId, String blockUser) {
@@ -91,15 +93,15 @@ public class SingleMessageService {
     }
 
 
-    public List<NotificationMessage> getMessageByUserId(String userId, String receiverId, String type, Long groupid, Long timestamp) {
-        if (type.equals("single")) {
-            ResultSet execute = session.execute(getRecord.bind(userId, receiverId,Instant.ofEpochMilli(timestamp)));
-            return MessageParser.parseToNotificationMessage(execute);
-
-        } else {
-            return chatGroupService.getGroupMessageByGroupIDAndTimestamp(groupid, timestamp);
-        }
-    }
+//    public List<NotificationMessage> getMessageByUserId(String userId, String receiverId, String type, Long groupid, Long timestamp) {
+//        if (type.equals("single")) {
+//            ResultSet execute = session.execute(getRecord.bind(userId, receiverId,Instant.ofEpochMilli(timestamp)));
+//            return MessageParser.parseToNotificationMessage(execute);
+//
+//        } else {
+//            return chatGroupService.getGroupMessageByGroupIDAndTimestamp(groupid, timestamp);
+//        }
+//    }
 
 
 
@@ -114,6 +116,7 @@ public class SingleMessageService {
             System.out.println("they are not friends");
             receipt.sequenceId = -1;
             receipt.result = false;
+
             return receipt;
         }
 
@@ -130,6 +133,7 @@ public class SingleMessageService {
         //judge if a user can send message
         producer.sendNotification(singleMessage);
         receipt.result = true;
+        receipt.timestamp = now.toEpochMilli();
 
         //    private String userId;
         //    private String title;
@@ -148,10 +152,18 @@ public class SingleMessageService {
 //    }
 
 
-    public List<NotificationMessage> getNewestMessages(Long userId, long timestamp, String pageState) {
-        chatGroupService.getNewestMessages(userId, timestamp);
-        ResultSet execute = session.execute(getRecord.bind(userId, timestamp));
-        return MessageParser.parseToNotificationMessage(execute);
+    public List<NotificationMessage> getNewestMessages(String userId, long timestamp, String pageState) {
+        if (timestamp == -1) {
+            timestamp = 0;
+        }
+        List<NotificationMessage> newestMessages = chatGroupService.getNewestMessages(userId, timestamp);
+
+        ResultSet execute = session.execute(getAllRecords.bind(userId, Instant.ofEpochMilli(timestamp)));
+        //System.out.println(execute.all().size());
+        List<NotificationMessage> notificationMessages = MessageParser.parseToNotificationMessage(execute);
+        System.out.println(notificationMessages.size());
+        notificationMessages.addAll(newestMessages);
+        return notificationMessages;
     }
 
 

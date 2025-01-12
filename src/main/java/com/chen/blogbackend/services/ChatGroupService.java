@@ -45,7 +45,7 @@ public class ChatGroupService {
     PreparedStatement removeMember;
     PreparedStatement delAllChatGroupById;
 
-    PreparedStatement getRecord;
+    //PreparedStatement getRecord;
     PreparedStatement getGroupDetails;
     PreparedStatement getRecordByGroupId;
 //    PreparedStatement getRecordByMemberId;
@@ -205,6 +205,7 @@ public class ChatGroupService {
             receipt.sequenceId = keyService.getIntKey("groupMessage");
             singleMessage.setMessageId(receipt.sequenceId);
             receipt.result = true;
+            receipt.timestamp = now.toEpochMilli();
             notificationProducer.sendNotification(singleMessage);
             return receipt;
         }
@@ -239,7 +240,7 @@ public class ChatGroupService {
         }
     }
 
-    public List<NotificationMessage> getNewestMessages(Long userId, long timestamp) {
+    public List<NotificationMessage> getNewestMessages(String userId, long timestamp) {
         ResultSet execute = session.execute(getGroups.bind(userId));
         List<NotificationMessage> notificationMessages = new ArrayList<>();
         if (!execute.getExecutionInfo().getErrors().isEmpty()) {

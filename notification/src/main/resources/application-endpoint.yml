@@ -1,0 +1,10 @@
+#spring.datasource.url=
+#spring.datasource.driver-class-name=
+#spring.datasource.username=
+#spring.datasource.password=
+#spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+server:
+  port: 7910
+spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration

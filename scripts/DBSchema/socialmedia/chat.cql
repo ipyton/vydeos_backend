@@ -6,10 +6,10 @@ CREATE KEYSPACE chat
 use chat;
 //create table chat_record_by_id(user_id text, receiver_id text, message_id text, content text, send_time timestamp, type text, object_id text, primary key ( (user_id, receiver_id), send_time));
 
-create table chat_records(user_id text, receiver_id text,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, PRIMARY KEY ((user_id, receiver_id), send_time, message_id));
+create table chat_records(user_id text, receiver_id text,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, PRIMARY KEY ((receiver_id),send_time, user_id, message_id));
 create table group_chat_records(user_id text,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, primary key ((group_id), send_time, message_id));
 
-CREATE INDEX ON chat.chat_records (receiver_id);
+CREATE INDEX ON chat.chat_records (user_id);
 
 
 create index get_chat_by_user_receiver_id on chat_records ((user_id), receiver_id);

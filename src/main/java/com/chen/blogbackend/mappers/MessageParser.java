@@ -4,6 +4,7 @@ import com.chen.blogbackend.entities.NotificationMessage;
 import com.chen.blogbackend.entities.deprecated.GroupMessage;
 import com.chen.blogbackend.entities.OnlineGroupMessage;
 import com.chen.blogbackend.entities.deprecated.SingleMessage;
+import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 
@@ -17,28 +18,33 @@ public class MessageParser {
     public static List<NotificationMessage> parseToNotificationMessage(ResultSet set) {
         ArrayList<NotificationMessage> result = new ArrayList<>();
         for (Row row : set.all()) { // 假设 resultSet 是某种支持 all() 的类型
-            String senderId = row.getString("user_id");
-            String receiverId = row.getString("receiver_id");
-            long messageId = row.getLong("message_id");
-            String content = row.getString("content");
-            Instant sendTime = row.getInstant("send_time");  // Convert timestamp to Instant
-            String type = row.getString("type");
-            String messageType = row.getString("messageType");
-            String referMessageId = row.getString("refer_message_id");
-            long groupId = row.getLong("group_id");
-            // 创建 NotificationMessage 对象
+
+            ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
+
+// 检查并获取每列的值
+            String senderId = columnDefinitions.contains("user_id") ? row.getString("user_id") : null;
+            String receiverId = columnDefinitions.contains("receiver_id") ? row.getString("receiver_id") : null;
+            Long messageId = columnDefinitions.contains("message_id") ? row.getLong("message_id") : null;
+            String content = columnDefinitions.contains("content") ? row.getString("content") : null;
+            Instant sendTime = columnDefinitions.contains("send_time") ? row.getInstant("send_time") : null;
+            String type = columnDefinitions.contains("type") ? row.getString("type") : null;
+            String messageType = columnDefinitions.contains("messageType") ? row.getString("messageType") : null;
+            Long referMessageId = columnDefinitions.contains("refer_message_id") ? row.getLong("refer_message_id") : null;
+            Long groupId = columnDefinitions.contains("group_id") ? row.getLong("group_id") : null;
+            System.out.println(senderId);
+// 创建 NotificationMessage 对象
             NotificationMessage message = new NotificationMessage(
-                    "",  // Assuming avatar is not provided by the database, set to null or default
+                    "", // Assuming avatar is not provided by the database, set to null or default
                     senderId,
                     receiverId,
-                    groupId,
-                    "",  // receiverName can be set to null or fetched if available
-                    "",  // senderName can be set to null or fetched if available
+                    groupId != null ? groupId : 0L, // 如果 groupId 为空，设置为默认值 0L
+                    "", // receiverName can be set to null or fetched if available
+                    "", // senderName can be set to null or fetched if available
                     type,
                     content,
-                    messageId,
+                    messageId != null ? messageId : 0L, // 如果 messageId 为空，设置为默认值 0L
                     sendTime,
-                    0l
+                    0L // 这里是固定值
             );
 
             // 将解析的消息添加到结果列表中
