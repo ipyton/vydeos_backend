@@ -1,5 +1,6 @@
 package com.chen.blogbackend.services;
 
+import com.chen.blogbackend.entities.MovieDownloadRequest;
 import com.chen.blogbackend.entities.Post;
 import com.chen.blogbackend.entities.Video;
 import com.chen.blogbackend.mappers.VideoParser;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 @Service
@@ -30,6 +32,9 @@ public class VideoService {
     private PreparedStatement collectVideo;
     private PreparedStatement removeVideo;
 
+    private PreparedStatement sendRequest;
+    private PreparedStatement getRequest;
+
 
     @PostConstruct
     public void init() {
@@ -38,6 +43,8 @@ public class VideoService {
         collectVideo = session.prepare("insert into movie.movieGallery(movieId, userId, poster, introduction, " +
                 "movie_name, actress_list,release_year) values(?,?,?,?,?,?,?)");
         removeVideo = session.prepare("delete from movie.movieGallery where userId = ? and movieId = ?");
+        sendRequest = session.prepare("insert into movie. ");
+        getRequest = session.prepare("select ")
     }
 
     public boolean starVideo(Video video){
@@ -75,6 +82,14 @@ public class VideoService {
         return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
+    public List<MovieDownloadRequest> getRequests(String userId) {
+
+        return new LinkedList<>();
+    }
+
+    public boolean sendVideoId(String userId, long videoId) {
+        return false;
+    }
 
 
 }

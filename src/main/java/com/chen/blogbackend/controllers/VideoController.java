@@ -1,6 +1,7 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.entities.MovieDownloadRequest;
 import com.chen.blogbackend.entities.Video;
 import com.chen.blogbackend.services.VideoService;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -27,8 +28,6 @@ public class VideoController {
     private VideoService videoService;
 
 
-
-
     @RequestMapping("get")
     public String getGallery(String userId){
         List<Video> videoMeta = videoService.getGallery(userId);
@@ -53,6 +52,16 @@ public class VideoController {
         else return JSON.toJSONString("fail");
     }
 
+    @RequestMapping("/sendRequest")
+    public String sendRequest(HttpServletRequest request, long videoId){
+        String email = (String) request.getAttribute("userEmail");
+        videoService.sendVideoId();
+    }
+
+    @RequestMapping("/getRequest")
+    public List<MovieDownloadRequest> getRequests(HttpServletRequest request){
+        return videoService.getRequests();
+    }
 
 
 

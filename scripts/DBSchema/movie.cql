@@ -13,4 +13,6 @@ actress_list list<text>, release_year text, level text, picture_list list<text>,
 
 create table movieGallery(userId text, movieId text, poster text, score text, introduction text, movie_name text, tags text,
                           actress_list list<text>, release_year text, level text, picture_list list<text>, maker_list map<text,text>,
-                          position int, genre_list list<text>, primary key ( userId, movieId ))
+                          position int, genre_list list<text>, primary key ( userId, movieId ));
+
+create table movie(movieId text, createTime timestamp, userId text, primary key ( userId ));
