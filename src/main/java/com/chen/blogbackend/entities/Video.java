@@ -12,35 +12,83 @@ public class Video {
     private String poster;
     private String score;
     private String introduction;
-    private String movie_name;
+    private String movieName;
     private String tags;
-    private List<String> actress_list;
-    private String release_year ;
+    private List<String> actorList;
+    private String releaseYear ;
     private String level;
-    private List<String> picture_list;
-    private Map<String, String> maker_list;
-    private List<String> genre_list;
+    private List<String> pictureList;
+    private Map<String, String> makerList;
+    private List<String> genreList;
     private int position;
 
-    public Video(String movieId, String poster, String score, String introduction, String movie_name, String tags,
-                 List<String> actress_list, String release_year, String level, List<String> picture_list, Map<String,
-            String> maker_list,int position, List<String> genre_list) {
+    public Video(String movieId, String poster, String score, String introduction, String movieName, String tags,
+                 List<String> actorList, String releaseYear, String level, List<String> pictureList, Map<String,
+            String> makerList,int position, List<String> genreList) {
         this.movieId = movieId;
         this.poster = poster;
         this.score = score;
         this.introduction = introduction;
-        this.movie_name = movie_name;
+        this.movieName = movieName;
         this.tags = tags;
-        this.actress_list = actress_list;
-        this.release_year = release_year;
+        this.actorList = actorList;
+        this.releaseYear = releaseYear;
         this.level = level;
-        this.picture_list = picture_list;
-        this.maker_list = maker_list;
-        this.genre_list = genre_list;
+        this.pictureList = pictureList;
+        this.makerList = makerList;
+        this.genreList = genreList;
         this.position = position;
     }
 
     public Video() {
+    }
+
+    public String getMovieName() {
+        return movieName;
+    }
+
+    public void setMovieName(String movieName) {
+        this.movieName = movieName;
+    }
+
+    public List<String> getActorList() {
+        return actorList;
+    }
+
+    public void setActorList(List<String> actorList) {
+        this.actorList = actorList;
+    }
+
+    public String getReleaseYear() {
+        return releaseYear;
+    }
+
+    public void setReleaseYear(String releaseYear) {
+        this.releaseYear = releaseYear;
+    }
+
+    public List<String> getPictureList() {
+        return pictureList;
+    }
+
+    public void setPictureList(List<String> pictureList) {
+        this.pictureList = pictureList;
+    }
+
+    public Map<String, String> getMakerList() {
+        return makerList;
+    }
+
+    public void setMakerList(Map<String, String> makerList) {
+        this.makerList = makerList;
+    }
+
+    public List<String> getGenreList() {
+        return genreList;
+    }
+
+    public void setGenreList(List<String> genreList) {
+        this.genreList = genreList;
     }
 
     public int getPosition() {
@@ -83,13 +131,6 @@ public class Video {
         this.introduction = introduction;
     }
 
-    public String getMovie_name() {
-        return movie_name;
-    }
-
-    public void setMovie_name(String movie_name) {
-        this.movie_name = movie_name;
-    }
 
     public String getTags() {
         return tags;
@@ -99,21 +140,6 @@ public class Video {
         this.tags = tags;
     }
 
-    public List<String> getActress_list() {
-        return actress_list;
-    }
-
-    public void setActress_list(List<String> actress_list) {
-        this.actress_list = actress_list;
-    }
-
-    public String getRelease_year() {
-        return release_year;
-    }
-
-    public void setRelease_year(String release_year) {
-        this.release_year = release_year;
-    }
 
     public String getLevel() {
         return level;
@@ -123,27 +149,4 @@ public class Video {
         this.level = level;
     }
 
-    public List<String> getPicture_list() {
-        return picture_list;
-    }
-
-    public void setPicture_list(List<String> picture_list) {
-        this.picture_list = picture_list;
-    }
-
-    public Map<String, String> getMaker_list() {
-        return maker_list;
-    }
-
-    public void setMaker_list(Map<String, String> maker_list) {
-        this.maker_list = maker_list;
-    }
-
-    public List<String> getGenre_list() {
-        return genre_list;
-    }
-
-    public void setGenre_list(List<String> genre_list) {
-        this.genre_list = genre_list;
-    }
 }

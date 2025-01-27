@@ -3,6 +3,7 @@ package com.chen.blogbackend.services;
 import com.chen.blogbackend.entities.MovieDownloadRequest;
 import com.chen.blogbackend.entities.Post;
 import com.chen.blogbackend.entities.Video;
+import com.chen.blogbackend.mappers.MovieDownloadRequestParser;
 import com.chen.blogbackend.mappers.VideoParser;
 import com.chen.blogbackend.util.VideoUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,21 +36,21 @@ public class VideoService {
 
     private PreparedStatement sendRequest;
     private PreparedStatement getRequest;
-
-
+    private PreparedStatement getRequestById;
+//movieId text, createTime timestamp, userId text
     @PostConstruct
     public void init() {
-        getVideoMeta = session.prepare("select * from movie.meta where movieId = ?");
-        getGallery = session.prepare("select * from movie.movieGallery where userId = ?");
+        getVideoMeta = session.prepare("select * from movie.meta where movieId = ?;");
+        getGallery = session.prepare("select * from movie.movieGallery where userId = ?;");
         collectVideo = session.prepare("insert into movie.movieGallery(movieId, userId, poster, introduction, " +
-                "movie_name, actress_list,release_year) values(?,?,?,?,?,?,?)");
-        removeVideo = session.prepare("delete from movie.movieGallery where userId = ? and movieId = ?");
-        sendRequest = session.prepare("insert into movie. ");
-        getRequest = session.prepare("select ")
+                "movie_name, actress_list,release_year) values(?,?,?,?,?,?,?);");
+        removeVideo = session.prepare("delete from movie.movieGallery where userId = ? and movieId = ?;");
+        sendRequest = session.prepare("insert into movie.requests (movieId, create_time, userId, movie_name, actor_list, release_year) values (?, ?, ?, ?, ?, ?);");
+        getRequest = session.prepare("select * from movie.requests;");
+        getRequestById = session.prepare("select * from movie.requests where movieId = ?");
     }
 
     public boolean starVideo(Video video){
-
         return true;
     }
 
@@ -73,7 +75,7 @@ public class VideoService {
         Video videoMeta = getVideoMeta(videoId);
 
         ResultSet execute = session.execute(collectVideo.bind(videoId, userId, videoMeta.getPoster(),
-                videoMeta.getIntroduction(),videoMeta.getMovie_name(),videoMeta.getActress_list(),videoMeta.getRelease_year()));
+                videoMeta.getIntroduction(),videoMeta.getMovieName(),videoMeta.getActorList(),videoMeta.getReleaseYear()));
         return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
@@ -82,14 +84,25 @@ public class VideoService {
         return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
-    public List<MovieDownloadRequest> getRequests(String userId) {
-
-        return new LinkedList<>();
+    public boolean sendRequest(String email, String videoId) {
+        ResultSet execute1 = session.execute(getVideoMeta.bind(videoId));
+        List<Video> videos = VideoParser.videoMetaParser(execute1);
+        if (videos.isEmpty()) {
+            return false;
+        }
+        Video video = videos.get(0);
+        // movieId, create_time, userId, movie_name, actor_list, release_year
+        ResultSet execute = session.execute(sendRequest.bind(video.getMovieId(),Instant.now() ,email, video.getMovieName(),video.getActorList(),video.getReleaseYear()));
+        return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
-    public boolean sendVideoId(String userId, long videoId) {
-        return false;
+    public List<MovieDownloadRequest> getRequests() {
+        ResultSet execute = session.execute(getRequest.bind());
+        return MovieDownloadRequestParser.parseMovieDownloadRequest(execute);
     }
 
-
+    public boolean isRequested(String movieId) {
+        ResultSet execute = session.execute(getRequestById.bind(movieId));
+        return !execute.all().isEmpty();
+    }
 }
