@@ -3,10 +3,20 @@ spring:
     active: dev
 
   autoconfigure:
-    exclude=org:
-      springframework:
+    exclude:
+      - org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration
+
+    springframework:
         boot:
           autoconfigure:
             cassandra:
               CassandraAutoConfiguration:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+  server:
+    tomcat:
+      max-http-form-post-size: 100MB
+      max-swallow-size: 100MB
 

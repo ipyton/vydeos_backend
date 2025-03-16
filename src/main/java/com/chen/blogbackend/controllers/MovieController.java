@@ -33,10 +33,6 @@ public class MovieController {
 
     }
 
-    @PostMapping("uploadMovie")
-    public LoginMessage getMovieMessages() {
-        return new LoginMessage(-1, "success");
-    }
 
     @RequestMapping("/sendRequest")
     public LoginMessage sendRequest(HttpServletRequest request, String videoId){

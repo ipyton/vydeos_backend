@@ -1,15 +1,18 @@
 package com.chen.blogbackend.services;
 
+import com.alibaba.fastjson2.JSON;
 import com.chen.blogbackend.DAO.VideoUploadingDao;
 import com.chen.blogbackend.entities.FileUploadStatus;
 import com.chen.blogbackend.entities.UnfinishedUpload;
 import com.chen.blogbackend.mappers.FileServiceMapper;
+import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.util.FileUtil;
 import com.chen.blogbackend.util.UnfinishedUploadCleaner;
 import com.chen.blogbackend.util.VideoUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.metadata.Node;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedGenerator;
 import io.minio.*;
@@ -35,6 +38,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -73,7 +77,7 @@ public class FileService {
     //PreparedStatement firstSlice;
     PreparedStatement addSlices;
     PreparedStatement lastSlice;
-
+    PreparedStatement setUploadStatus;
 
     TimeBasedGenerator timeBasedGenerator = Generators.timeBasedGenerator();
     private CqlSession setScyllaSession;
@@ -98,19 +102,30 @@ public class FileService {
         getUploadStatus = cqlSession.prepare("select * from files.file_upload_status where resource_id = ? and resource_type = ?");
         addSlices = cqlSession.prepare("insert into files.file_upload_status (current_slice, total_slices, resource_type, resource_id, user_email, status_code) values (?, ?, ?, ?, ?, ?)");
         //addSlices = cqlSession.prepare("update file.file_upload_status set current_slice = current_slice + 1 where resourceId = ? and resourceType = ?");
-
+        setUploadStatus = cqlSession.prepare("insert into files.file_upload_status (user_email, " +
+                " resource_id, resource_type, whole_hash, file_name, total_slices, current_slice, size, " +
+                "quality, status_code, format) values (?,?,?,?,?,?,?,?,?,?,?)");
     }
 
-    public FileUploadStatus getUploadStatus(Long resourceId, String resourceType) {
-        ResultSet execute = cqlSession.execute(getUploadStatus.bind( resourceId, resourceType));
-        FileUploadStatus fileUploadStatus = FileServiceMapper.parseUploadStatus(execute);
+    public LoginMessage setUploadStatus(String userEmail, String resourceId, String resourceType,
+                                        String wholeMD5, long size, String filename, int totalSlice ,Short quality,
+                                        String format) {
+        FileUploadStatus fileUploadStatus = getUploadStatus(resourceId, resourceType);
         if (null == fileUploadStatus) {
-            fileUploadStatus = new FileUploadStatus();
-            fileUploadStatus.setResourceType(resourceType);
-            fileUploadStatus.setStatusCode(0);
-            return fileUploadStatus;
+            System.out.println(fileUploadStatus);
+            ResultSet execute1 = cqlSession.execute(setUploadStatus.bind(userEmail, resourceId,
+                    resourceType, wholeMD5, filename, totalSlice, 0,  size, quality,  0, format));
+            List<Map.Entry<Node, Throwable>> errors = execute1.getExecutionInfo().getErrors();
+            if (errors.isEmpty()) return new LoginMessage(1, "success");
+            return new LoginMessage(-1, "failed");
         }
-        return fileUploadStatus;
+
+        return new LoginMessage(2, JSON.toJSONString(fileUploadStatus));
+    }
+
+    public FileUploadStatus getUploadStatus(String resourceId, String resourceType) {
+        ResultSet execute = cqlSession.execute(getUploadStatus.bind( resourceId, resourceType));
+        return FileServiceMapper.parseUploadStatus(execute);
     }
 
 
@@ -282,7 +297,7 @@ public class FileService {
         return hexString.toString();
     }
 
-    private boolean checkUploadFile(String resourceType, Long resourceId, Integer currentSlice, Integer totalSlice, MultipartFile file, String md5) throws IOException, NoSuchAlgorithmException {
+    private boolean checkUploadFile(String resourceType, String resourceId, Integer currentSlice, Integer totalSlice, MultipartFile file, String md5) throws IOException, NoSuchAlgorithmException {
         FileUploadStatus uploadStatus = getUploadStatus(resourceId, resourceType);
         if (null == uploadStatus && currentSlice != 0) {
             return false;
@@ -327,36 +342,40 @@ public class FileService {
         return abstraction.equals(md5);
     }
 
-    public FileUploadStatus uploadFile(MultipartFile file, String type, Integer currentSlice, Integer totalSlice,
-                                       Long resourceId, String userEmail, String checkSum,String totalCheckSum) throws IOException, NoSuchAlgorithmException {
+    public FileUploadStatus uploadFile(MultipartFile file, String type, Integer currentSlice,
+                                       String resourceId, String userEmail, String checkSum) throws IOException, NoSuchAlgorithmException {
         if (file.isEmpty()) {
             System.out.println("file is empty!");
             return null;
         }
+        FileUploadStatus uploadStatus = getUploadStatus(resourceId, type);
+        if (uploadStatus == null) {
+            return null;
+        }
         // 检查该分片是否正常
-        boolean isValid = checkUploadFile(type, resourceId, currentSlice, totalSlice, file, checkSum);
+        boolean isValid = checkUploadFile(type, resourceId, currentSlice, uploadStatus.getTotalSlices(), file, checkSum);
         if (!isValid) {
             return null;
         }
 
-        File fileToWrite = new File("./tmp/" +type + "_" + resourceId + "_" + currentSlice + "_" + totalSlice + "_" + checkSum);
+        File fileToWrite = new File("./tmp/" +type + "_" + resourceId + "_" + currentSlice + "_" + uploadStatus.getTotalSlices()+ "_" + checkSum);
         file.transferTo(fileToWrite);
 
         //额外处理
         if (currentSlice == 0) {
             //第一个分段
-            cqlSession.execute(addSlices.bind(0, totalSlice, type, resourceId, userEmail, 1));
+            cqlSession.execute(addSlices.bind(0, uploadStatus.getTotalSlices(), type, resourceId, userEmail, 1));
         }
-        else if (currentSlice.equals(totalSlice)) {
+        else if (currentSlice.equals(uploadStatus.getTotalSlices())) {
             //最后一个分段
-            cqlSession.execute(addSlices.bind(totalSlice, totalSlice, type, resourceId, userEmail, 2));
+            cqlSession.execute(addSlices.bind(uploadStatus.getTotalSlices(), uploadStatus.getTotalSlices(), type, resourceId, userEmail, 2));
             executor.submit(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
                     String path = "./tmp/type_" + resourceId;
                     try (FileOutputStream fis = new FileOutputStream(path)){
-                        for (int i = 0; i < totalSlice; i ++) {
-                            try (FileInputStream subFiles = new FileInputStream("./tmp/" + type + "_" + resourceId + "_" + i + "_" + totalSlice)) {
+                        for (int i = 0; i < uploadStatus.getTotalSlices(); i ++) {
+                            try (FileInputStream subFiles = new FileInputStream("./tmp/" + type + "_" + resourceId + "_" + i + "_" + uploadStatus.getTotalSlices())) {
                                 byte[] buffer = new byte[1024];
                                 int bytesRead;
                                 while ((bytesRead = subFiles.read(buffer)) != -1) {
@@ -366,11 +385,11 @@ public class FileService {
                             catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
-                            boolean b = checkSum(path, totalCheckSum);
+                            boolean b = checkSum(path, uploadStatus.getWholeHash());
                             if (!b) {
                                 throw new Exception("检验失败");
                             }
-                            cqlSession.execute(addSlices.bind(totalSlice, totalSlice, type, resourceId, userEmail, 3));
+                            cqlSession.execute(addSlices.bind(uploadStatus.getTotalSlices(), uploadStatus.getTotalSlices(), type, resourceId, userEmail, 3));
                         }
                     } catch (Exception e) {
                         throw new Exception(e);
@@ -382,7 +401,7 @@ public class FileService {
             });
         } else {
             // 中间分段
-            cqlSession.execute(addSlices.bind(currentSlice , totalSlice, type, resourceId, userEmail, 1));
+            cqlSession.execute(addSlices.bind(currentSlice , uploadStatus.getTotalSlices(), type, resourceId, userEmail, 1));
         }
         return new FileUploadStatus();
     }

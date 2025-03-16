@@ -52,10 +52,4 @@ public class VideoController {
         if (result) return JSON.toJSONString("success");
         else return JSON.toJSONString("fail");
     }
-
-
-
-
-
-
 }

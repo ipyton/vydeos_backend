@@ -18,7 +18,7 @@ import java.util.Properties;
 @Profile("dispatcher")
 public class DispatcherConfiguration {
 
-    private static String ipAddress = "192.168.1.11";
+    private static String ipAddress = "192.168.1.6";
 
     @Bean
     public static Jedis configRedis() {

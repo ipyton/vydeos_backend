@@ -43,11 +43,11 @@ public class VideoService {
         getVideoMeta = session.prepare("select * from movie.meta where movieId = ?;");
         getGallery = session.prepare("select * from movie.movieGallery where userId = ?;");
         collectVideo = session.prepare("insert into movie.movieGallery(movieId, userId, poster, introduction, " +
-                "movie_name, actress_list,release_year) values(?,?,?,?,?,?,?);");
+                "movie_name, actor_list,release_year) values(?,?,?,?,?,?,?);");
         removeVideo = session.prepare("delete from movie.movieGallery where userId = ? and movieId = ?;");
         sendRequest = session.prepare("insert into movie.requests (movieId, create_time, userId, movie_name, actor_list, release_year) values (?, ?, ?, ?, ?, ?);");
         getRequest = session.prepare("select * from movie.requests;");
-        getRequestById = session.prepare("select * from movie.requests where movieId = ?");
+        getRequestById = session.prepare("select * from movie.requests where movieid = ?");
     }
 
     public boolean starVideo(Video video){

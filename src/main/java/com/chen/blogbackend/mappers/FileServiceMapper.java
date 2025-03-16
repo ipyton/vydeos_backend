@@ -17,7 +17,7 @@ public class FileServiceMapper {
         if (all.isEmpty()) {
             return null;
         }
-        Row row = set.all().get(0);
+        Row row = all.get(0);
         ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
         return new FileUploadStatus(
                 !columnDefinitions.contains("user_email") ? null : row.getString("user_email"),
@@ -26,6 +26,12 @@ public class FileServiceMapper {
                 !columnDefinitions.contains("resourceType") ? null : row.getString("resourceType"),
                 !columnDefinitions.contains("whole_hash") ? null : row.getString("whole_hash"),
                 !columnDefinitions.contains("total_slices") ? null : row.getInt("total_slices"),
-                !columnDefinitions.contains("current_slice") ? null : row.getInt("current_slice"));
+                !columnDefinitions.contains("current_slice") ? null : row.getInt("current_slice"),
+                !columnDefinitions.contains("resource_name") ? null : row.getString("resource_name"),
+                !columnDefinitions.contains("quality") ? null : row.getShort("quality"),
+                !columnDefinitions.contains("status_code") ? null : row.getInt("status_code"),
+                !columnDefinitions.contains("format") ? null : row.getString("format"),
+                !columnDefinitions.contains("size") ? null : row.getLong("size")
+                );
     }
 }

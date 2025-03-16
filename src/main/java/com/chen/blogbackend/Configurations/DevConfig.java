@@ -21,6 +21,8 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -32,7 +34,7 @@ import java.util.Properties;
 @Configuration
 @Profile("dev")
 public class DevConfig {
-    static String ipAddress = "192.168.1.11";
+    static String ipAddress = "localhost";
      public static void setFilters(){
 
     }
@@ -64,7 +66,7 @@ public class DevConfig {
 
         return CqlSession.builder()
                 .addContactPoint(new InetSocketAddress(ipAddress,9042))
-                .withAuthCredentials("cassandra", "cassandra")
+//                .withAuthCredentials("cassandra", "cassandra")
                 .withLocalDatacenter("datacenter1").build();
 
     }
@@ -99,21 +101,21 @@ public class DevConfig {
     }
 
 
-    @Bean
-    public static ElasticsearchClient configElasticSearch() {
-        String serverUrl = "http://" + ipAddress + ":9200";
-        String apiKey = "VnVhQ2ZHY0JDZGJrU...";
-        RestClient restClient = RestClient
-                .builder(HttpHost.create(serverUrl))
-                .setDefaultHeaders(new Header[]{
-                        new BasicHeader("Authorization", "ApiKey " + apiKey)
-                })
-                .build();
-
-        RestClientTransport transport = new RestClientTransport(
-                restClient, new JacksonJsonpMapper());
-        return new ElasticsearchClient(transport);
-    }
+//    @Bean
+//    public static ElasticsearchClient configElasticSearch() {
+//        String serverUrl = "http://" + ipAddress + ":9200";
+//        String apiKey = "VnVhQ2ZHY0JDZGJrU...";
+//        RestClient restClient = RestClient
+//                .builder(HttpHost.create(serverUrl))
+//                .setDefaultHeaders(new Header[]{
+//                        new BasicHeader("Authorization", "ApiKey " + apiKey)
+//                })
+//                .build();
+//
+//        RestClientTransport transport = new RestClientTransport(
+//                restClient, new JacksonJsonpMapper());
+//        return new ElasticsearchClient(transport);
+//    }
 
 
     @Bean
@@ -142,5 +144,6 @@ public class DevConfig {
         return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
 
     }
+
 
 }

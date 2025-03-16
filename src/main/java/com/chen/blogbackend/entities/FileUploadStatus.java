@@ -5,6 +5,10 @@ public class FileUploadStatus {
     public String fileName;
     public String wholeHash;
     public String resourceType;
+    public String resourceName;
+    public String format;
+    public Short quality;
+    public Long size;
 
     public Integer totalSlices;
     public Integer currentSlice;
@@ -16,7 +20,9 @@ public class FileUploadStatus {
     public FileUploadStatus() {
     }
 
-    public FileUploadStatus(String userEmail, String fileName, Long resourceId, String resourceType, String wholeHash, Integer totalSlices, Integer currentSlice) {
+    public FileUploadStatus(String userEmail, String fileName, Long resourceId, String resourceType, String wholeHash,
+                            Integer totalSlices, Integer currentSlice, String resourceName, Short quality,
+                            Integer statusCode, String  format, Long size ) {
         this.userEmail = userEmail;
         this.fileName = fileName;
         this.resourceId = resourceId;
@@ -24,6 +30,44 @@ public class FileUploadStatus {
         this.totalSlices = totalSlices;
         this.currentSlice = currentSlice;
         this.resourceType = resourceType;
+        this.resourceName = resourceName;
+        this.quality = quality;
+        this.statusCode = statusCode;
+        this.format = format;
+        this.size= size;
+
+    }
+
+    public String getResourceName() {
+        return resourceName;
+    }
+
+    public void setResourceName(String resourceName) {
+        this.resourceName = resourceName;
+    }
+
+    public String getFormat() {
+        return format;
+    }
+
+    public void setFormat(String format) {
+        this.format = format;
+    }
+
+    public Short getQuality() {
+        return quality;
+    }
+
+    public void setQuality(Short quality) {
+        this.quality = quality;
+    }
+
+    public Long getSize() {
+        return size;
+    }
+
+    public void setSize(Long size) {
+        this.size = size;
     }
 
     public Integer getStatusCode() {

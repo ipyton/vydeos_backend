@@ -22,7 +22,7 @@ import java.util.Properties;
 @Profile("endpoint")
 public class EndpointConfiguration {
 
-    private static final String ipAddress = "192.168.1.11";
+    private static final String ipAddress = "192.168.1.6";
     private static final String VAPID_PRIVATE_KEY = "hSMqgJnMk1W2eByorB3c1OG4TCZ_Bwf_VVuCtp6T9-s"; // 从 private.pem 获取
     private static final String VAPID_PUBLIC_KEY = "BKN0Wn4eIWJNOkZ58-G2HZ1rMuSfi8i4XfTFsti6yaF2G25Fv8dh0K_XZmklXDZ1vp0ozTpb6ZlXdnvYg3PV01w"; // 从 public.pem 获取
     private static final String VAPID_EMAIL = "mailto: czhdawang@163.com"; // 你自己的邮箱
