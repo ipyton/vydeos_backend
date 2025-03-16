@@ -5,6 +5,7 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.datastax.oss.driver.api.core.CqlSession;
 import io.minio.MinioClient;
+import jakarta.servlet.MultipartConfigElement;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
@@ -18,9 +19,11 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
+import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 import redis.clients.jedis.Jedis;
@@ -123,6 +126,14 @@ public class DevConfig {
         SchedulerFactory factory = new StdSchedulerFactory();
         return factory.getScheduler();
     }
+    @Bean
+    public MultipartConfigElement multipartConfigElement() {
+        MultipartConfigFactory factory = new MultipartConfigFactory();
+        factory.setMaxFileSize(DataSize.ofBytes(100000000L));
+        factory.setMaxRequestSize(DataSize.ofBytes(100000000L));
+        return factory.createMultipartConfig();
+    }
+
 
 
 

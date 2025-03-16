@@ -14,9 +14,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
 
 
-
-
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -40,5 +38,8 @@ public class BlogBackendApplication {
         app.setAdditionalProfiles("dev"); // Activate 'dev' profile
         app.run(args);
     }
+
+
+
 
 }

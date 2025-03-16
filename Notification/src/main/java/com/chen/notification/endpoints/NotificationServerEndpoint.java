@@ -2,12 +2,8 @@ package com.chen.notification.endpoints;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.chen.blogbackend.UserStatus;
 import com.chen.notification.entities.Negotiation;
 import com.chen.notification.entities.NotificationMessage;
-import com.google.api.Http;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import jakarta.annotation.PostConstruct;
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnMessage;
@@ -17,8 +13,6 @@ import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.repository.query.Param;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;

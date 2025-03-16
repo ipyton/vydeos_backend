@@ -11,7 +11,6 @@
     <groupId>com.chen</groupId>
     <artifactId>blogBackend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>
     <name>blogBackend</name>
     <description>blogBackend</description>
 
@@ -281,6 +280,11 @@
                     </configuration>
                 </plugin>
             </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
 
 
 

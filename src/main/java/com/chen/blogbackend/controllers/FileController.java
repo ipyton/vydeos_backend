@@ -110,7 +110,7 @@ public class FileController {
     //开始上传
     @PostMapping("/uploadFile")
     public FileUploadStatus uploadFile(HttpServletRequest httpServletRequest, @RequestParam("file") MultipartFile file,@RequestParam("type") String type, @RequestParam("currentSlice") Integer currentSlice,
-                                       @RequestParam("resourceId") String resourceId, @RequestParam("checkSum") String checkSum) throws IOException, NoSuchAlgorithmException {
+                                       @RequestParam("resourceId") String resourceId, @RequestParam("hashCode") String checkSum) throws IOException, NoSuchAlgorithmException {
         if (file == null || type == null || currentSlice == null || resourceId == null || checkSum == null){
             return null;
         }
