@@ -3,6 +3,7 @@ package com.chen.blogbackend.controllers;
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.FileUploadStatus;
 import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.FileService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,13 +110,25 @@ public class FileController {
 
     //开始上传
     @PostMapping("/uploadFile")
-    public FileUploadStatus uploadFile(HttpServletRequest httpServletRequest, @RequestParam("file") MultipartFile file,@RequestParam("type") String type, @RequestParam("currentSlice") Integer currentSlice,
-                                       @RequestParam("resourceId") String resourceId, @RequestParam("hashCode") String checkSum) throws IOException, NoSuchAlgorithmException {
+    public Message uploadFile(HttpServletRequest httpServletRequest, @RequestParam("file") MultipartFile file, @RequestParam("type") String type, @RequestParam("currentSlice") Integer currentSlice,
+                              @RequestParam("resourceId") String resourceId, @RequestParam("hashCode") String checkSum)  {
         if (file == null || type == null || currentSlice == null || resourceId == null || checkSum == null){
             return null;
         }
         String email = (String) httpServletRequest.getAttribute("userEmail");
-        return fileService.uploadFile(file, type, currentSlice, resourceId, email, checkSum);
+        int result = -1;
+        try {
+            result = fileService.uploadFile(file, type, currentSlice, resourceId, email, checkSum);
+        } catch (Exception e) {
+            return new Message(-1, e.getMessage());
+        }
+
+        if (result==0) {
+            return new Message(0, "success");
+        }else if (result == 1) {
+            return new Message(result, "is processing");
+        }
+        return new Message(-1, "Unknown Error");
     }
 
 
