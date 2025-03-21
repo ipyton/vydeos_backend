@@ -156,5 +156,13 @@ public class DevConfig {
 
     }
 
+//    @Bean("movieProducer")
+//    public Producer<String,String> movieProducer() {
+//        Properties props = new Properties();
+//        props.put("bootstrap.servers", ipAddress + ":9092");
+//        props.put(ProducerConfig.ACKS_CONFIG, "all");
+//        return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
+//    }
+
 
 }

@@ -2,6 +2,7 @@ package com.chen.blogbackend.services;
 
 import com.alibaba.fastjson2.JSON;
 import com.chen.blogbackend.DAO.VideoUploadingDao;
+import com.chen.blogbackend.entities.EncodingRequest;
 import com.chen.blogbackend.entities.FileUploadStatus;
 import com.chen.blogbackend.entities.UnfinishedUpload;
 import com.chen.blogbackend.mappers.FileServiceMapper;
@@ -69,9 +70,12 @@ public class FileService {
     @Autowired
     CqlSession cqlSession;
 
-
-    @Resource(name = "movieProducer")
+    @Autowired
     Producer<String, String> producer;
+
+
+//    @Resource(name = "movieProducer")
+//    Producer<String, String> producer;
 //    @Autowired
 //    Scheduler scheduler;
 
@@ -91,7 +95,6 @@ public class FileService {
     final Map<String, String> videoMimeTypes = new HashMap<>();
 
     TimeBasedGenerator timeBasedGenerator = Generators.timeBasedGenerator();
-    private CqlSession setScyllaSession;
 
     @PostConstruct
     public void init() throws SchedulerException {
@@ -440,8 +443,7 @@ public class FileService {
                     try (FileOutputStream fis = new FileOutputStream(path)){
                         System.out.println("start");
                         for (int i = 0; i < uploadStatus.getTotalSlices(); i ++) {
-                            System.out.println(i);
-                            System.out.flush();
+
                             try (FileInputStream subFiles = new FileInputStream("D:\\tmp\\" + type + "_" + extractBeforeQuestionMark(resourceId) + "\\" + i + "_" + uploadStatus.getTotalSlices())) {
                                 byte[] buffer = new byte[1024];
                                 int bytesRead;
@@ -467,7 +469,13 @@ public class FileService {
                                 System.out.println("文件删除失败");
                             }
                         }
-                        producer.send(new ProducerRecord<>("topic", "", ""), (metadata, exception) -> {
+                        producer.send(new ProducerRecord<>("topic", "", JSON.toJSONString(
+                                new EncodingRequest("D:\\tmp\\" + type + "_" + extractBeforeQuestionMark(resourceId) + "\\"
+                                + resourceId.hashCode() + getSuffix(resourceId, type),
+                                        "D:\\encoded\\" +  type + "_" + extractBeforeQuestionMark(resourceId) + "\\"
+                                                + resourceId.hashCode() ,
+                                        "",
+                                        "",resourceId, type))), (metadata, exception) -> {
                             if (exception == null) {
                                 System.out.printf("消息发送成功: topic=%s, partition=%d, offset=%d, key=%s, value=%s\n",
                                         metadata.topic(), metadata.partition(), metadata.offset());
