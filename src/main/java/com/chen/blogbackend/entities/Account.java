@@ -19,7 +19,23 @@ public class Account {
     private int relationship = 20;
     private String group = "";
     private String location = "";
+    private String language = "";
 
+    public Account(String userId, String userEmail, String userName, String introduction, String avatar, LocalDate dateOfBirth, String telephone, boolean gender, int relationship, String group, String location, String language, List<String> apps) {
+        this.userId = userId;
+        this.userEmail = userEmail;
+        this.userName = userName;
+        this.introduction = introduction;
+        this.avatar = avatar;
+        this.dateOfBirth = dateOfBirth;
+        this.telephone = telephone;
+        this.gender = gender;
+        this.relationship = relationship;
+        this.group = group;
+        this.location = location;
+        this.language = language;
+        this.apps = apps;
+    }
 
     List<String> apps = new ArrayList<>();
 
@@ -187,5 +203,13 @@ public class Account {
                 ", group='" + group + '\'' +
                 ", apps=" + apps +
                 '}';
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 }

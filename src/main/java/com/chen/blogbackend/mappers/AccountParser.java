@@ -51,6 +51,7 @@ public class AccountParser {
                     !columnDefinitions.contains("gender") || row.getBoolean("gender"),
                     !columnDefinitions.contains("relationship")?0:row.getInt("relationship"),
                     !columnDefinitions.contains("location")?"":row.getString("location"),
+                    !columnDefinitions.contains("language")?"":row.getString("language"),
                     !columnDefinitions.contains("apps")?null:row.getList("apps", String.class)));
         }
         return accounts;

@@ -53,13 +53,13 @@ public class LoginTokenFilter implements Filter {
         if (token == null) {
             System.out.println("unauthorized token is null");
             servletResponse.setContentType("application/json");
-            servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "please login first")).getBytes(StandardCharsets.UTF_8));
+            servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "please login")).getBytes(StandardCharsets.UTF_8));
             return;
         }
         else {
             Token token1 = TokenUtil.resolveToken(token);
             if (token1 == null) {
-                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "please login first")).getBytes(StandardCharsets.UTF_8));
+                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "invalid token")).getBytes(StandardCharsets.UTF_8));
                 return;
             } else {
                 System.out.println(token1.toString());

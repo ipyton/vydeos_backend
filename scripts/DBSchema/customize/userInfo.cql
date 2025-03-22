@@ -4,7 +4,7 @@ CREATE KEYSPACE userInfo
         'replication_factor' : 1
         };
 use userInfo;
-create table user_information(user_id text primary key, user_name text, avatar text, birthdate date,gender boolean, intro text, location text ,apps list<text>);
+create table user_information(user_id text primary key, user_name text, avatar text, birthdate date,gender boolean, intro text, location text , language text,apps list<text>);
 
 
 create table settings_by_user(user_id text, applicationId text, config map<text, text>, primary key ( (user_id, applicationId) ));
