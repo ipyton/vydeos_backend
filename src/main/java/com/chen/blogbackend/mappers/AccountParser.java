@@ -50,8 +50,10 @@ public class AccountParser {
                     !columnDefinitions.contains("telephone")?null:row.getString("telephone"),
                     !columnDefinitions.contains("gender") || row.getBoolean("gender"),
                     !columnDefinitions.contains("relationship")?0:row.getInt("relationship"),
+                    !columnDefinitions.contains("group")?null:row.getString("group"), // ?
                     !columnDefinitions.contains("location")?"":row.getString("location"),
                     !columnDefinitions.contains("language")?"":row.getString("language"),
+                    !columnDefinitions.contains("country")?"":row.getString("country"),
                     !columnDefinitions.contains("apps")?null:row.getList("apps", String.class)));
         }
         return accounts;

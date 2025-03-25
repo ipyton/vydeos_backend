@@ -82,7 +82,6 @@ public class FileService {
     ThreadPoolExecutor executor = new ThreadPoolExecutor(3, 10, 1000,
             TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(10), new ThreadPoolExecutor.AbortPolicy());
 
-    final String basePath = "D:\\tmp";
 
     PreparedStatement uploadAvatar;
     PreparedStatement addAssets;
@@ -406,20 +405,21 @@ public class FileService {
                 return -1;
             }
         } else if (!uploadStatus.currentSlice.equals(uploadStatus.totalSlices)) return -1;
-
+        String base = System.getProperty("user.home") + "/tmp/" +type + "_" + resourceId;
         if (Objects.equals(uploadStatus.currentSlice, currentSlice)) {
-            File folder = new File("D:\\tmp\\" +type + "_" + extractBeforeQuestionMark(resourceId) );
+            File folder = new File(base);
 
             if (!folder.exists()) {
                 if (folder.mkdirs()) {
                     System.out.println("文件夹创建成功：" + folder.getAbsolutePath());
                 } else {
                     System.out.println("创建文件夹失败！" + folder.getAbsolutePath());
+                    return -1;
                 }
             } else {
                 System.out.println("文件夹已存在！");
             }
-            File fileToWrite = new File("D:\\tmp\\" +type + "_" + extractBeforeQuestionMark(resourceId) + "\\" + currentSlice + "_" + uploadStatus.getTotalSlices());
+            File fileToWrite = new File( base + "/" + currentSlice + "_" + uploadStatus.getTotalSlices());
             file.transferTo(fileToWrite);
             cqlSession.execute(addSlices.bind(currentSlice + 1 ,resourceId, type));
         }
@@ -437,14 +437,14 @@ public class FileService {
                 @Override
                 public Object call() throws Exception {
 
-                    String path = "D:\\tmp\\" + type + "_" + extractBeforeQuestionMark(resourceId) + "\\"
-                            + resourceId.hashCode() + getSuffix(resourceId, type);
+                    String path =  base + "/" + resourceId.hashCode() + getSuffix(resourceId, type);
 
                     try (FileOutputStream fis = new FileOutputStream(path)){
                         System.out.println("start");
                         for (int i = 0; i < uploadStatus.getTotalSlices(); i ++) {
 
-                            try (FileInputStream subFiles = new FileInputStream("D:\\tmp\\" + type + "_" + extractBeforeQuestionMark(resourceId) + "\\" + i + "_" + uploadStatus.getTotalSlices())) {
+                            try (FileInputStream subFiles = new FileInputStream( base + "/" + i + "_" +
+                                    uploadStatus.getTotalSlices())) {
                                 byte[] buffer = new byte[1024];
                                 int bytesRead;
                                 while ((bytesRead = subFiles.read(buffer)) != -1) {
@@ -461,7 +461,7 @@ public class FileService {
                             throw new Exception("检验失败");
                         }
                         for (int i = 0; i < uploadStatus.getTotalSlices(); i ++) {
-                            File file = new File("D:\\tmp\\" + type + "_" + extractBeforeQuestionMark(resourceId) + "\\" + i + "_" + uploadStatus.getTotalSlices()); // 指定文件路径
+                            File file = new File( base + "/" + i + "_" + uploadStatus.getTotalSlices()); // 指定文件路径
 
                             if (file.delete()) {
                                 System.out.println("文件已成功删除");
@@ -469,16 +469,16 @@ public class FileService {
                                 System.out.println("文件删除失败");
                             }
                         }
-                        producer.send(new ProducerRecord<>("topic", "", JSON.toJSONString(
-                                new EncodingRequest("D:\\tmp\\" + type + "_" + extractBeforeQuestionMark(resourceId) + "\\"
+                        producer.send(new ProducerRecord<>("fileUploadStage1", resourceId + "_" +type,
+                                JSON.toJSONString(new EncodingRequest( base +  "/"
                                 + resourceId.hashCode() + getSuffix(resourceId, type),
-                                        "D:\\encoded\\" +  type + "_" + extractBeforeQuestionMark(resourceId) + "\\"
+                                        System.getProperty("user.home") + "/tmp/encoded/" +  type + "_" + (resourceId) + "/"
                                                 + resourceId.hashCode() ,
                                         "",
                                         "",resourceId, type))), (metadata, exception) -> {
                             if (exception == null) {
-                                System.out.printf("消息发送成功: topic=%s, partition=%d, offset=%d, key=%s, value=%s\n",
-                                        metadata.topic(), metadata.partition(), metadata.offset());
+                                System.out.printf("消息发送成功: topic=%s, partition=%d, offset=%d, key=%s\n",
+                                        metadata.topic(), metadata.partition(), metadata.offset(),resourceId + "_" +type);
                             } else {
                                 System.err.println("消息发送失败: " + exception.getMessage());
                             }

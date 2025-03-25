@@ -79,7 +79,7 @@ public class AccountService {
         getAuth = session.prepare("select userid, roleid from userinfo.user_auth where userid=?");
 
         insertUserDetails = session.prepare("insert into userinfo.user_information (user_id, apps, avatar, " +
-                "birthdate, gender, intro, user_name,location) values(?,?,?,?,?,?,?,?);");
+                "birthdate, gender, intro, user_name,location,language,country) values(?,?,?,?,?,?,?,?,?,?);");
         getUserDetails = session.prepare("select * from userinfo.user_information where user_id = ?");
 
         updateEmail = session.prepare("update userinfo.user_auth set email = ? where userId = ?");
@@ -113,7 +113,8 @@ public class AccountService {
     public boolean insertUserDetails(Account userDetail) {
         ResultSet execute = session.execute(insertUserDetails.bind(userDetail.getUserId(), userDetail.getApps(),
                 userDetail.getAvatar(), userDetail.getDateOfBirth(), userDetail.getGender(),
-                userDetail.getIntroduction(), userDetail.getUserName(), userDetail.getLocation()));
+                userDetail.getIntroduction(), userDetail.getUserName(), userDetail.getLocation(),
+                userDetail.getLanguage(), userDetail.getCountry()));
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 

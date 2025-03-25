@@ -1,11 +1,14 @@
 package com.chen.blogbackend.controllers;
 
+import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.MovieDownloadRequest;
 import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.VideoService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -26,30 +29,37 @@ public class MovieController {
         return new LoginMessage(1, "success");
     }
 
-    @PostMapping("getMeta")
-    public LoginMessage getMovieMetadata(String movieName) {
-
-        return new LoginMessage(-1, "success");
-
+    @GetMapping("isStared")
+    public Message isStared(HttpServletRequest request, String resourceId, String type) {
+        String email = (String) request.getAttribute("userEmail");
+        boolean result = videoService.isStared(email, resourceId, type);
+        if (result) return new Message(0, "success");
+        else return new Message(-1, "fail");
     }
 
-
     @RequestMapping("/sendRequest")
-    public LoginMessage sendRequest(HttpServletRequest request, String videoId){
+    public Message sendRequest(HttpServletRequest request, String resourceId, String type, String language){
         String email = (String) request.getAttribute("userEmail");
-        boolean b = videoService.sendRequest(email, videoId);
-        if (b) return new LoginMessage(200, "success");
-        else return new LoginMessage(201, "fail");
+        boolean b = videoService.sendRequest(email, resourceId, type, language);
+        if (b) return new Message(200, "success");
+        else return new Message(201, "fail");
     }
 
     @RequestMapping("/getRequests")
-    public List<MovieDownloadRequest> getRequests(){
-        return videoService.getRequests();
+    public Message getRequests(){
+    try {
+        List<MovieDownloadRequest> requests = videoService.getRequests();
+        return new Message(0, JSON.toJSONString(requests));
+    } catch (Exception e) {
+        e.printStackTrace();
+        return new Message(-1, "fail");
+    }
+
     }
 
     @RequestMapping("/isRequested")
-    public boolean isRequested(String videoId){
-        return videoService.isRequested(videoId);
+    public boolean isRequested(String videoId,String type){
+        return videoService.isRequested(videoId,type);
     }
 
 }

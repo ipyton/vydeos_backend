@@ -131,7 +131,6 @@ public class AccountController {
 
     @PostMapping("/setinfo")
     public LoginMessage setAccountInformation(Account account)  {
-        System.out.println(account.getLocation());
         boolean result = accountService.insertUserDetails(account);
         if (result) {
             return new LoginMessage(1, "Success");

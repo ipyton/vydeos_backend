@@ -150,6 +150,8 @@ public class DevConfig {
         Properties props = new Properties();
         props.put("bootstrap.servers", ipAddress + ":9092");
         props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put("retries", 5);  // 允许重试 5 次
+        props.put("retry.backoff.ms", 1000); // 每次重试等待 1 秒
 
 //        props.put("transactional.id", "my-transactional-id");
         return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());

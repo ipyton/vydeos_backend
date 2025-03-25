@@ -8,7 +8,7 @@ import java.util.Map;
 @Entity
 public class Video {
 
-    private String movieId;
+    private String resourceId;
     private String poster;
     private String score;
     private String introduction;
@@ -21,11 +21,12 @@ public class Video {
     private Map<String, String> makerList;
     private List<String> genreList;
     private int position;
+    private String type;
 
-    public Video(String movieId, String poster, String score, String introduction, String movieName, String tags,
+    public Video(String resourceId, String poster, String score, String introduction, String movieName, String tags,
                  List<String> actorList, String releaseYear, String level, List<String> pictureList, Map<String,
-            String> makerList,int position, List<String> genreList) {
-        this.movieId = movieId;
+            String> makerList,int position, List<String> genreList, String type) {
+        this.resourceId = resourceId;
         this.poster = poster;
         this.score = score;
         this.introduction = introduction;
@@ -38,10 +39,22 @@ public class Video {
         this.makerList = makerList;
         this.genreList = genreList;
         this.position = position;
+        this.type = type;
     }
 
     public Video() {
     }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+
+
 
     public String getMovieName() {
         return movieName;
@@ -99,12 +112,13 @@ public class Video {
         this.position = position;
     }
 
-    public String getMovieId() {
-        return movieId;
+
+    public String getResourceId() {
+        return resourceId;
     }
 
-    public void setMovieId(String movieId) {
-        this.movieId = movieId;
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
     }
 
     public String getPoster() {

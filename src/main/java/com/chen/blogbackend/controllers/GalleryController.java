@@ -1,28 +1,20 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.entities.MovieDownloadRequest;
 import com.chen.blogbackend.entities.Video;
-import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.VideoService;
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.PreparedStatement;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import redis.clients.jedis.Jedis;
 
 import java.util.List;
 
 @Controller
 @RequestMapping("/gallery")
 @ResponseBody
-public class VideoController {
+public class GalleryController {
 
 
     @Autowired
@@ -36,19 +28,19 @@ public class VideoController {
     }
 
     @RequestMapping("collect")
-    public String collectMovie(HttpServletRequest request, String videoId){
+    public String collectMovie(HttpServletRequest request, String resourceId, String type, String language){
+        //the user should get the language information about this.
         String email = (String) request.getAttribute("userEmail");
-        System.out.println(videoId);
-        boolean result = videoService.collectVideo(email, videoId);
+        boolean result = videoService.collectVideo(email, resourceId, type, language);
         if (result) return JSON.toJSONString("success");
         else return JSON.toJSONString("fail");
     }
 
     @RequestMapping("remove")
-    public String removeVideo(HttpServletRequest request, String videoId){
+    public String removeVideo(HttpServletRequest request, String resourceId, String type){
 
         String email = (String) request.getAttribute("userEmail");
-        boolean result = videoService.deleteVideo(email, videoId);
+        boolean result = videoService.unstarVideo(email, resourceId, type);
         if (result) return JSON.toJSONString("success");
         else return JSON.toJSONString("fail");
     }

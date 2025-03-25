@@ -4,29 +4,43 @@ import java.time.Instant;
 import java.util.List;
 
 public class MovieDownloadRequest {
-    public String movieId;
+    public String resourceId;
     public String userId;
     public Instant timestamp;
     public String movieName;
     public List<String> actorList;
     public String release_year;
+    public String type;
 
-    public MovieDownloadRequest(String movieId, String userId, Instant timestamp, String movieName,
-                                List<String> actorList, String release_year) {
-        this.movieId = movieId;
+    public MovieDownloadRequest(String resourceId, String userId, Instant timestamp, String movieName,
+                                List<String> actorList, String release_year,String type) {
+        this.resourceId = resourceId;
         this.userId = userId;
         this.timestamp = timestamp;
         this.movieName = movieName;
         this.actorList = actorList;
         this.release_year = release_year;
+        this.type = type;
     }
 
-    public String getMovieId() {
-        return movieId;
+    public String getResourceId() {
+        return resourceId;
     }
 
-    public void setMovieId(String movieId) {
-        this.movieId = movieId;
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
+    }
+
+    public void setActorList(List<String> actorList) {
+        this.actorList = actorList;
+    }
+
+    public String getRelease_year() {
+        return release_year;
+    }
+
+    public void setRelease_year(String release_year) {
+        this.release_year = release_year;
     }
 
     public String getUserId() {

@@ -20,8 +20,12 @@ public class Account {
     private String group = "";
     private String location = "";
     private String language = "";
+    private String country = "";
 
-    public Account(String userId, String userEmail, String userName, String introduction, String avatar, LocalDate dateOfBirth, String telephone, boolean gender, int relationship, String group, String location, String language, List<String> apps) {
+
+    public Account(String userId, String userEmail, String userName, String introduction, String avatar,
+                   LocalDate dateOfBirth, String telephone, boolean gender, int relationship, String group,
+                   String location, String language, String country, List<String> apps) {
         this.userId = userId;
         this.userEmail = userEmail;
         this.userName = userName;
@@ -34,6 +38,7 @@ public class Account {
         this.group = group;
         this.location = location;
         this.language = language;
+        this.country = country;
         this.apps = apps;
     }
 
@@ -47,12 +52,25 @@ public class Account {
         this.group = group;
     }
 
+    public boolean isGender() {
+        return gender;
+    }
+
+
     public String getLocation() {
         return location;
     }
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
     }
 
     public int getRelationship() {
@@ -63,40 +81,8 @@ public class Account {
         this.relationship = relationship;
     }
 
-    public Account(String userId, String userEmail, String userName, String introduction, String avatar, LocalDate dateOfBirth, String telephone, boolean gender, int relationship, String location,List<String> apps) {
-        this.userId = userId;
-        this.userEmail = userEmail;
-        this.userName = userName;
-        this.introduction = introduction;
-        this.avatar = avatar;
-        this.dateOfBirth = dateOfBirth;
-        this.telephone = telephone;
-        this.gender = gender;
-        this.relationship = relationship;
-        this.apps = apps;
-        this.location = location;
-    }
 
-    public Account(String userId, String userEmail, String userName, String introduction, String avatar, LocalDate dateOfBirth, String telephone, boolean gender, int relationship, String group, String address, List<String> apps) {
-        this.userId = userId;
-        this.userEmail = userEmail;
-        this.userName = userName;
-        this.introduction = introduction;
-        this.avatar = avatar;
-        this.dateOfBirth = dateOfBirth;
-        this.telephone = telephone;
-        this.gender = gender;
-        this.relationship = relationship;
-        this.group = group;
-        this.location = address;
-        this.apps = apps;
-    }
 
-    public Account(String userId, String userEmail, String telephone) {
-        this.userId = userId;
-        this.userEmail = userEmail;
-        this.telephone = telephone;
-    }
 
     public String getTelephone() {
         return telephone;

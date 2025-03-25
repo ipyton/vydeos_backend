@@ -29,7 +29,7 @@ public class VideoParser {
         for (Row row:
                 set.all()) {
             ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
-            videos.add(new Video(!columnDefinitions.contains("movieId")?null:row.getString("movieId"),
+            videos.add(new Video(!columnDefinitions.contains("resource_id")?null:row.getString("resource_id"),
                     !columnDefinitions.contains("poster")?null:row.getString("poster"),
                     !columnDefinitions.contains("score")?null:row.getString("score"),
                     !columnDefinitions.contains("introduction")?null:row.getString("introduction"),
@@ -41,7 +41,8 @@ public class VideoParser {
                     !columnDefinitions.contains("picture_list")?null:row.getList("picture_list",String.class),
                     !columnDefinitions.contains("maker_list")?null:row.getMap("maker_list",String.class, String.class),
                     !columnDefinitions.contains("position")?0:row.getInt("position"),
-                    !columnDefinitions.contains("genre_list")?null:row.getList("genre_list", String.class)
+                    !columnDefinitions.contains("genre_list")?null:row.getList("genre_list", String.class),
+                    !columnDefinitions.contains("type")?null:row.getString("type")
                     ));
         }
         return videos;
