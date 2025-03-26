@@ -381,6 +381,9 @@ public class FileService {
     }
 
 
+    //fileUploadStage1
+    //fileUploadStage2
+    //fileUploadStage3
     public int uploadFile(MultipartFile file, String type, Integer currentSlice,
                                        String resourceId, String userEmail, String checkSum) throws Exception {
         if (file.isEmpty()) {
@@ -469,7 +472,7 @@ public class FileService {
                                 System.out.println("文件删除失败");
                             }
                         }
-                        producer.send(new ProducerRecord<>("fileUploadStage1", resourceId + "_" +type,
+                        producer.send(new ProducerRecord<>("fileUploadStage1", type + "_" +resourceId,
                                 JSON.toJSONString(new EncodingRequest( base +  "/"
                                 + resourceId.hashCode() + getSuffix(resourceId, type),
                                         System.getProperty("user.home") + "/tmp/encoded/" +  type + "_" + (resourceId) + "/"

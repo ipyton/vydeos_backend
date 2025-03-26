@@ -11,6 +11,8 @@ import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.insert.Insert;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +25,7 @@ import java.util.List;
 @Service
 public class AccountService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AccountService.class);
 
     @Autowired
     CqlSession session;
@@ -115,11 +118,11 @@ public class AccountService {
                 userDetail.getAvatar(), userDetail.getDateOfBirth(), userDetail.getGender(),
                 userDetail.getIntroduction(), userDetail.getUserName(), userDetail.getLocation(),
                 userDetail.getLanguage(), userDetail.getCountry()));
-        return execute.getExecutionInfo().getErrors().size() == 0;
+        return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
     public Account getAccountDetailsById(String userId) {
-        if (userId == null || userId.length() == 0 ) {
+        if (userId == null || userId.isEmpty()) {
             return null;
         }
         ResultSet execute = session.execute(getUserDetails.bind(userId));
@@ -136,7 +139,7 @@ public class AccountService {
         ResultSet execute = session.execute(getUserDetails.bind(userIdToFollow));
 
         List<Account> friendSet = AccountParser.userDetailParser(execute);
-        if (friendSet.size() == 0) {
+        if (friendSet.isEmpty()) {
             return null;
         }
         Account friend = friendSet.get(0);
@@ -145,18 +148,16 @@ public class AccountService {
         return friend;
     }
 
-
-
     public boolean insert(Auth account) {
         ResultSet execute = session.execute(insertAccount.bind(account.getEmail(), account.getEmail(),
                 account.getPassword(), account.getTelephone()));
-        return 0 == execute.getExecutionInfo().getErrors().size();
+        return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
     public Account selectAccount(String accountID) {
         ResultSet execute = session.execute(getAccount.bind(accountID));
         List<Account> tokens = AccountParser.userDetailParser(execute);
-        if (0 != execute.getExecutionInfo().getErrors().size() || tokens.size() != 1) {
+        if (!execute.getExecutionInfo().getErrors().isEmpty() || tokens.size() != 1) {
             System.out.println("error!!!!");
             return null;
         }
@@ -165,10 +166,11 @@ public class AccountService {
 
 
     public boolean haveValidLogin(String token) {
-        if (null == token || 0 == token.length()) return false;
+        if (null == token || token.isEmpty()) return false;
         Token token1 = TokenUtil.resolveToken(token);
         System.out.println(token1);
         //token1.getUserId().equals(userId)
+        assert token1 != null;
         if( null == token1.getUserId()){
             System.out.println("not find userId");
             return false;
@@ -190,22 +192,22 @@ public class AccountService {
     public boolean setToken(Token token) {
         ResultSet set = session.execute(setToken.bind(token.getTokenString(), token.getUserId(),
                 token.getExpireDatetime()));
-        return set.getExecutionInfo().getErrors().size() == 0;
+        return set.getExecutionInfo().getErrors().isEmpty();
     }
 
     public boolean updateEmail(String userId, String email) {
         ResultSet set = session.execute(setToken.bind(email,userId));
-        return set.getExecutionInfo().getErrors().size() == 0;
+        return set.getExecutionInfo().getErrors().isEmpty();
     }
 
     public boolean updatePhone(String userId, String phone) {
         ResultSet set = session.execute(setToken.bind(phone, userId));
-        return set.getExecutionInfo().getErrors().size() == 0;
+        return set.getExecutionInfo().getErrors().isEmpty();
     }
 
     public boolean updatePassword(String userId, String password) {
         ResultSet set = session.execute(setToken.bind(password, userId));
-        return set.getExecutionInfo().getErrors().size() == 0;
+        return set.getExecutionInfo().getErrors().isEmpty();
     }
 
     public boolean updateIndex(Friend friend) throws IOException, InterruptedException {
@@ -221,11 +223,11 @@ public class AccountService {
         ResultSet judge = session.execute(getIsTemp.bind(userId));
         System.out.println(judge.all().size());
 
-        if (judge.all().size() != 0) {
+        if (!judge.all().isEmpty()) {
             return judge.all().get(0).getBoolean("temp");
         }
         ResultSet execute = session.execute(insertUserName.bind(userId, userId));
-        return execute.getExecutionInfo().getErrors().size() == 0;
+        return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
     public boolean insertStep2(String userId) {
@@ -233,12 +235,11 @@ public class AccountService {
         return false;
     }
 
-
     public boolean insertStep3(String password,String userId) {
         String encrypted = RandomUtil.getMD5(password);
         ResultSet execute = session.execute(insertPassword.bind(encrypted, userId));
         if (friendsService.initUserIntro(userId)) {
-            return execute.getExecutionInfo().getErrors().size()==0;
+            return execute.getExecutionInfo().getErrors().isEmpty();
         }
         return false;
     }
@@ -254,6 +255,7 @@ public class AccountService {
             String storedPassword = row.getString("password"); // 假设密码字段是 "password"
             String encrypted = RandomUtil.getMD5(oldPassword);
             // 假设你有一个方法来比较密码
+            assert storedPassword != null;
             if (storedPassword.equals(encrypted)) {
                 // 密码匹配，开始更新密码
                 ResultSet execute = session.execute(updatePassword.bind(email, RandomUtil.getMD5(newPassword))); // 假设 newPassword 是新的密码
@@ -303,6 +305,7 @@ public class AccountService {
 
         // Extract the result from the ResultSet
         var row = resultSet.one();
+        assert row != null;
         String roleName = row.getString("roleName");
         List<String> allowedPaths = row.getList("allowedPaths", String.class);
 
@@ -419,7 +422,7 @@ public class AccountService {
             return true;
         } catch (Exception e) {
             // Log the error (this can be improved with proper logging)
-            e.printStackTrace();
+            logger.error("Error deleting user: " + e.getMessage());
             return false;
         }
     }

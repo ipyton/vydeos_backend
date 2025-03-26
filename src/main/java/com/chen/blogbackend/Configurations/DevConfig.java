@@ -141,7 +141,6 @@ public class DevConfig {
     public static Producer<String,String> configMessageQueue()  {
 // This is rocketmq configuration
         //        String endpoint = "192.168.23.129:8081";
-////        String topic = "TestTopic";
 //        ClientServiceProvider provider = ClientServiceProvider.loadService();
 //        ClientConfigurationBuilder builder = ClientConfiguration.newBuilder().setEndpoints(endpoint);
 //        //builder.enableSsl(false);
