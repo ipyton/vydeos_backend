@@ -1,9 +1,11 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.entities.MovieDownloadRequest;
+import com.chen.blogbackend.entities.Playable;
 import com.chen.blogbackend.entities.Post;
 import com.chen.blogbackend.entities.Video;
 import com.chen.blogbackend.mappers.MovieDownloadRequestParser;
+import com.chen.blogbackend.mappers.PlayableMapper;
 import com.chen.blogbackend.mappers.VideoParser;
 import com.chen.blogbackend.util.VideoUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -38,6 +40,7 @@ public class VideoService {
     private PreparedStatement getRequest;
     private PreparedStatement getRequestById;
     private PreparedStatement isStared;
+    private PreparedStatement getPlayable;
 //movieId text, createTime timestamp, userId text
     @PostConstruct
     public void init() {
@@ -51,6 +54,7 @@ public class VideoService {
         getRequest = session.prepare("select * from movie.requests;");
         getRequestById = session.prepare("select * from movie.requests where resource_id = ? and type = ?;");
         isStared = session.prepare("select * from movie.movieGallery where user_id = ? and resource_id = ? and type = ? ;");
+        getPlayable = session.prepare("select * from movie.playable where resource_id = ? and type = ?;");
     }
 
     public boolean starVideo(Video video){
@@ -114,5 +118,12 @@ public class VideoService {
     public boolean isStared(String userId, String resourceId, String type) {
         ResultSet execute = session.execute(isStared.bind(userId, resourceId, type));
         return !execute.all().isEmpty();
+    }
+
+    public List<Playable> getPlayable(String resourceId, String type) {
+        ResultSet execute = session.execute(getPlayable.bind(resourceId, type));
+        List<Playable> list = PlayableMapper.parse(execute);
+        return list;
+
     }
 }

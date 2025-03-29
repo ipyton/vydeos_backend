@@ -2,6 +2,7 @@ package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.MovieDownloadRequest;
+import com.chen.blogbackend.entities.Playable;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.VideoService;
@@ -60,6 +61,14 @@ public class MovieController {
     @RequestMapping("/isRequested")
     public boolean isRequested(String videoId,String type){
         return videoService.isRequested(videoId,type);
+    }
+
+    @RequestMapping("/getPlayable")
+    public Message getPlayable(String resourceId, String type ){
+        if (resourceId == null || resourceId.isEmpty() || type == null || type.isEmpty()) return new Message(-1, "fail");
+        List<Playable> playableList = videoService.getPlayable(resourceId, type);
+        return new Message(0, JSON.toJSONString(playableList));
+
     }
 
 }

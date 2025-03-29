@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -211,6 +212,25 @@ public class AccountController {
         }
     }
 
+    @GetMapping("/auth")
+    public ResponseEntity<String> auth(HttpServletRequest request) {
+        String token = request.getHeader("Token");
+        ResponseEntity<String> response; // Declare a variable to hold the response
+        try {
+            if (accountService.haveValidLogin(token)) {
+                response = new ResponseEntity<>("Success message", HttpStatus.OK);  // 200 OK
+            } else {
+                response = new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response = new ResponseEntity<>("Error occurred", HttpStatus.INTERNAL_SERVER_ERROR); // You can customize this error response
+        }
+        return response; // Return the response after the try-catch-finally block
+
+
+
+    }
 
 
 //    @PostMapping("/getAvatar")

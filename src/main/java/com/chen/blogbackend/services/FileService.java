@@ -475,8 +475,7 @@ public class FileService {
                         producer.send(new ProducerRecord<>("fileUploadStage1", type + "_" +resourceId,
                                 JSON.toJSONString(new EncodingRequest( base +  "/"
                                 + resourceId.hashCode() + getSuffix(resourceId, type),
-                                        System.getProperty("user.home") + "/tmp/encoded/" +  type + "_" + (resourceId) + "/"
-                                                + resourceId.hashCode() ,
+                                        System.getProperty("user.home") + "/tmp/encoded/" +  type + "_" + (resourceId) + "/",
                                         "",
                                         "",resourceId, type))), (metadata, exception) -> {
                             if (exception == null) {

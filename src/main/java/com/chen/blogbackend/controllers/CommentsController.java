@@ -1,15 +1,20 @@
 package com.chen.blogbackend.controllers;
 
+import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.ApplicationComment;
 import com.chen.blogbackend.entities.Comment;
 import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.services.CommentService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 @RequestMapping("comment")
 @Controller()
@@ -19,10 +24,33 @@ public class CommentsController {
     @Autowired
     CommentService commentService;
 
-    @RequestMapping("get_by_object")
-    public PagingMessage<Comment> getCommentsByObject(String objectId, String pagingState) {
-        commentService.getCommentByObjectId(objectId, pagingState);
-        return new PagingMessage<>();
+    @RequestMapping("get")
+    public Message getCommentsByResourceId(String resourceId, String type, String pagingState) {
+        try {
+            List<Comment> commentByObjectId = commentService.getCommentByResourceId(resourceId, type, pagingState);
+            return new Message(0, JSON.toJSONString(commentByObjectId));
+        }
+        catch (Exception e) {
+            return new Message(-1, e.getMessage());
+        }
+    }
+
+    @RequestMapping("send")
+    public Message sendComment(HttpServletRequest request,String  content, String resourceId, String type, String pagingState) {
+        try {
+            String userEmail = (String) request.getAttribute("userEmail");
+            boolean result = commentService.sendComment(userEmail, content,resourceId,type,0l);
+            if (result) {
+                return new Message(0, "success");
+            }
+            else {
+                return new Message(-1, "fail");
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return new Message(-1, e.getMessage());
+        }
     }
 
     @RequestMapping("get_by_comment")

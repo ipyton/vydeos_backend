@@ -2,7 +2,7 @@ package com.chen.blogbackend.entities;
 
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
-import java.util.ArrayList;
+import java.time.Instant;
 
 @Entity
 public class Comment {
@@ -14,24 +14,17 @@ public class Comment {
         this.userId = userId;
     }
 
-    public String getCommentDateTime() {
-        return commentDateTime;
-    }
 
-    public void setCommentDateTime(String commentDateTime) {
-        this.commentDateTime = commentDateTime;
-    }
+    private String userId;
 
-    String userId;
-
-    String objectId;
-    String commentId;
-    String comment;
-    int numberOfLikes;
-    String commentDateTime;
-    String type="";
-    String avatar="";
-    String userName="";
+    private String resourceId;
+    private String commentId;
+    private String content;
+    private Long likes;
+    private Instant time;
+    private String type="";
+    private String avatar="";
+    private String userName="";
 
     public String getAvatar() {
         return avatar;
@@ -60,15 +53,15 @@ public class Comment {
     public Comment() {
     }
 
-    public Comment(String userId, String objectId, String commentId, String comment, int numberOfLikes, String commentDateTime) {
+    public Comment(String userId, String resourceId, String type, String commentId, String content, Long likes, Instant commentDateTime) {
         this.userId = userId;
-        this.objectId = objectId;
+        this.type = type;
+        this.resourceId = resourceId;
         this.commentId = commentId;
-        this.comment = comment;
-        this.numberOfLikes = numberOfLikes;
-        this.commentDateTime = commentDateTime;
+        this.content = content;
+        this.likes = likes;
+        this.time = commentDateTime;
     }
-
 
 
 
@@ -80,44 +73,37 @@ public class Comment {
         this.commentId = commentId;
     }
 
-    public String getComment() {
-        return comment;
+    public String getContent() {
+        return content;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setContent(String content) {
+        this.content = content;
     }
 
-    public String getObjectId() {
-        return objectId;
+    public String getResourceId() {
+        return resourceId;
     }
 
-    public void setObjectId(String objectId) {
-        this.objectId = objectId;
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
     }
 
-    public String getComments() {
-        return comment;
+
+    public Long getLikes() {
+        return likes;
     }
 
-    public void setComments(String comments) {
-        this.comment = comments;
+    public void setLikes(Long likes) {
+        this.likes = likes;
     }
 
-    public int getNumberOfLikes() {
-        return numberOfLikes;
+    public Instant getTime() {
+        return time;
     }
 
-    public void setNumberOfLikes(int numberOfLikes) {
-        this.numberOfLikes = numberOfLikes;
-    }
-
-    public String getCommentDateAndTime() {
-        return commentDateTime;
-    }
-
-    public void setCommentDateAndTime(String commentDateAndTime) {
-        this.commentDateTime = commentDateAndTime;
+    public void setTime(Instant commentDateAndTime) {
+        this.time = commentDateAndTime;
     }
 
 
