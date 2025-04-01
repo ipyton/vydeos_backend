@@ -31,7 +31,9 @@ public class FileServiceMapper {
                 !columnDefinitions.contains("quality") ? null : row.getShort("quality"),
                 !columnDefinitions.contains("status_code") ? null : row.getInt("status_code"),
                 !columnDefinitions.contains("format") ? null : row.getString("format"),
-                !columnDefinitions.contains("size") ? null : row.getLong("size")
+                !columnDefinitions.contains("size") ? null : row.getLong("size"),
+                !columnDefinitions.contains("seasonId") ? null : row.getInt("seasonId"),
+        !columnDefinitions.contains("episode") ? null : row.getInt("episode")
                 );
     }
 }

@@ -10,15 +10,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @ResponseBody
 public class HotNewsController {
 
-    @RequestMapping("get")
-    public LoginMessage getHotNews() {
+    @RequestMapping("posts/get")
+    public LoginMessage getHotPosts() {
 
         return new LoginMessage(-1, "");
     }
 
 
     @RequestMapping("set")
-    public LoginMessage setHotNews() {
+    public LoginMessage setHotPosts() {
 
         return new LoginMessage(-1, "");
     }

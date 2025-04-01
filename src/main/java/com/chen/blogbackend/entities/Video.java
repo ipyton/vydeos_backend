@@ -20,12 +20,13 @@ public class Video {
     private List<String> pictureList;
     private Map<String, String> makerList;
     private List<String> genreList;
-    private int position;
+    private Integer position;
     private String type;
+    private Integer totalSeason;
 
     public Video(String resourceId, String poster, String score, String introduction, String movieName, String tags,
                  List<String> actorList, String releaseYear, String level, List<String> pictureList, Map<String,
-            String> makerList,int position, List<String> genreList, String type) {
+            String> makerList,int position, List<String> genreList, String type, Integer totalSeason) {
         this.resourceId = resourceId;
         this.poster = poster;
         this.score = score;
@@ -40,9 +41,18 @@ public class Video {
         this.genreList = genreList;
         this.position = position;
         this.type = type;
+        this.totalSeason = totalSeason;
     }
 
     public Video() {
+    }
+
+    public Integer getTotalSeason() {
+        return totalSeason;
+    }
+
+    public void setTotalSeason(Integer totalSeason) {
+        this.totalSeason = totalSeason;
     }
 
     public String getType() {

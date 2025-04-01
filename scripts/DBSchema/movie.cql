@@ -6,11 +6,14 @@ CREATE KEYSPACE movie
 use movie;
 
 
-create table resource(resource_id text,  type text, resource text, name text,gid text,status text, quality int, primary key (resource_id,type, resource,quality));
+create table resource(resource_id text,  type text, resource text, name text,gid text,status text, quality int, season_id int,episode int, primary key ((resource_id,type,season_id, episode), resource,quality));
 
 create table meta(resource_id text, poster text, score text, introduction text, movie_name text, tags text,
 actor_list list<text>, release_year text, level text, picture_list list<text>, maker_list map<text,text>,
-                  genre_list list<text>,type text, language text, primary key ( (resource_id, type,language) ));
+                  genre_list list<text>,type text, language text, total_season int, primary key ( (resource_id, type,language) ));
+
+//tv 1
+//movie 0
 
 create table movieGallery(resource_id text, type text, user_id text, poster text, score text, introduction text, movie_name text, tags text,
                           actor_list list<text>, release_year text, level text, picture_list list<text>, maker_list map<text,text>,
@@ -18,10 +21,20 @@ create table movieGallery(resource_id text, type text, user_id text, poster text
 
 create table requests(resource_id text, movie_name text,type text, language text, create_time timestamp, userId text, release_year text,actor_list list<text>,  primary key ( resource_id,type,language ));
 
-create table playable(resource_id text, type text, quality tinyint, bucket text, path text, primary key ( (resource_id, type), quality ));
+create table playable(
+                         resource_id text,
+                         type text,
+                         season_id int,
+                         episode int,
+                         quality tinyint,
+                         bucket text,
+                         path text,
+                         PRIMARY KEY ((resource_id, type), season_id, episode, quality));
+create table subtitles(resource_id text, type text, language text, bucket text,episode int, season_id int, path text, primary key ((resource_id, type,season_id, episode),language));
+create table comments(resource_id text, type text, userId text, time time, content text, likes bigint, season_id int,episode int, primary key ( (resource_id, type, season_id, episode), time, userId ) );
+create table season_meta(resource_id text, type text, total_episode int, season_id int, primary key ( (resource_id, type, season_id) ) );
 
-create table subtitles(resource_id text, type text, language text, bucket text, path text primary key);
-create table comments(resource_id text, type text, userId text, time time, content text, likes bigint, primary key ( (resource_id, type),time, userId ) )
+
 -- 1.360p	640 × 360	16:9	低清，早期在线视频
 -- 2.480p	720 × 480	4:3 / 16:9	DVD 标准，早期电视
 -- 3.720p	1280 × 720	16:9	基础高清，流媒体常见

@@ -25,6 +25,15 @@ public class Comment {
     private String type="";
     private String avatar="";
     private String userName="";
+    private Integer episode;
+
+    public Integer getEpisode() {
+        return episode;
+    }
+
+    public void setEpisode(Integer episode) {
+        this.episode = episode;
+    }
 
     public String getAvatar() {
         return avatar;
@@ -53,7 +62,7 @@ public class Comment {
     public Comment() {
     }
 
-    public Comment(String userId, String resourceId, String type, String commentId, String content, Long likes, Instant commentDateTime) {
+    public Comment(String userId, String resourceId, String type, String commentId, String content, Long likes, Instant commentDateTime, Integer episode) {
         this.userId = userId;
         this.type = type;
         this.resourceId = resourceId;
@@ -61,6 +70,7 @@ public class Comment {
         this.content = content;
         this.likes = likes;
         this.time = commentDateTime;
+        this.episode = episode;
     }
 
 

@@ -42,7 +42,8 @@ public class VideoParser {
                     !columnDefinitions.contains("maker_list")?null:row.getMap("maker_list",String.class, String.class),
                     !columnDefinitions.contains("position")?0:row.getInt("position"),
                     !columnDefinitions.contains("genre_list")?null:row.getList("genre_list", String.class),
-                    !columnDefinitions.contains("type")?null:row.getString("type")
+                    !columnDefinitions.contains("type")?null:row.getString("type"),
+                    !columnDefinitions.contains("total_season") ? null:row.getInt("total_season")
                     ));
         }
         return videos;

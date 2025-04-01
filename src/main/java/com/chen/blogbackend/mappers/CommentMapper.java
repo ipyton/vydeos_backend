@@ -28,7 +28,8 @@ public class CommentMapper {
                 columnDefinitions.contains("comment_id") ? row.getString("comment_id") : null,
                 columnDefinitions.contains("content") ? row.getString("content") : null,
                 columnDefinitions.contains("likes") ? row.getLong("likes") : 0,
-                columnDefinitions.contains("time") ? row.getInstant("time") : null
+                columnDefinitions.contains("time") ? row.getInstant("time") : null,
+                columnDefinitions.contains("episode")? row.getInt("episode"):null
         );
     }
 }

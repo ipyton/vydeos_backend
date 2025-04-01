@@ -14,4 +14,4 @@ create table chat_group_members (group_id bigint, user_id text , user_name text,
 
 create table chat_messages_mailbox (user_id text , group_id bigint, type text, content text, count text, latest_timestamp timestamp, primary key ( user_id,group_id ));
 create table chat_group_by_user(user_id text, group_id bigint, group_name text, primary key (user_id, group_id));
-create table chat_group_invitation (group_id bigint, group_name text, expire_time timestamp, user_id text, user_name text, limitation int, primary key (group_id));
+create table invitations (source_id bigint, source_type text, expire_time timestamp, target_id text, target_type text, limitation int, primary key (source_id, source_type, target_id, target_type));

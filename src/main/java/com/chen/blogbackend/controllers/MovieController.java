@@ -3,6 +3,7 @@ package com.chen.blogbackend.controllers;
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.MovieDownloadRequest;
 import com.chen.blogbackend.entities.Playable;
+import com.chen.blogbackend.entities.SeasonMeta;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.VideoService;
@@ -34,8 +35,8 @@ public class MovieController {
     public Message isStared(HttpServletRequest request, String resourceId, String type) {
         String email = (String) request.getAttribute("userEmail");
         boolean result = videoService.isStared(email, resourceId, type);
-        if (result) return new Message(0, "success");
-        else return new Message(-1, "fail");
+        if (result) return new Message(0, "stared");
+        else return new Message(0, "not");
     }
 
     @RequestMapping("/sendRequest")
@@ -64,11 +65,26 @@ public class MovieController {
     }
 
     @RequestMapping("/getPlayable")
-    public Message getPlayable(String resourceId, String type ){
+    public Message getPlayable(String resourceId, String type, Integer season ){
         if (resourceId == null || resourceId.isEmpty() || type == null || type.isEmpty()) return new Message(-1, "fail");
-        List<Playable> playableList = videoService.getPlayable(resourceId, type);
+        List<Playable> playableList = videoService.getPlayable(resourceId, type, season);
         return new Message(0, JSON.toJSONString(playableList));
+    }
 
+    @RequestMapping("/isPlayable")
+    public Message isPlayable(String resourceId, String type ){
+        try {
+            return new Message(0,JSON.toJSONString(videoService.isPlayable(resourceId, type)));
+
+        } catch (Exception e) {
+            return new Message(-1, e.getMessage());
+        }
+    }
+
+    @RequestMapping("/get_season_meta")
+    public Message getSeasonMeta(String resourceId, String type, Integer seasonId){
+        SeasonMeta meta = videoService.getSeasonMeta(resourceId, type, seasonId);
+        return new Message(0, JSON.toJSONString(meta));
     }
 
 }

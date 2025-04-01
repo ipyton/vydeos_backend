@@ -20,7 +20,9 @@ public class PlayableMapper {
                     !columnDefinitions.contains("type") ? null : row.getString("type"),
                     !columnDefinitions.contains("quality") ? null : row.getByte("quality"),
                     !columnDefinitions.contains("bucket") ? null : row.getString("bucket"),
-                    !columnDefinitions.contains("path") ? null : row.getString("path")
+                    !columnDefinitions.contains("path") ? null : row.getString("path"),
+                    !columnDefinitions.contains("season_id") ? null : row.getInt("season_id"),
+                    !columnDefinitions.contains("episode") ? null : row.getInt("episode")
             ));
         }
         return playables;

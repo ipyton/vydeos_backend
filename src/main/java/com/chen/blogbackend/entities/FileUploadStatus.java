@@ -9,20 +9,20 @@ public class FileUploadStatus {
     public String format;
     public Short quality;
     public Long size;
-
     public Integer totalSlices;
     public Integer currentSlice;
     public Long resourceId; //primary key
     // status:0 还没开始上传 status:1, 正在上传. status:2 正在处理，status:3 已上传
     public Integer statusCode;
-
+    public Integer seasonId;
+    public Integer episode;
 
     public FileUploadStatus() {
     }
 
     public FileUploadStatus(String userEmail, String fileName, Long resourceId, String resourceType, String wholeHash,
                             Integer totalSlices, Integer currentSlice, String resourceName, Short quality,
-                            Integer statusCode, String  format, Long size ) {
+                            Integer statusCode, String  format, Long size,Integer seasonId, Integer episode) {
         this.userEmail = userEmail;
         this.fileName = fileName;
         this.resourceId = resourceId;
@@ -35,7 +35,24 @@ public class FileUploadStatus {
         this.statusCode = statusCode;
         this.format = format;
         this.size= size;
+        this.episode = episode;
+        this.seasonId = seasonId;
+    }
 
+    public Integer getEpisode() {
+        return episode;
+    }
+
+    public Integer getSeasonId() {
+        return seasonId;
+    }
+
+    public void setSeasonId(Integer seasonId) {
+        this.seasonId = seasonId;
+    }
+
+    public void setEpisode(Integer episode) {
+        this.episode = episode;
     }
 
     public String getResourceName() {

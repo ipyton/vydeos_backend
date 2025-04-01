@@ -15,7 +15,5 @@ public class RelationshipParser {
                     set.getColumnDefinitions().contains("avatar")?row.getString("avatar"):null, row.getString("group_id"), row.getString("name")));
         }
         return result;
-
-
     }
 }

@@ -23,3 +23,4 @@ CREATE TABLE web_push_endpoints (
                                              auth TEXT,                     -- Web Push auth
                                              PRIMARY KEY (user_id, endpoint) -- 复合主键，确保用户的每个 endpoint 唯一
 );
+

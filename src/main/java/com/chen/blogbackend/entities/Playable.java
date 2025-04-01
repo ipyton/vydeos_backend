@@ -11,15 +11,36 @@ public class Playable  {
 
     private String bucket;
     private String path;
+    private Integer seasonId;
+    private Integer episode;
 
     public Playable() {}
 
-    public Playable(String resourceId, String type, Byte quality, String bucket, String path) {
+    public Playable(String resourceId, String type, Byte quality, String bucket, String path,Integer seasonId, Integer episode) {
         this.resourceId = resourceId;
         this.type = type;
         this.quality = quality;
         this.bucket = bucket;
         this.path = path;
+        this.episode = episode;
+        this.seasonId = seasonId;
+
+    }
+
+    public Integer getSeasonId() {
+        return seasonId;
+    }
+
+    public void setSeasonId(Integer seasonId) {
+        this.seasonId = seasonId;
+    }
+
+    public Integer getEpisode() {
+        return episode;
+    }
+
+    public void setEpisode(Integer episode) {
+        this.episode = episode;
     }
 
     public String getResourceId() {
