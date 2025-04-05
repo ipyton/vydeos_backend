@@ -7,6 +7,7 @@ import com.chen.blogbackend.mappers.SeasonMetaMapper;
 import com.chen.blogbackend.mappers.VideoParser;
 import com.chen.blogbackend.util.VideoUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
@@ -43,7 +44,9 @@ public class VideoService {
     private PreparedStatement isPlayable;
     private PreparedStatement getSeasonMeta;
     private PreparedStatement insertSeasonMeta;
-    private PreparedStatement updateSeasonMeta;
+    private PreparedStatement updateTotalEpisode;
+    private PreparedStatement updateEpisodeMeta;
+    private PreparedStatement addSeasonCount;
     //private PreparedStatement getPlayableCount;
 //movieId text, createTime timestamp, userId text
     @PostConstruct
@@ -63,9 +66,9 @@ public class VideoService {
         isPlayable = session.prepare("select * from movie.playable where resource_id = ? and type = ?;");
         getSeasonMeta  = session.prepare("select * from movie.season_meta where resource_id = ? and type = ? and season_id=?;");
         //create table season_meta(resource_id text, type text, total_episode int, season_id int, primary key ( (resource_id, type, season_id) ) );
-        insertSeasonMeta = session.prepare("insert into movie.season_meta values(resource_id, type, total_episode, season_id) (?,?,?,?);");
-        updateSeasonMeta = session.prepare("update movie.season_meta set total_episode = ?  where resource_id = ? and type = ? and season_id=?;");
-
+        insertSeasonMeta = session.prepare("insert into movie.season_meta (resource_id, type, total_episode, season_id) values (?,?,?,?);");
+        updateTotalEpisode = session.prepare("update movie.season_meta set total_episode = ?  where resource_id = ? and type = ? and season_id=?;");
+        addSeasonCount = session.prepare("update movie.meta set total_season = ?  where resource_id = ? and type = ? and language = ?;");
     }
 
     public boolean starVideo(Video video){
@@ -158,7 +161,10 @@ public class VideoService {
         return !execute.all().isEmpty();
     }
 
-    public SeasonMeta getSeasonMeta(String resourceId, String type, Integer seasonId) {
+    public SeasonMeta getSeasonMeta(String resourceId, String type, Integer seasonId, String language) throws Exception {
+        if (resourceId == null || resourceId.isEmpty() || type == null || type.isEmpty() ||seasonId == null || seasonId < 1 || language == null ) {
+            throw new Exception("lost params");
+        }
         ResultSet execute = session.execute(getSeasonMeta.bind(resourceId, type, seasonId));
         List<SeasonMeta> seasonMetas = SeasonMetaMapper.parseSeasonMeta(execute);
         if (seasonMetas.isEmpty()) {
@@ -174,5 +180,40 @@ public class VideoService {
             seasonMeta.setAvailableEpisodes(availablePlayable);
         }
         return seasonMeta;
+    }
+
+    public boolean addEpisode(String resourceId, String type, Integer seasonId) throws Exception {
+        if (seasonId == null || seasonId <= 0 || type == null || type.isEmpty()) {
+            throw new Exception("Not enough parameters ");
+        }
+        SeasonMeta seasonMeta = getSeasonMeta(resourceId, type, seasonId,"en-US");
+        if (seasonMeta == null) {
+            throw new Exception("No season meta found for " + type + " " + resourceId + " " + seasonId);
+        }
+        updateEpisode(resourceId,type,seasonId, seasonMeta.getTotalEpisode() + 1);
+        return true;
+    }
+
+    private boolean updateEpisode(String resourceId, String type, Integer seasonId, Integer episode) {
+        if (seasonId == null || seasonId <= 0 || type == null || type.isEmpty()) {
+            return false;
+        }
+        session.execute(updateTotalEpisode.bind(episode, resourceId, type, seasonId));
+        return true;
+    }
+
+    public boolean addSeason(String resourceId, String type) throws Exception {
+        System.out.println(resourceId + " " + type);
+        if (type == null || type.isEmpty() || resourceId == null || resourceId.isEmpty()) {
+            throw new Exception("no sufficient params");
+        }
+        Video videoMeta = getVideoMeta(resourceId, type, "en-US");
+        if (videoMeta == null) {
+            throw new Exception("No video meta found for " + type + " " + resourceId);
+        }
+        //resource_id, type, total_episode, season_id
+        ResultSet execute = session.execute(insertSeasonMeta.bind(resourceId, type, 1, videoMeta.getTotalSeason() + 1));
+        ResultSet execute1 = session.execute(addSeasonCount.bind(videoMeta.getTotalSeason() + 1, resourceId, type, "en-US"));
+        return execute.getExecutionInfo().getErrors().isEmpty();
     }
 }

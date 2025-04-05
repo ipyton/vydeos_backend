@@ -21,7 +21,8 @@ create table IF NOT EXISTS assets(user_id text, bucket text, file text,primary k
 CREATE TABLE IF NOT EXISTS file_upload_status (user_email TEXT, resource_name TEXT, resource_id text, resource_type TEXT,
                                                format text,whole_hash TEXT, file_name text, size bigint,
                                                quality smallint, total_slices INT, current_slice INT, status_code INT, -- 上传状态：0-未开始, 1-正在上传, 2-正在处理, 3-encoding 4-uploading 5-success
-                                               PRIMARY KEY ((resource_id,resource_type,quality)) -- quality
+                                               season_id int, episode int,
+                                               PRIMARY KEY ((resource_id,resource_type,season_id, episode), quality) -- quality
 );
 -- 1.360p	640 × 360	16:9	低清，早期在线视频
 -- 2.480p	720 × 480	4:3 / 16:9	DVD 标准，早期电视

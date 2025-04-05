@@ -33,7 +33,7 @@ public class FileServiceMapper {
                 !columnDefinitions.contains("format") ? null : row.getString("format"),
                 !columnDefinitions.contains("size") ? null : row.getLong("size"),
                 !columnDefinitions.contains("seasonId") ? null : row.getInt("seasonId"),
-        !columnDefinitions.contains("episode") ? null : row.getInt("episode")
+                !columnDefinitions.contains("episode") ? null : row.getInt("episode")
                 );
     }
 }

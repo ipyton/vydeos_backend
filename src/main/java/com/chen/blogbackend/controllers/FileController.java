@@ -98,27 +98,29 @@ public class FileController {
     @PostMapping("/negotiationStep1")
     public LoginMessage negotiationStep1(HttpServletRequest request,String resourceId, String resourceType,
                                              String wholeHashCode, Long size, String fileName, Integer totalSlice,
-                                             Short quality, String format) {
+                                             Short quality, String format, Integer seasonId, Integer episodeId) {
         if (resourceId == null || resourceType == null || wholeHashCode == null || size == null ||
-                fileName == null || totalSlice == null || quality == null || format == null) {
+                fileName == null || totalSlice == null || quality == null || format == null || seasonId == null
+                || episodeId == null) {
             return new LoginMessage(-1, "Lost parameters");
         }
         String email = (String) request.getAttribute("userEmail");
         return fileService.setUploadStatus(email, resourceId, resourceType,wholeHashCode, size, fileName, totalSlice,
-                quality, format);
+                quality, format,seasonId,episodeId);
     }
 
     //开始上传
     @PostMapping("/uploadFile")
     public Message uploadFile(HttpServletRequest httpServletRequest, @RequestParam("file") MultipartFile file, @RequestParam("type") String type, @RequestParam("currentSlice") Integer currentSlice,
-                              @RequestParam("resourceId") String resourceId, @RequestParam("hashCode") String checkSum)  {
+                              @RequestParam("resourceId") String resourceId, @RequestParam("hashCode") String checkSum,
+                                @RequestParam("seasonId") Integer seasonId, @RequestParam("episode") Integer episode)  {
         if (file == null || type == null || currentSlice == null || resourceId == null || checkSum == null){
             return null;
         }
         String email = (String) httpServletRequest.getAttribute("userEmail");
         int result = -1;
         try {
-            result = fileService.uploadFile(file, type, currentSlice, resourceId, email, checkSum);
+            result = fileService.uploadFile(file, type, currentSlice, resourceId, email, checkSum, seasonId, episode);
         } catch (Exception e) {
             return new Message(-1, e.getMessage());
         }

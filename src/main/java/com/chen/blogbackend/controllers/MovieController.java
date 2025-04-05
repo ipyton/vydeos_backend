@@ -10,12 +10,10 @@ import com.chen.blogbackend.services.VideoService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("movie")
@@ -82,9 +80,48 @@ public class MovieController {
     }
 
     @RequestMapping("/get_season_meta")
-    public Message getSeasonMeta(String resourceId, String type, Integer seasonId){
-        SeasonMeta meta = videoService.getSeasonMeta(resourceId, type, seasonId);
+    public Message getSeasonMeta(@RequestBody Map<String, Object> params){
+        SeasonMeta meta;
+        String resourceId = (String) params.get("resourceId");
+        String type = (String) params.get("type");
+        Integer seasonId = (Integer) params.get("seasonId");
+        try {
+            meta = videoService.getSeasonMeta(resourceId, type, seasonId,"en_US");
+        }
+        catch (Exception e) {
+            return new Message(-1, e.getMessage());
+        }
         return new Message(0, JSON.toJSONString(meta));
+    }
+
+    @RequestMapping("add_episode")
+    public Message addEpisode(@RequestBody Map<String, Object> params){
+        String resourceId = (String) params.get("resourceId");
+        String type = (String) params.get("type");
+        Integer seasonId = (Integer) params.get("seasonId");
+
+        try {
+            boolean result = videoService.addEpisode(resourceId,type,seasonId);
+            if (result) return new Message(0, "success");
+            else return new Message(0, "fail");
+        } catch (Exception e) {
+            return new Message(-1, e.getMessage());
+        }
+
+    }
+
+    @RequestMapping("add_season")
+    public Message addSeason(@RequestBody Map<String, Object> params) {
+        try {
+            String resourceId = (String) params.get("resourceId");
+            String type = params.get("type").toString();
+            boolean result = videoService.addSeason(resourceId,type);
+            if (result) return new Message(0, "success");
+            else return new Message(-1, "fail");
+        }
+        catch (Exception e) {
+            return new Message(-1, e.getMessage());
+        }
     }
 
 }

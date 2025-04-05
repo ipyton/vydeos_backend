@@ -112,12 +112,12 @@ public class FileService {
 //        scheduler.start();
         uploadAvatar = cqlSession.prepare("update userinfo.user_information set avatar=? where user_id=?");
         addAssets = cqlSession.prepare("insert into files.assets (user_id, bucket, file) values (?,?,?) ");
-        getUploadStatus = cqlSession.prepare("select * from files.file_upload_status where resource_id = ? and resource_type = ?");
-        updateStatus = cqlSession.prepare("update files.file_upload_status set status_code = ? where resource_id = ? and resource_type = ?");
-        addSlices = cqlSession.prepare("update files.file_upload_status set current_slice = ? where resource_id = ? and resource_type = ?");
+        getUploadStatus = cqlSession.prepare("select * from files.file_upload_status where resource_id = ? and resource_type = ? and season_id = ? and episode = ?");
+        updateStatus = cqlSession.prepare("update files.file_upload_status set status_code = ? where resource_id = ? and resource_type = ?  and season_id = ? and episode = ? and quality = ?");
+        addSlices = cqlSession.prepare("update files.file_upload_status set current_slice = ? where resource_id = ? and resource_type = ? and season_id = ? and episode = ? and quality = ?");
         setUploadStatus = cqlSession.prepare("insert into files.file_upload_status (user_email, " +
                 " resource_id, resource_type, whole_hash, file_name, total_slices, current_slice, size, " +
-                "quality, status_code, format) values (?,?,?,?,?,?,?,?,?,?,?)");
+                "quality, status_code, format, season_id, episode) values (?,?,?,?,?,?,?,?,?,?,?, ?, ?)");
         videoMimeTypes.put("video/mp4", ".mp4");
         videoMimeTypes.put("video/webm", ".webm");
         videoMimeTypes.put("video/ogg", ".ogv");
@@ -134,8 +134,12 @@ public class FileService {
 
     public LoginMessage setUploadStatus(String userEmail, String resourceId, String resourceType,
                                         String wholeMD5, long size, String filename, int totalSlice ,Short quality,
-                                        String format) {
-        FileUploadStatus fileUploadStatus = getUploadStatus(resourceId, resourceType);
+                                        String format, Integer seasonId, Integer episodeId) {
+        if (resourceType.equals("video")) {
+            seasonId = 0;
+            episodeId = 0;
+        }
+        FileUploadStatus fileUploadStatus = getUploadStatus(resourceId, resourceType, seasonId, episodeId);
         if (null == fileUploadStatus) {
             ResultSet execute1 = cqlSession.execute(setUploadStatus.bind(userEmail, resourceId,
                     resourceType, wholeMD5, filename, totalSlice, 0,  size, quality,  0, format));
@@ -147,8 +151,8 @@ public class FileService {
         return new LoginMessage(2, JSON.toJSONString(fileUploadStatus));
     }
 
-    public FileUploadStatus getUploadStatus(String resourceId, String resourceType) {
-        ResultSet execute = cqlSession.execute(getUploadStatus.bind( resourceId, resourceType));
+    public FileUploadStatus getUploadStatus(String resourceId, String resourceType, Integer seasonId, Integer episodeId) {
+        ResultSet execute = cqlSession.execute(getUploadStatus.bind( resourceId, resourceType, seasonId, episodeId));
         return FileServiceMapper.parseUploadStatus(execute);
     }
 
@@ -375,8 +379,8 @@ public class FileService {
         }
     }
 
-    private String getSuffix(String resourceId, String type){
-        FileUploadStatus uploadStatus = getUploadStatus(resourceId, type);
+    private String getSuffix(String resourceId, String type, Integer season, Integer episode) {
+        FileUploadStatus uploadStatus = getUploadStatus(resourceId, type, season, episode);
         return videoMimeTypes.get(uploadStatus.getFormat());
     }
 
@@ -385,12 +389,12 @@ public class FileService {
     //fileUploadStage2
     //fileUploadStage3
     public int uploadFile(MultipartFile file, String type, Integer currentSlice,
-                                       String resourceId, String userEmail, String checkSum) throws Exception {
+                                       String resourceId, String userEmail, String checkSum, Integer seasonId, Integer episode) throws Exception {
         if (file.isEmpty()) {
             System.out.println("file is empty!");
             return -1;
         }
-        FileUploadStatus uploadStatus = getUploadStatus(resourceId, type);
+        FileUploadStatus uploadStatus = getUploadStatus(resourceId, type,seasonId, episode);
         if (uploadStatus == null) {
             return -1;
         }
@@ -440,7 +444,7 @@ public class FileService {
                 @Override
                 public Object call() throws Exception {
 
-                    String path =  base + "/" + resourceId.hashCode() + getSuffix(resourceId, type);
+                    String path =  base + "/" + resourceId.hashCode() + getSuffix(resourceId, type,seasonId,episode);
 
                     try (FileOutputStream fis = new FileOutputStream(path)){
                         System.out.println("start");
@@ -474,7 +478,7 @@ public class FileService {
                         }
                         producer.send(new ProducerRecord<>("fileUploadStage1", type + "_" +resourceId,
                                 JSON.toJSONString(new EncodingRequest( base +  "/"
-                                + resourceId.hashCode() + getSuffix(resourceId, type),
+                                + resourceId.hashCode() + getSuffix(resourceId, type,seasonId,episode),
                                         System.getProperty("user.home") + "/tmp/encoded/" +  type + "_" + (resourceId) + "/",
                                         "",
                                         "",resourceId, type))), (metadata, exception) -> {
