@@ -47,6 +47,8 @@ public class VideoService {
     private PreparedStatement updateTotalEpisode;
     private PreparedStatement updateEpisodeMeta;
     private PreparedStatement addSeasonCount;
+    private PreparedStatement getPlayable3;
+
     //private PreparedStatement getPlayableCount;
 //movieId text, createTime timestamp, userId text
     @PostConstruct
@@ -61,7 +63,7 @@ public class VideoService {
         getRequest = session.prepare("select * from movie.requests;");
         getRequestById = session.prepare("select * from movie.requests where resource_id = ? and type = ?;");
         isStared = session.prepare("select * from movie.movieGallery where user_id = ? and resource_id = ? and type = ? ;");
-        getPlayable = session.prepare("select * from movie.playable where resource_id = ? and type = ? and season_id=?;");
+        getPlayable = session.prepare("select * from movie.playable where resource_id = ? and type = ? and season_id=? and episode = ?;");
         //getPlayableCount = session.prepare("select count(*) from movie.playable where resource_id = ? and type = ? and e;");
         isPlayable = session.prepare("select * from movie.playable where resource_id = ? and type = ?;");
         getSeasonMeta  = session.prepare("select * from movie.season_meta where resource_id = ? and type = ? and season_id=?;");
@@ -69,6 +71,7 @@ public class VideoService {
         insertSeasonMeta = session.prepare("insert into movie.season_meta (resource_id, type, total_episode, season_id) values (?,?,?,?);");
         updateTotalEpisode = session.prepare("update movie.season_meta set total_episode = ?  where resource_id = ? and type = ? and season_id=?;");
         addSeasonCount = session.prepare("update movie.meta set total_season = ?  where resource_id = ? and type = ? and language = ?;");
+        getPlayable3 = session.prepare("select * from movie.playable where resource_id = ? and type = ? and season_id=?;");
     }
 
     public boolean starVideo(Video video){
@@ -134,11 +137,18 @@ public class VideoService {
         return !execute.all().isEmpty();
     }
 
-    public List<Playable> getPlayable(String resourceId, String type, Integer season) {
-        ResultSet execute = session.execute(getPlayable.bind(resourceId, type, season));
+    public List<Playable> getPlayable(String resourceId, String type, Integer seasonId, Integer episode) {
+        System.out.println(resourceId + " " + type + " " + seasonId + " " + episode);
+        ResultSet execute = session.execute(getPlayable.bind(resourceId, type, seasonId, episode));
         List<Playable> list = PlayableMapper.parse(execute);
         return list;
     }
+    public List<Playable> getPlayable(String resourceId, String type, Integer seasonId) {
+        ResultSet execute = session.execute(getPlayable3.bind(resourceId, type, seasonId));
+        List<Playable> list = PlayableMapper.parse(execute);
+        return list;
+    }
+
 
     public Integer getSeasons(String resourceId, String type) throws Exception {
         ResultSet execute = session.execute(getVideoMeta.bind(resourceId, type));
@@ -160,6 +170,8 @@ public class VideoService {
         ResultSet execute = session.execute(isPlayable.bind(resourceId, type));
         return !execute.all().isEmpty();
     }
+
+
 
     public SeasonMeta getSeasonMeta(String resourceId, String type, Integer seasonId, String language) throws Exception {
         if (resourceId == null || resourceId.isEmpty() || type == null || type.isEmpty() ||seasonId == null || seasonId < 1 || language == null ) {

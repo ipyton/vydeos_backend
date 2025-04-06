@@ -63,9 +63,10 @@ public class MovieController {
     }
 
     @RequestMapping("/getPlayable")
-    public Message getPlayable(String resourceId, String type, Integer season ){
-        if (resourceId == null || resourceId.isEmpty() || type == null || type.isEmpty()) return new Message(-1, "fail");
-        List<Playable> playableList = videoService.getPlayable(resourceId, type, season);
+    public Message getPlayable(String resourceId, String type, Integer seasonId, Integer episode ){
+        if (resourceId == null || resourceId.isEmpty() || type == null || type.isEmpty() || seasonId == null
+                || episode == null) return new Message(-1, "fail");
+        List<Playable> playableList = videoService.getPlayable(resourceId, type, seasonId, episode);
         return new Message(0, JSON.toJSONString(playableList));
     }
 

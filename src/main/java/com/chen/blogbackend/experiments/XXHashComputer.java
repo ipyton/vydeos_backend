@@ -7,6 +7,7 @@ import net.jpountz.xxhash.XXHashFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -56,9 +57,34 @@ public class XXHashComputer {
     /**
      * Overloaded method with default chunk size
      */
-    public static String computeXxHash(String filePath) throws IOException {
+    public static String computeHash(String filePath) throws IOException {
         return computeXxHash(filePath, 32 * 1024 * 1024);
     }
+
+    public static String computeHash(InputStream inputStream, int chuckSize) throws IOException {
+            int chunkSize = 32 * 1024 * 1024; // 默认 32MB 块大小
+            byte[] buffer = new byte[chunkSize];
+            int bytesRead;
+            long totalBytes = 0;
+
+            // 获取 xxHash 工厂和哈希器
+            XXHashFactory factory = XXHashFactory.fastestInstance();
+            StreamingXXHash64 hasher = factory.newStreamingHash64(990816L);
+
+            try {
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    hasher.update(buffer, 0, bytesRead);
+                    totalBytes += bytesRead;
+                    System.out.printf("Processed: %.2f MB%n", totalBytes / (1024.0 * 1024.0));
+                }
+                long hash = hasher.getValue();
+                return Long.toHexString(hash);
+            } finally {
+                inputStream.close(); // 确保关闭流
+            }
+        }
+
+
 
     /**
      * Example usage
@@ -67,7 +93,7 @@ public class XXHashComputer {
         try {
             long start = System.currentTimeMillis();
             String filePath = "/Volumes/kinston/testing.zip.zip";
-            String hash = computeXxHash(filePath);
+            String hash = computeXxHash(filePath,-1);
             System.out.println("xxHash: " + hash  );
             System.out.println(System.currentTimeMillis() - start);
         } catch (IOException e) {

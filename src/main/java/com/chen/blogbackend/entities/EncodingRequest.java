@@ -1,12 +1,30 @@
 package com.chen.blogbackend.entities;
 
 public class EncodingRequest {
-    public String inputPath;
-    public String outputPath;
-    public String inputSource;
-    public String outputSource;
-    public String resourceId;
-    public String type;
+    private String inputPath;
+    private String outputPath;
+    private String inputSource;
+    private String outputSource;
+    private String resourceId;
+    private String type;
+    private Integer seasonId;
+    private Integer episode;
+
+    public Integer getSeasonId() {
+        return seasonId;
+    }
+
+    public void setSeasonId(Integer seasonId) {
+        this.seasonId = seasonId;
+    }
+
+    public Integer getEpisode() {
+        return episode;
+    }
+
+    public void setEpisode(Integer episode) {
+        this.episode = episode;
+    }
 
     public String getResourceId() {
         return resourceId;
@@ -24,13 +42,16 @@ public class EncodingRequest {
         this.type = type;
     }
 
-    public EncodingRequest(String inputPath, String outputPath, String inputSource, String outputSource, String resourceId, String type) {
+    public EncodingRequest(String inputPath, String outputPath, String inputSource, String outputSource,
+                           String resourceId, String type, Integer seasonId, Integer episode) {
         this.inputPath = inputPath;
         this.outputPath = outputPath;
         this.inputSource = inputSource;
         this.outputSource = outputSource;
         this.resourceId = resourceId;
         this.type = type;
+        this.seasonId = seasonId;
+        this.episode = episode;
     }
 
     public EncodingRequest(String inputPath, String outputPath, String inputSource, String outputSource) {

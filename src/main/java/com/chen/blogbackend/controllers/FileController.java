@@ -98,15 +98,15 @@ public class FileController {
     @PostMapping("/negotiationStep1")
     public LoginMessage negotiationStep1(HttpServletRequest request,String resourceId, String resourceType,
                                              String wholeHashCode, Long size, String fileName, Integer totalSlice,
-                                             Short quality, String format, Integer seasonId, Integer episodeId) {
+                                             Short quality, String format, Integer seasonId, Integer episode) {
         if (resourceId == null || resourceType == null || wholeHashCode == null || size == null ||
                 fileName == null || totalSlice == null || quality == null || format == null || seasonId == null
-                || episodeId == null) {
+                || episode == null) {
             return new LoginMessage(-1, "Lost parameters");
         }
         String email = (String) request.getAttribute("userEmail");
         return fileService.setUploadStatus(email, resourceId, resourceType,wholeHashCode, size, fileName, totalSlice,
-                quality, format,seasonId,episodeId);
+                quality, format,seasonId,episode);
     }
 
     //开始上传

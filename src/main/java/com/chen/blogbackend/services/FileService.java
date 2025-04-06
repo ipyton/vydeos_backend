@@ -5,6 +5,7 @@ import com.chen.blogbackend.DAO.VideoUploadingDao;
 import com.chen.blogbackend.entities.EncodingRequest;
 import com.chen.blogbackend.entities.FileUploadStatus;
 import com.chen.blogbackend.entities.UnfinishedUpload;
+import com.chen.blogbackend.experiments.XXHashComputer;
 import com.chen.blogbackend.mappers.FileServiceMapper;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.util.FileUtil;
@@ -142,7 +143,7 @@ public class FileService {
         FileUploadStatus fileUploadStatus = getUploadStatus(resourceId, resourceType, seasonId, episodeId);
         if (null == fileUploadStatus) {
             ResultSet execute1 = cqlSession.execute(setUploadStatus.bind(userEmail, resourceId,
-                    resourceType, wholeMD5, filename, totalSlice, 0,  size, quality,  0, format));
+                    resourceType, wholeMD5, filename, totalSlice, 0,  size, quality,  0, format,seasonId,episodeId));
             List<Map.Entry<Node, Throwable>> errors = execute1.getExecutionInfo().getErrors();
             if (errors.isEmpty()) return new LoginMessage(1, "success");
             return new LoginMessage(-1, "failed");
@@ -325,44 +326,31 @@ public class FileService {
         return hexString.toString();
     }
 
-    private boolean checkUploadFile(FileUploadStatus uploadStatus, Integer currentSlice, Integer totalSlice, MultipartFile file, String md5) throws IOException, NoSuchAlgorithmException {
+    private boolean checkUploadFile(FileUploadStatus uploadStatus, Integer currentSlice, Integer totalSlice, MultipartFile file, String hash) throws IOException, NoSuchAlgorithmException {
         if (!Objects.equals(currentSlice, uploadStatus.getCurrentSlice())) {
             return false;
         }
-        return checkSum(file, md5);
+        return checkSum(file, hash);
     }
 
-    private boolean checkSum(MultipartFile file, String md5) throws IOException, NoSuchAlgorithmException {
+    private boolean checkSum(MultipartFile file, String hash) throws IOException, NoSuchAlgorithmException {
         InputStream inputStream = file.getInputStream();
-        boolean b = checkSum(inputStream, md5);
+        boolean b = checkSum(inputStream, hash);
         inputStream.close();
         return b;
 
     }
 
-    private boolean checkSum(String path, String md5) throws IOException, NoSuchAlgorithmException {
+    private boolean checkSum(String path, String hash) throws IOException, NoSuchAlgorithmException {
         FileInputStream fis = new FileInputStream(path);
-        boolean b = checkSum(fis, md5);
+        boolean b = checkSum(fis, hash);
         fis.close();
         return b;
     }
 
-    private boolean checkSum(InputStream inputStream, String md5) throws NoSuchAlgorithmException, IOException {
-        MessageDigest digest = MessageDigest.getInstance("MD5");
-        byte[] buffer = new byte[1024];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            digest.update(buffer, 0, bytesRead);
-        }
-        byte[] hashBytes = digest.digest();
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : hashBytes) {
-            hexString.append(String.format("%02x", b));
-        }
-        String abstraction = hexString.toString();
-        System.out.println(abstraction);
-        System.out.println(md5);
-        return abstraction.equals(md5);
+    private boolean checkSum(InputStream inputStream, String hash) throws NoSuchAlgorithmException, IOException {
+        String s = XXHashComputer.computeHash(inputStream, -1);
+        return s.equals(hash);
     }
 
 
@@ -388,13 +376,16 @@ public class FileService {
     //fileUploadStage1
     //fileUploadStage2
     //fileUploadStage3
+
+    // 1. ~/tmp/movie_xxx_{season}_{episode}/1,2,3,4 segments
+    // 2
     public int uploadFile(MultipartFile file, String type, Integer currentSlice,
                                        String resourceId, String userEmail, String checkSum, Integer seasonId, Integer episode) throws Exception {
         if (file.isEmpty()) {
             System.out.println("file is empty!");
             return -1;
         }
-        FileUploadStatus uploadStatus = getUploadStatus(resourceId, type,seasonId, episode);
+        FileUploadStatus uploadStatus = getUploadStatus(resourceId, type, seasonId, episode);
         if (uploadStatus == null) {
             return -1;
         }
@@ -412,7 +403,7 @@ public class FileService {
                 return -1;
             }
         } else if (!uploadStatus.currentSlice.equals(uploadStatus.totalSlices)) return -1;
-        String base = System.getProperty("user.home") + "/tmp/" +type + "_" + resourceId;
+        String base = System.getProperty("user.home") + "/tmp/" +type + "_" + resourceId + "_" + seasonId + "_" + episode;
         if (Objects.equals(uploadStatus.currentSlice, currentSlice)) {
             File folder = new File(base);
 
@@ -428,18 +419,18 @@ public class FileService {
             }
             File fileToWrite = new File( base + "/" + currentSlice + "_" + uploadStatus.getTotalSlices());
             file.transferTo(fileToWrite);
-            cqlSession.execute(addSlices.bind(currentSlice + 1 ,resourceId, type));
+            cqlSession.execute(addSlices.bind(currentSlice + 1 ,resourceId, type, seasonId, episode, (short) 1));
         }
 
 
         if (currentSlice == 0 && !uploadStatus.currentSlice.equals(uploadStatus.totalSlices)) {
-            cqlSession.execute(updateStatus.bind(1,resourceId, type));
-            cqlSession.execute(addSlices.bind(currentSlice + 1 ,resourceId, type));
+            cqlSession.execute(updateStatus.bind(1,resourceId, type,seasonId,episode, (short) 1));
+            cqlSession.execute(addSlices.bind(currentSlice + 1 ,resourceId, type,seasonId,episode,(short)1));
         }
         //额外处理
         else if (currentSlice.equals(uploadStatus.getTotalSlices() - 1) || Objects.equals(uploadStatus.currentSlice, uploadStatus.totalSlices)) {
             //最后一个分段
-            cqlSession.execute(updateStatus.bind(2, resourceId, type));
+            cqlSession.execute(updateStatus.bind(2, resourceId, type,seasonId,episode, (short) 1));
             executor.submit(new Callable<Object>() {
                 @Override
                 public Object call() throws Exception {
@@ -479,17 +470,17 @@ public class FileService {
                         producer.send(new ProducerRecord<>("fileUploadStage1", type + "_" +resourceId,
                                 JSON.toJSONString(new EncodingRequest( base +  "/"
                                 + resourceId.hashCode() + getSuffix(resourceId, type,seasonId,episode),
-                                        System.getProperty("user.home") + "/tmp/encoded/" +  type + "_" + (resourceId) + "/",
+                                        System.getProperty("user.home") + "/tmp/encoded/" +  type + "_" + (resourceId)  + "_" + seasonId + "_"+ episode + "/",
                                         "",
-                                        "",resourceId, type))), (metadata, exception) -> {
+                                        "",resourceId, type,seasonId,episode))), (metadata, exception) -> {
                             if (exception == null) {
                                 System.out.printf("消息发送成功: topic=%s, partition=%d, offset=%d, key=%s\n",
-                                        metadata.topic(), metadata.partition(), metadata.offset(),resourceId + "_" +type);
+                                        metadata.topic(), metadata.partition(), metadata.offset(),resourceId + "_" +type + "_" + seasonId + "_"+ episode + "/");
                             } else {
                                 System.err.println("消息发送失败: " + exception.getMessage());
                             }
                         });
-                        cqlSession.execute(updateStatus.bind(3,resourceId, type));
+                        cqlSession.execute(updateStatus.bind(3,resourceId, type, seasonId, episode,(short)1));
                     } catch (Exception e) {
                         e.printStackTrace();
                         throw new Exception(e);
