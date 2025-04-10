@@ -8,7 +8,6 @@ import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.session.Session;
 import jakarta.annotation.PostConstruct;
 import org.checkerframework.checker.units.qual.A;
-import org.graalvm.polyglot.Language;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMapping;
