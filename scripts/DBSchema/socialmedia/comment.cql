@@ -9,5 +9,5 @@ create table comments_by_content(comment_refer text , comment_id text , refer te
 // create table comments_by_object_id(object_id text primary key, comment_id text primary key,  comment_datetime timestamp,likes int, content text, type text, user_name text ,user_id text, avatar text);
 create table app_comments(applicationId text, userId text , comment text, rate float, picture list<text>, primary key ( (applicationId,userId) ));
 
-create table comments(resource_id text, type text, user_id text, time timestamp, content text, likes bigint,episode int, extension1 bigint, extension2 text  primary key ( (resource_id, type),time, user_id ) );
+create table comments(resource_id text, type text, user_id text, time timestamp, content text, likes bigint,episode int, extension1 bigint, extension2 text, primary key ( (resource_id, type),time, user_id ) );
 CREATE INDEX ON comments(user_id);

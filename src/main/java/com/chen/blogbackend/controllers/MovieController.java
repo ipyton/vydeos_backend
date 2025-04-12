@@ -16,18 +16,13 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-@RequestMapping("movie")
+@RequestMapping("movie_management")
 @ResponseBody()
 public class MovieController {
 
     @Autowired
     private VideoService videoService;
 
-    @PostMapping("uploadMeta")
-    public LoginMessage uploadMovieMetadata() {
-        // return a endpoint to upload the files
-        return new LoginMessage(1, "success");
-    }
 
     @GetMapping("isStared")
     public Message isStared(HttpServletRequest request, String resourceId, String type) {
