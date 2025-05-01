@@ -62,17 +62,12 @@ public class AccountService {
 
     PreparedStatement getAuth;
 
+    PreparedStatement setVerificationCode;
+    PreparedStatement getVerificationCode;
+
     @PostConstruct
     public void init(){
-//        AppMapper appMapper = new AppMapperBuilder(session).withDefaultKeyspace("apps").build();
-//        appDao = appMapper.appDao();
-//        getApplicationsSimple = session.prepare("select applicationId, name, ratings, pictures, author from apps.application;");
-//        getDetailedIntroduction = session.prepare("select * from apps.application where applicationId=?;");
-//        getInstalledApps = session.prepare("select * from apps.user_apps where userId=?;");
-//        deleteApp = session.prepare("delete from apps.user_apps where userId = ? and applicationId = ?");
-//        saveComment = session.prepare("insert into apps.app_comment (appId, commentId , userId , userName, userAvatar, comment , rate, commentDateTime) values (?,?,?,?,?,?,?,?)");
-//        saveApplication = session.prepare("insert into apps.application (applicationid, version," +
-//                " author, history_versions, hot_comments,introduction, lastmodified, name, pictures, ratings, system_requirements, type) values (?,?,?,?,?,?,?,?,?,?,?,?)");
+
         insertAccount = session.prepare("insert into userinfo.user_auth (userid, email, password, telephone) values(?,?,?,?)");
         getAccount = session.prepare("select * from userinfo.user_auth where userid=?");
         setToken = session.prepare("insert into userinfo.user_tokens (user_token, userId, invalid_date) values (?,?,?)");
@@ -94,7 +89,8 @@ public class AccountService {
         insertPasswordAndRoleId = session.prepare("update userinfo.user_auth set password=?, temp=false, roleid = ? where userid=?");
         getIsTemp = session.prepare("select temp from userinfo.user_auth where userid=?");
 
-
+        getVerificationCode = session.prepare("select apps from userinfo.user_auth where userid=?");
+        setVerificationCode = session.prepare("insert into userinfo. ()");
     }
 
 
@@ -165,6 +161,11 @@ public class AccountService {
         return tokens.get(0);
     }
 
+
+    public void sendVerificationEmail(String email) {
+        String s = RandomUtil.generateRandomInt(6);
+
+    }
 
     public boolean haveValidLogin(String token) {
         if (null == token || token.isEmpty()) return false;

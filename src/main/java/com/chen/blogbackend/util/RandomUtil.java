@@ -49,12 +49,12 @@ public class RandomUtil {
             return null;
         }
     }
-    public static String generate6RandomInt() {
+    public static String generateRandomInt(int size) {
         String characters = "1234567890";
-        StringBuilder sb = new StringBuilder(6);
+        StringBuilder sb = new StringBuilder(size);
         Random random = new Random();
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < size; i++) {
             int index = random.nextInt(characters.length());
             sb.append(characters.charAt(index));
         }

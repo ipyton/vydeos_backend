@@ -7,6 +7,7 @@ use userInfo;
 
 create table user_auth (userId text, password text, email text, telephone text,temp boolean,roleId int, primary key ( userId ));
 create table user_tokens (user_token text primary key , userId text,  invalid_date timestamp);
+create table user_registration_code (userId text primary key, code text, expire_time timestamp);
 
 CREATE TABLE IF NOT EXISTS roles (
                                      roleId int,         -- role identifier

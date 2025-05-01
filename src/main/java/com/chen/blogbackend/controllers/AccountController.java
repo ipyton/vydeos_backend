@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
@@ -44,10 +45,15 @@ public class AccountController {
     PictureService pictureService;
 
     @PostMapping("/login")
-    public LoginMessage login(@Param("email") String email, @Param("password") String password) {
+    public LoginMessage login(@Param("email") String email, @Param("password") String password, @Param("remember") Boolean remember) {
+        float days = 0.2f;
+        if (remember == true) {
+            days = 30;
+        }
         Auth auth = accountService.validatePassword(email, password);
+
         if (auth != null) {
-            Token token = TokenUtil.createToken(new Token(email, auth.getRoleid(),Instant.now().plus(30 * 3600 * 24, ChronoUnit.SECONDS), email));
+            Token token = TokenUtil.createToken(new Token(email, auth.getRoleid(),Instant.now().plus((long) (days * 3600 * 24), ChronoUnit.SECONDS), email));
             System.out.println("account service");
             if (accountService.setToken(token)) {
                 return new LoginMessage(1, token.getTokenString());
@@ -60,13 +66,25 @@ public class AccountController {
     public LoginMessage registerStep1(String userId) {
         System.out.println(userId);
         if (AccountInfoValidator.validateUserEmail(userId)) {
-            if (accountService.insertStep1(userId)) return new LoginMessage(1, "Registered Successfully");
+            if (accountService.insertStep1(userId)) return new LoginMessage(1, "Successfully");
         }
         return new LoginMessage(-1, "register error");
     }
 
+    @PostMapping("/sendVerificationCode")
+    public Message sendVerification(String userId) {
+        try {
+            accountService.sendVerificationEmail(userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Message(-1, "failed");
+        }
+        return new Message(0, "Success!");
+    }
+
     @PostMapping("/registerStep2")
     public LoginMessage registerStep2(Auth accountInfo) {
+
         return new LoginMessage(1, "register error");
     }
 
@@ -192,22 +210,8 @@ public class AccountController {
             response = new ResponseEntity<>("Error occurred", HttpStatus.INTERNAL_SERVER_ERROR); // You can customize this error response
         }
         return response; // Return the response after the try-catch-finally block
-
-
-
     }
 
 
-//    @PostMapping("/getAvatar")
-//    public ResponseEntity<StreamingResponseBody> getAvatar(HttpServletRequest request) {
-//        String userEmail = request.getHeader("userEmail");
-//        if (null == userEmail) {
-//            return (ResponseEntity<StreamingResponseBody>) ResponseEntity.notFound();
-//        }
-//        System.out.println(userEmail);
-//        StreamingResponseBody avatar = pictureService.getAvatar(userEmail);
-//
-//        return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(avatar);
-//    }
 
 }
