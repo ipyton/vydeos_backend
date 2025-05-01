@@ -56,11 +56,12 @@ public class AccountService {
     PreparedStatement searchResult;
 
     PreparedStatement insertUserName;
-    PreparedStatement insertPassword;
+    PreparedStatement insertPasswordAndRoleId;
     PreparedStatement getIsTemp;
     PreparedStatement revertTempStat;
 
     PreparedStatement getAuth;
+
     @PostConstruct
     public void init(){
 //        AppMapper appMapper = new AppMapperBuilder(session).withDefaultKeyspace("apps").build();
@@ -90,7 +91,7 @@ public class AccountService {
         updatePhoneNumber = session.prepare("update userinfo.user_auth set telephone = ? where userId = ?");
         insertUserName = session.prepare("insert into userinfo.user_auth (userid, email, temp) values(?,?, true)");
 
-        insertPassword = session.prepare("update userinfo.user_auth set password=?, temp=false where userid=?");
+        insertPasswordAndRoleId = session.prepare("update userinfo.user_auth set password=?, temp=false, roleid = ? where userid=?");
         getIsTemp = session.prepare("select temp from userinfo.user_auth where userid=?");
 
 
@@ -172,7 +173,6 @@ public class AccountService {
         //token1.getUserId().equals(userId)
         assert token1 != null;
         if( null == token1.getUserId()){
-            System.out.println("not find userId");
             return false;
         }
         System.out.println(token1.getExpireDatetime().isAfter(Instant.now()));
@@ -237,7 +237,7 @@ public class AccountService {
 
     public boolean insertStep3(String password,String userId) {
         String encrypted = RandomUtil.getMD5(password);
-        ResultSet execute = session.execute(insertPassword.bind(encrypted, userId));
+        ResultSet execute = session.execute(insertPasswordAndRoleId.bind(encrypted, 1, userId));
         if (friendsService.initUserIntro(userId)) {
             return execute.getExecutionInfo().getErrors().isEmpty();
         }
@@ -272,101 +272,6 @@ public class AccountService {
         } else {
             // 查询密码时出错
             return false;
-        }
-    }
-
-    public boolean upsertRole(Role role) {
-            // Prepare the CQL query to insert or update the role data
-        Insert insert = QueryBuilder.insertInto("userInfo", "roles")
-                .value("roleId", QueryBuilder.literal(role.getRoleId()))
-                .value("roleName", QueryBuilder.literal(role.getRoleName()))
-                .value("allowedPaths", QueryBuilder.literal(role.getAllowedPaths()));
-
-        // Execute the query
-        session.execute(insert.build());
-        System.out.println("Role upserted: " + role.getRoleName());
-        return true;
-    }
-    
-    public Role getRoleById(int roleId) {
-        Select select = QueryBuilder.selectFrom("userInfo", "roles")
-                .column("roleId")
-                .column("roleName")
-                .column("allowedPaths")
-                .whereColumn("roleId").isEqualTo(QueryBuilder.literal(roleId));
-
-        ResultSet resultSet = session.execute(select.build());
-        List<Row> all = resultSet.all();
-
-        if (all.isEmpty()) {
-            System.out.println("No role found with the given roleId: " + roleId);
-            return null;
-        }
-
-        // Extract the result from the ResultSet
-        var row = resultSet.one();
-        assert row != null;
-        String roleName = row.getString("roleName");
-        List<String> allowedPaths = row.getList("allowedPaths", String.class);
-
-        return new Role(roleId, roleName, allowedPaths);
-    }
-
-    public List<Role> getRoles() {
-        Select select = QueryBuilder.selectFrom("userInfo", "roles")
-                .column("roleId")
-                .column("roleName")
-                .column("allowedPaths");
-
-        ResultSet resultSet = session.execute(select.build());
-
-        List<Role> roles = new ArrayList<>();
-
-        // Iterate over the result set and convert rows to Role objects
-        resultSet.forEach(row -> {
-            int roleId = row.getInt("roleId");
-            String roleName = row.getString("roleName");
-            List<String> allowedPaths = row.getList("allowedPaths", String.class);
-            roles.add(new Role(roleId, roleName, allowedPaths));
-        });
-
-        return roles;
-    }
-    public boolean updateUserRole( String userId, int newRoleId) {
-        // 1. 检查用户是否存在
-        ResultSet resultSet = session.execute("SELECT roleId FROM userinfo.user_auth WHERE userId = ?", userId);
-        if (resultSet.all().isEmpty()) {
-            // 如果没有找到该用户，返回 false
-            return false;
-        }
-        ResultSet resultSet1 = session.execute("SELECT roleId FROM userinfo.roles WHERE roleid = ?", newRoleId);
-        if (resultSet1.all().isEmpty()) {
-            return false;
-        }
-        // 2. 如果用户存在，执行更新操作
-        // 更新用户的 roleId
-        PreparedStatement updateRoleStmt = session.prepare("UPDATE userinfo.user_auth SET roleId = ? WHERE userId = ?");
-        BoundStatement boundStatement = updateRoleStmt.bind(newRoleId, userId);
-        session.execute(boundStatement);
-
-        // 3. 确认是否更新成功
-        resultSet = session.execute("SELECT roleId FROM userinfo.user_auth WHERE userId = ?", userId);
-        Row row = resultSet.one();
-        if (row != null && row.getInt("roleId") == newRoleId) {
-            return true; // 更新成功
-        }
-
-        return false; // 更新失败
-    }
-
-    public boolean DeleteUserRole(int roleId) {
-        String deleteQuery = "DELETE FROM userInfo.roles WHERE roleid = ?";
-        try {
-            session.execute(deleteQuery, roleId);
-            return true; // 删除成功
-        } catch (Exception e) {
-            System.err.println("Error deleting user role: " + e.getMessage());
-            return false; // 删除失败
         }
     }
 

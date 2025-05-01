@@ -1,26 +1,21 @@
 package com.chen.blogbackend.entities;
 
-import java.util.List;
-import java.util.UUID;
-
 public class Role {
-    private int roleId;
-    private String roleName;
-    private List<String> allowedPaths;
+    Integer roleId;
+    String roleName;
 
-    // Constructors
-    public Role(int roleId, String roleName, List<String> allowedPaths) {
+
+
+    public Role(Integer roleId, String roleName) {
         this.roleId = roleId;
         this.roleName = roleName;
-        this.allowedPaths = allowedPaths;
     }
 
-    // Getters and Setters
-    public int getRoleId() {
+    public Integer getRoleId() {
         return roleId;
     }
 
-    public void setRoleId(int roleId) {
+    public void setRoleId(Integer roleId) {
         this.roleId = roleId;
     }
 
@@ -30,13 +25,5 @@ public class Role {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
-    }
-
-    public List<String> getAllowedPaths() {
-        return allowedPaths;
-    }
-
-    public void setAllowedPaths(List<String> allowedPaths) {
-        this.allowedPaths = allowedPaths;
     }
 }

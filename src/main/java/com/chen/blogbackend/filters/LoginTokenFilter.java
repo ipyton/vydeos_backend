@@ -57,7 +57,14 @@ public class LoginTokenFilter implements Filter {
             return;
         }
         else {
-            Token token1 = TokenUtil.resolveToken(token);
+            Token token1 = null;
+            try {
+                token1 = TokenUtil.resolveToken(token);
+            }
+            catch (Exception e) {
+                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "expired token")).getBytes(StandardCharsets.UTF_8));
+                return;
+            }
             if (token1 == null) {
                 servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "invalid token")).getBytes(StandardCharsets.UTF_8));
                 return;

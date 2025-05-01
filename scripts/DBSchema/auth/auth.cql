@@ -9,7 +9,7 @@ create table user_auth (userId text, password text, email text, telephone text,t
 create table user_tokens (user_token text primary key , userId text,  invalid_date timestamp);
 
 CREATE TABLE IF NOT EXISTS roles (
-                                     roleId int PRIMARY KEY,         -- 角色唯一标识符
-                                     roleName TEXT,                   -- 角色名称
-                                     allowedPaths LIST<TEXT>         -- 允许访问的路径数组
+                                     roleId int,         -- role identifier
+                                     roleName TEXT,                   -- role name
+                                     path text, name text, version text, icon_name text, primary key ( roleId, path, version )
 );

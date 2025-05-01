@@ -165,42 +165,7 @@ public class AccountController {
         }
     }
 
-    @PostMapping("/upsertRole")
-    public LoginMessage upsertRole(Role role) {
-        if (role == null) return new LoginMessage(-1, "role is null");
-        boolean result = accountService.upsertRole(role);
-        if (result) {
-            return new LoginMessage(1, "Success");
-        }
-        else {
-            return new LoginMessage(-1, "reset password error");
-        }
-    }
 
-    @GetMapping("/getRole")
-    public List<Role> getRole() {
-        return accountService.getRoles();
-    }
-
-    @PostMapping("/deleteRole")
-    public LoginMessage deleteRole(int roleId) {
-        boolean b = accountService.DeleteUserRole(roleId);
-        if (b) {
-            return new LoginMessage(1, "Success");
-        }
-        return new LoginMessage(-1, "delete error");
-    }
-
-    @PostMapping("/changeRole")
-    public LoginMessage changeRole(HttpServletRequest request,String userId, int roleId) {
-
-        boolean b = accountService.updateUserRole(userId, roleId);
-        if (b) {
-            return new LoginMessage(1, "Success");
-        } else {
-            return new LoginMessage(-1, "change role error");
-        }
-    }
 
     @PostMapping("/deleteUser")
     public LoginMessage deleteAccount(String userId) {

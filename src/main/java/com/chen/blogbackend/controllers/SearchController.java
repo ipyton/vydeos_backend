@@ -7,7 +7,7 @@ import com.chen.blogbackend.entities.deprecated.GroupMessage;
 import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.AccountService;
-import com.chen.blogbackend.services.AuthorityService;
+import com.chen.blogbackend.services.AuthorizationService;
 import com.chen.blogbackend.services.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -28,7 +28,7 @@ public class SearchController {
     SearchService searchService;
 
     @Autowired
-    AuthorityService authorityService;
+    AuthorizationService authorizationService;
 
     @Autowired
     AccountService accountService;
