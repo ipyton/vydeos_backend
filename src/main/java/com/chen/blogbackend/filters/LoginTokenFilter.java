@@ -1,10 +1,16 @@
 package com.chen.blogbackend.filters;
 
 import com.alibaba.fastjson.JSON;
+import com.chen.blogbackend.entities.Path;
+import com.chen.blogbackend.entities.PathDTO;
 import com.chen.blogbackend.entities.Token;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.services.AccountService;
+import com.chen.blogbackend.services.AuthorizationService;
 import com.chen.blogbackend.util.TokenUtil;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,9 +22,16 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 @Component
 public class LoginTokenFilter implements Filter {
+
+
+    @Autowired
+    static AuthorizationService authorizationService;
 
     @Autowired
     AccountService accountService;
@@ -27,6 +40,8 @@ public class LoginTokenFilter implements Filter {
     public void init(FilterConfig filterConfig) throws ServletException {
         Filter.super.init(filterConfig);
     }
+
+
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
@@ -70,7 +85,7 @@ public class LoginTokenFilter implements Filter {
                 return;
             } else {
                 System.out.println(token1.toString());
-                if (token1.getRoleId() == -1 || accountService.hasAccess(token1.getRoleId(), request.getRequestURI())) {
+                if (token1.getRoleId() == -1 || authorizationService.hasAccess(token1.getRoleId(), request.getRequestURI())) {
                     request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
                     chain.doFilter(request, response);
                 } else {

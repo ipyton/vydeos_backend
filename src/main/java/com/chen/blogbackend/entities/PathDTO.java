@@ -7,17 +7,18 @@ package com.chen.blogbackend.entities;
 public class PathDTO {
     private String name;
     private String route;
-    private String iconName;
+    private String type;
+
 
     // Default constructor
     public PathDTO() {
     }
 
     // Constructor with fields
-    public PathDTO(String name, String route, String iconName) {
+    public PathDTO(String name, String route, String type) {
         this.name = name;
         this.route = route;
-        this.iconName = iconName;
+        this.type = type;
     }
 
     // Factory method to convert Role entity to RoleDTO
@@ -25,7 +26,7 @@ public class PathDTO {
         return new PathDTO(
                 role.getName(),
                 role.getPath(),  // 'path' in entity maps to 'route' in DTO
-                role.getIconName()
+                role.getType()
         );
     }
 
@@ -46,12 +47,12 @@ public class PathDTO {
         this.route = route;
     }
 
-    public String getIconName() {
-        return iconName;
+    public String getType() {
+        return type;
     }
 
-    public void setIconName(String iconName) {
-        this.iconName = iconName;
+    public void setType(String type) {
+        this.type = type;
     }
 
     @Override
@@ -59,7 +60,7 @@ public class PathDTO {
         return "RoleDTO{" +
                 "name='" + name + '\'' +
                 ", route='" + route + '\'' +
-                ", iconName='" + iconName + '\'' +
+                ", type='" + type + '\'' +
                 '}';
     }
 }

@@ -7,17 +7,18 @@ public class Path {
     private String name;
     private String version;
     private String iconName;
-
+    private String type;
 
 
     // Constructors
-    public Path(int roleId, String roleName, String path, String name, String version, String iconName) {
+    public Path(int roleId, String roleName, String path, String name, String version, String iconName, String type) {
         this.roleId = roleId;
         this.roleName = roleName;
         this.path = path;
         this.name = name;
         this.version = version;
         this.iconName = iconName;
+        this.type = type;
     }
 
     public String getName() {
@@ -69,5 +70,11 @@ public class Path {
         this.roleName = roleName;
     }
 
+    public String getType() {
+        return type;
+    }
 
+    public void setType(String type) {
+        this.type = type;
+    }
 }

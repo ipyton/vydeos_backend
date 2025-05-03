@@ -83,9 +83,18 @@ public class AccountController {
     }
 
     @PostMapping("/registerStep2")
-    public LoginMessage registerStep2(Auth accountInfo) {
-
-        return new LoginMessage(1, "register error");
+    public Message registerStep2(Auth accountInfo, String verificationCode) {
+        try {
+            if (accountService.verifyCode(accountInfo.getEmail(), verificationCode)) {
+                return new Message(0, "success");
+            }
+            else {
+                return new Message(-1, "error code");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Message(-1, "failed");
+        }
     }
 
     @PostMapping("/registerStep3")

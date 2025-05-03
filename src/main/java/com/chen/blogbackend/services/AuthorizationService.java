@@ -3,17 +3,18 @@ package com.chen.blogbackend.services;
 import com.chen.blogbackend.entities.Path;
 import com.chen.blogbackend.entities.PathDTO;
 import com.chen.blogbackend.entities.Role;
+import com.chen.blogbackend.filters.LoginTokenFilter;
 import com.chen.blogbackend.mappers.PathMapper;
+import com.chen.blogbackend.util.PathMatcher;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.*;
-import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
-import com.datastax.oss.driver.api.querybuilder.insert.Insert;
-import com.datastax.oss.driver.api.querybuilder.select.Select;
+
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -23,25 +24,79 @@ public class AuthorizationService {
     CqlSession session;
 
     PreparedStatement getRoleId;
-    PreparedStatement getPaths;
+    PreparedStatement getAllPaths;
     PreparedStatement getAllRoles;
     PreparedStatement insertPath;
+    PreparedStatement createRole;
+    PreparedStatement deleteRole;
+    PreparedStatement getPathsByRoleIdAndType;
+    PreparedStatement getPathsByRoleId;
+
+
+    public static HashMap<Integer, List<String>> allowedPaths;
+
+
+
+    private void reload() {
+        allowedPaths.clear();
+        List<Path> allPaths = getAllPaths();
+        for (Path item : allPaths) {
+            if (item.getType().equals("api")) {
+                if (allowedPaths.containsKey(item.getRoleId())) {
+                    allowedPaths.get(item.getRoleId()).add(item.getPath());
+                }
+            }
+        }
+    }
 
     @PostConstruct
     public void init() {
         getRoleId = session.prepare("select roleid from userinfo.user_auth where userid = ?;");
-        getPaths = session.prepare("select * from userinfo.roles where roleid = ?;");
-        getAllRoles = session.prepare("select roleId, role_name from userinfo.roles allow filtering;");
-        insertPath = session.prepare("insert into userinfo.roles ( roleid, role_name, path, name, version) values (?, ?, ?, ?, ?);");
 
+        getAllRoles = session.prepare("select roleId, roleName from userinfo.roles allow filtering;");
+        createRole = session.prepare("insert into userinfo.roles (roleid, roleName) values (?, ?);");
+        deleteRole = session.prepare("delete from userinfo.roles where roleid = ?;");
+
+
+        getPathsByRoleId = session.prepare("select * from userinfo.role_auths where roleid = ?;");
+        getPathsByRoleIdAndType = session.prepare("select * from userinfo.role_auths where roleid = ? and type = ?");
+        insertPath = session.prepare("insert into userinfo.role_auths ( roleid, path, name, version) values (?, ?, ?, ?, ?);");
+        getAllPaths = session.prepare("select * from userinfo.role_auths allow filtering;");
+        allowedPaths = new HashMap<>();
+        reload();
     }
 
-    public List<PathDTO> getPaths(String userId) {
-        try {
-            ResultSet execute = session.execute(getRoleId.bind(userId));
-            Integer roleId = execute.all().get(0).getInt("roleid");
-            ResultSet paths = session.execute(getPaths.bind(roleId));
 
+    public List<Path> getAllPaths() {
+        ResultSet execute = session.execute(getAllPaths.bind());
+        List<Path> parsedPaths = PathMapper.parsePaths(execute);
+        List<PathDTO> pathDTOs = new ArrayList<>();
+        parsedPaths.forEach(parsedPath -> {
+            pathDTOs.add(PathDTO.fromPath(parsedPath));
+        });
+        return parsedPaths;
+    }
+
+    public List<PathDTO> getUIPathsByEmail(String Email) {
+        ResultSet execute = session.execute(getRoleId.bind(Email));
+        List<Row> all = execute.all();
+        Row row = all.get(0);
+        Integer roleid = row.getInt("roleid");
+        List<PathDTO> uiPathsByRoleId = getUIPathsByRoleId(roleid);
+        return uiPathsByRoleId;
+    }
+
+    public boolean hasAccess(int roleId, String path) {
+        // 1. 查询角色权限
+
+        List<String> patterns = allowedPaths.get(roleId);
+        boolean match = PathMatcher.match(patterns, path);
+        return match;
+    }
+
+    public List<PathDTO> getUIPathsByRoleId(Integer roleId) {
+        try {
+            ResultSet paths = session.execute(getPathsByRoleIdAndType.bind(roleId, "nav"));
             List<Path> parsedPaths = PathMapper.parsePaths(paths);
             ArrayList<PathDTO> result = new ArrayList<>();
             parsedPaths.forEach(parsedPath -> {
@@ -61,12 +116,13 @@ public class AuthorizationService {
             builder.addStatement(insertPath.bind(path.getRoleId(), path.getName(), path.getPath(),0));
         }
         session.execute(builder.build());
+        reload();
         return true;
     }
 
 
 
-    public List<Role> getRoles() {
+    public List<Role> getAllRoles() {
 
         ResultSet resultSet = session.execute(getAllRoles.bind());
 
@@ -93,13 +149,10 @@ public class AuthorizationService {
         if (resultSet1.all().isEmpty()) {
             return false;
         }
-        // 2. 如果用户存在，执行更新操作
-        // 更新用户的 roleId
         PreparedStatement updateRoleStmt = session.prepare("UPDATE userinfo.user_auth SET roleId = ? WHERE userId = ?");
         BoundStatement boundStatement = updateRoleStmt.bind(newRoleId, userId);
         session.execute(boundStatement);
 
-        // 3. 确认是否更新成功
         resultSet = session.execute("SELECT roleId FROM userinfo.user_auth WHERE userId = ?", userId);
         Row row = resultSet.one();
         if (row != null && row.getInt("roleId") == newRoleId) {

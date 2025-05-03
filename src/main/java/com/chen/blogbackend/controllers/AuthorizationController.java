@@ -1,9 +1,11 @@
 package com.chen.blogbackend.controllers;
 
+import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.Path;
 import com.chen.blogbackend.entities.PathDTO;
 import com.chen.blogbackend.entities.Role;
 import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.AuthorizationService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +22,17 @@ public class AuthorizationController {
     @Autowired
     AuthorizationService service;
 
-    @RequestMapping("getPaths")
-    public List<PathDTO> getPaths(HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userEmail");
-        return service.getPaths(userId);
+    @RequestMapping("getUiPaths")
+    public Message getUIPaths(HttpServletRequest request) {
+        try {
+            String userId = (String) request.getAttribute("userEmail");
+            List<PathDTO> uiPathsByEmail = service.getUIPathsByEmail(userId);
+            return new Message(0, JSON.toJSONString(uiPathsByEmail));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return new Message(-1, e.getMessage());
+        }
     }
 
     @PostMapping("/upsertRole")
@@ -40,7 +49,7 @@ public class AuthorizationController {
 
     @GetMapping("/getRole")
     public List<Role> getRole() {
-        return service.getRoles();
+        return service.getAllRoles();
     }
 
     @PostMapping("/deleteRole")

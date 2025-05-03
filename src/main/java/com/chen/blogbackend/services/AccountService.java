@@ -2,6 +2,8 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.mappers.AccountParser;
+import com.chen.blogbackend.mappers.CodeMapper;
+import com.chen.blogbackend.util.EmailSender;
 import com.chen.blogbackend.util.PasswordEncryption;
 import com.chen.blogbackend.util.RandomUtil;
 import com.chen.blogbackend.util.TokenUtil;
@@ -64,6 +66,9 @@ public class AccountService {
 
     PreparedStatement setVerificationCode;
     PreparedStatement getVerificationCode;
+    PreparedStatement deleteToken;
+    @Autowired
+    private CqlSession cqlSession;
 
     @PostConstruct
     public void init(){
@@ -72,6 +77,7 @@ public class AccountService {
         getAccount = session.prepare("select * from userinfo.user_auth where userid=?");
         setToken = session.prepare("insert into userinfo.user_tokens (user_token, userId, invalid_date) values (?,?,?)");
         getToken = session.prepare("select * from userinfo.user_tokens where user_token=?");
+        deleteToken = session.prepare("delete from userinfo.user_tokens where userId = ?");
         searchResult = session.prepare("select user_id, user_name, intro, avatar from userinfo.user_information where user_id=?");
 
         getPassword = session.prepare("select password from userinfo.user_auth where userid=?");
@@ -89,8 +95,8 @@ public class AccountService {
         insertPasswordAndRoleId = session.prepare("update userinfo.user_auth set password=?, temp=false, roleid = ? where userid=?");
         getIsTemp = session.prepare("select temp from userinfo.user_auth where userid=?");
 
-        getVerificationCode = session.prepare("select apps from userinfo.user_auth where userid=?");
-        setVerificationCode = session.prepare("insert into userinfo. ()");
+        getVerificationCode = session.prepare("select * from userinfo.user_registration_code where userid=?;");
+        setVerificationCode = session.prepare("insert into userinfo.user_registration_code (userid, code, expire_time) values(?,?,?);");
     }
 
 
@@ -109,6 +115,10 @@ public class AccountService {
         return accounts.get(0);
     }
 
+    public boolean invalidateTokenByUserId(String userId) {
+        session.execute(deleteToken.bind(userId));
+        return true;
+    }
 
     public boolean insertUserDetails(Account userDetail) {
         ResultSet execute = session.execute(insertUserDetails.bind(userDetail.getUserId(), userDetail.getApps(),
@@ -162,9 +172,34 @@ public class AccountService {
     }
 
 
-    public void sendVerificationEmail(String email) {
-        String s = RandomUtil.generateRandomInt(6);
+    public boolean sendVerificationEmail(String email) {
+        try {
 
+            ResultSet execute = session.execute(getVerificationCode.bind(email));
+            Verification verification = CodeMapper.codeMapper(execute);
+            if (verification != null) {
+                if (Instant.now().isBefore(verification.getExpiration().minusSeconds(540))) {
+                    return false;
+                }
+            }
+            String code = RandomUtil.generateRandomInt(6);
+            session.execute(setVerificationCode.bind(code, email, Instant.now().plusSeconds(600)));
+            EmailSender.send("noah@vydeo.xyz", email, code);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public boolean verifyCode(String email,String code) {
+        ResultSet execute = session.execute(getVerificationCode.bind(email));
+        Verification verification = CodeMapper.codeMapper(execute);
+        if (verification == null) return false;
+        if (Instant.now().isAfter(verification.getExpiration())) return false;
+        if (verification.getCode().equals(code)) return true;
+        return false;
     }
 
     public boolean haveValidLogin(String token) {
@@ -274,31 +309,6 @@ public class AccountService {
             // 查询密码时出错
             return false;
         }
-    }
-
-    // 根据角色ID和请求的路径检查权限
-    public boolean hasAccess(int roleId, String path) {
-        // 1. 查询角色权限
-        String query = "SELECT allowedPaths FROM userinfo.roles WHERE roleId = ?";
-        SimpleStatement statement = SimpleStatement.newInstance(query, roleId);
-
-        // 2. 执行查询并获取结果
-        Row row = session.execute(statement).one();
-
-        // 3. 如果没有找到角色，则返回没有权限
-        if (row == null) {
-            return false;
-        }
-
-        // 4. 获取该角色允许访问的路径列表
-        List<String> allowedPaths = row.getList("allowedPaths", String.class);
-
-        // 5. 检查路径是否在允许的路径列表中
-        if (allowedPaths != null && allowedPaths.contains(path)) {
-            return true;
-        }
-
-        return false;
     }
 
 
