@@ -67,6 +67,9 @@ public class AccountService {
     PreparedStatement setVerificationCode;
     PreparedStatement getVerificationCode;
     PreparedStatement deleteToken;
+    PreparedStatement invalidateVerificationCode;
+
+
     @Autowired
     private CqlSession cqlSession;
 
@@ -77,7 +80,7 @@ public class AccountService {
         getAccount = session.prepare("select * from userinfo.user_auth where userid=?");
         setToken = session.prepare("insert into userinfo.user_tokens (user_token, userId, invalid_date) values (?,?,?)");
         getToken = session.prepare("select * from userinfo.user_tokens where user_token=?");
-        deleteToken = session.prepare("delete from userinfo.user_tokens where userId = ?");
+        deleteToken = session.prepare("delete from userinfo.user_tokens where user_token = ?");
         searchResult = session.prepare("select user_id, user_name, intro, avatar from userinfo.user_information where user_id=?");
 
         getPassword = session.prepare("select password from userinfo.user_auth where userid=?");
@@ -95,8 +98,9 @@ public class AccountService {
         insertPasswordAndRoleId = session.prepare("update userinfo.user_auth set password=?, temp=false, roleid = ? where userid=?");
         getIsTemp = session.prepare("select temp from userinfo.user_auth where userid=?");
 
-        getVerificationCode = session.prepare("select * from userinfo.user_registration_code where userid=?;");
-        setVerificationCode = session.prepare("insert into userinfo.user_registration_code (userid, code, expire_time) values(?,?,?);");
+        getVerificationCode = session.prepare("select * from userinfo.user_registration_code where kind = ? and userid = ?;");
+        setVerificationCode = session.prepare("insert into userinfo.user_registration_code (kind, userid, code, expire_time) values(?, ?, ?, ?);");
+        invalidateVerificationCode = session.prepare("delete from userinfo.user_registration_code where kind = ? and userid = ?;");
     }
 
 
@@ -115,8 +119,8 @@ public class AccountService {
         return accounts.get(0);
     }
 
-    public boolean invalidateTokenByUserId(String userId) {
-        session.execute(deleteToken.bind(userId));
+    public boolean invalidateTokenByToken(String token) {
+        session.execute(deleteToken.bind(token));
         return true;
     }
 
@@ -175,7 +179,7 @@ public class AccountService {
     public boolean sendVerificationEmail(String email) {
         try {
 
-            ResultSet execute = session.execute(getVerificationCode.bind(email));
+            ResultSet execute = session.execute(getVerificationCode.bind("step2", email));
             Verification verification = CodeMapper.codeMapper(execute);
             if (verification != null) {
                 if (Instant.now().isBefore(verification.getExpiration().minusSeconds(540))) {
@@ -183,7 +187,7 @@ public class AccountService {
                 }
             }
             String code = RandomUtil.generateRandomInt(6);
-            session.execute(setVerificationCode.bind(code, email, Instant.now().plusSeconds(600)));
+            session.execute(setVerificationCode.bind("step2", email, code, Instant.now().plusSeconds(600)));
             EmailSender.send("noah@vydeo.xyz", email, code);
         }
         catch (Exception e) {
@@ -193,13 +197,22 @@ public class AccountService {
         return true;
     }
 
-    public boolean verifyCode(String email,String code) {
-        ResultSet execute = session.execute(getVerificationCode.bind(email));
+    public String verifyCode(String email,String code) {
+        ResultSet execute = session.execute(getVerificationCode.bind("step2",email));
         Verification verification = CodeMapper.codeMapper(execute);
-        if (verification == null) return false;
-        if (Instant.now().isAfter(verification.getExpiration())) return false;
-        if (verification.getCode().equals(code)) return true;
-        return false;
+        System.out.println(verification.getCode());
+        if (verification == null) return null;
+        if (Instant.now().isAfter(verification.getExpiration())) return null;
+        if (verification.getCode().equals(code)) {
+            String step3Code = RandomUtil.generateRandomString(10);
+            ResultSet execute1 = session.execute(invalidateVerificationCode.bind("step2", email));
+            ResultSet execute2 = session.execute(setVerificationCode.bind("step3", email, step3Code, Instant.now().plusSeconds(600)));
+            if (!execute1.getExecutionInfo().getErrors().isEmpty() || !execute2.getExecutionInfo().getErrors().isEmpty()) {
+                return null;
+            }
+            return step3Code;
+        }
+        return null;
     }
 
     public boolean haveValidLogin(String token) {
@@ -271,10 +284,16 @@ public class AccountService {
         return false;
     }
 
-    public boolean insertStep3(String password,String userId) {
+    public boolean insertStep3(String code, String password,String userId) {
         String encrypted = RandomUtil.getMD5(password);
-        ResultSet execute = session.execute(insertPasswordAndRoleId.bind(encrypted, 1, userId));
-        if (friendsService.initUserIntro(userId)) {
+        ResultSet execute1 = session.execute(getVerificationCode.bind("step3", userId));
+        if (!execute1.getExecutionInfo().getErrors().isEmpty()) {
+            return false;
+        }
+        Verification verification = CodeMapper.codeMapper(execute1);
+        if (verification != null && Instant.now().isBefore(verification.getExpiration()) && verification.getCode().equals(code)) {
+            System.out.println("insert");
+            ResultSet execute = session.execute(insertPasswordAndRoleId.bind(encrypted, 1, userId));
             return execute.getExecutionInfo().getErrors().isEmpty();
         }
         return false;
@@ -341,5 +360,14 @@ public class AccountService {
             logger.error("Error deleting user: " + e.getMessage());
             return false;
         }
+    }
+
+    public boolean resetStep1(String userId) {
+        ResultSet judge = session.execute(getIsTemp.bind(userId));
+
+        if (judge.all().isEmpty()) {
+            return false;
+        }
+        return judge.getExecutionInfo().getErrors().isEmpty();
     }
 }

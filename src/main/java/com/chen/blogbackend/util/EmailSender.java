@@ -22,7 +22,7 @@ public  class EmailSender {
         }
         AccountInfoValidator validator = new AccountInfoValidator();
 
-        if( validator.validateUserEmail(fromAddress) && validator.validateUserEmail(toAddress) ) {
+        if( !validator.validateUserEmail(fromAddress) || !validator.validateUserEmail(toAddress) ) {
             throw new RuntimeException("Invalid email address.");
         }
 
@@ -54,7 +54,8 @@ public  class EmailSender {
     public static void main(String[] args) throws Exception {
         System.out.println(apiKey);
         System.out.println(apiSecret);
-        send("pingzi64@vydeo.xyz","czh1278341834@gmail.com","su" );
+        System.out.println(AccountInfoValidator.validateUserEmail("pingzi64@vydeo.xyz"));
+        //send("pingzi64@vydeo.xyz","czh1278341834@gmail.com","su" );
     }
 
 }

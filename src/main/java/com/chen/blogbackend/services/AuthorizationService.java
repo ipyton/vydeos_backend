@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @Service
 public class AuthorizationService {
@@ -31,18 +32,23 @@ public class AuthorizationService {
     PreparedStatement deleteRole;
     PreparedStatement getPathsByRoleIdAndType;
     PreparedStatement getPathsByRoleId;
-
+    PreparedStatement getRoleById;
+    PreparedStatement deletePath;
 
     public static HashMap<Integer, List<String>> allowedPaths;
 
 
 
-    private void reload() {
+    public void reload() {
         allowedPaths.clear();
         List<Path> allPaths = getAllPaths();
         for (Path item : allPaths) {
             if (item.getType().equals("api")) {
                 if (allowedPaths.containsKey(item.getRoleId())) {
+                    allowedPaths.get(item.getRoleId()).add(item.getPath());
+                }
+                else {
+                    allowedPaths.put(item.getRoleId(), new ArrayList<>());
                     allowedPaths.get(item.getRoleId()).add(item.getPath());
                 }
             }
@@ -56,12 +62,13 @@ public class AuthorizationService {
         getAllRoles = session.prepare("select roleId, roleName from userinfo.roles allow filtering;");
         createRole = session.prepare("insert into userinfo.roles (roleid, roleName) values (?, ?);");
         deleteRole = session.prepare("delete from userinfo.roles where roleid = ?;");
-
+        getRoleById = session.prepare("select * from userinfo.roles where roleid = ?");
 
         getPathsByRoleId = session.prepare("select * from userinfo.role_auths where roleid = ?;");
         getPathsByRoleIdAndType = session.prepare("select * from userinfo.role_auths where roleid = ? and type = ?");
-        insertPath = session.prepare("insert into userinfo.role_auths ( roleid, path, name, version) values (?, ?, ?, ?, ?);");
+        insertPath = session.prepare("insert into userinfo.role_auths ( roleid ,type, path, name, version) values (?,?, ?, ?, ?);");
         getAllPaths = session.prepare("select * from userinfo.role_auths allow filtering;");
+        deletePath = session.prepare("delete from userinfo.role_auths where roleid=? and path = ? and type = ?;");
         allowedPaths = new HashMap<>();
         reload();
     }
@@ -72,6 +79,7 @@ public class AuthorizationService {
         List<Path> parsedPaths = PathMapper.parsePaths(execute);
         List<PathDTO> pathDTOs = new ArrayList<>();
         parsedPaths.forEach(parsedPath -> {
+            System.out.println(parsedPath.toString());
             pathDTOs.add(PathDTO.fromPath(parsedPath));
         });
         return parsedPaths;
@@ -86,9 +94,20 @@ public class AuthorizationService {
         return uiPathsByRoleId;
     }
 
+    public List<PathDTO> getPathsByRoleId(Integer roleId) {
+        ResultSet execute = session.execute(getPathsByRoleId.bind(roleId));
+        List<Path> parsedPaths = PathMapper.parsePaths(execute);
+        List<PathDTO> pathDTOs = new ArrayList<>();
+        parsedPaths.forEach(parsedPath -> {
+            pathDTOs.add(PathDTO.fromPath(parsedPath));
+        });
+        return pathDTOs;
+    }
+
     public boolean hasAccess(int roleId, String path) {
         // 1. 查询角色权限
-
+        System.out.println(roleId);
+        System.out.println(allowedPaths.toString());
         List<String> patterns = allowedPaths.get(roleId);
         boolean match = PathMatcher.match(patterns, path);
         return match;
@@ -109,11 +128,19 @@ public class AuthorizationService {
     }
 
 
-    public boolean upsertRole(List<Path> paths) {
-        BatchStatementBuilder builder = BatchStatement.builder(DefaultBatchType.LOGGED);
 
-        for (Path path : paths) {
-            builder.addStatement(insertPath.bind(path.getRoleId(), path.getName(), path.getPath(),0));
+
+    public boolean upsertRole(Integer roleId, String roleName, List<PathDTO> paths) {
+        BatchStatementBuilder builder = BatchStatement.builder(DefaultBatchType.LOGGED);
+        ResultSet execute = session.execute(getRoleById.bind(roleId));
+        if (execute.all().isEmpty()) {
+            execute = session.execute(createRole.bind(roleId, roleName));
+            if (!execute.getExecutionInfo().getErrors().isEmpty()) {
+                return false;
+            }
+        }
+        for (PathDTO path : paths) {
+            builder.addStatement(insertPath.bind(roleId, path.getType(), path.getRoute() , path.getName(),0));
         }
         session.execute(builder.build());
         reload();
@@ -174,4 +201,19 @@ public class AuthorizationService {
     }
 
 
+    public boolean deletePath(Integer roleId, String path, String type) {
+        try {
+            ResultSet execute = session.execute(deletePath.bind(roleId, path, type));
+            if (execute.getExecutionInfo().getErrors().isEmpty()) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        } catch (Exception e) {
+            System.err.println("Error deleting path: " + e.getMessage());
+            return false;
+        }
+
+    }
 }

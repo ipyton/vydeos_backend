@@ -31,7 +31,7 @@ public class LoginTokenFilter implements Filter {
 
 
     @Autowired
-    static AuthorizationService authorizationService;
+    AuthorizationService authorizationService;
 
     @Autowired
     AccountService accountService;
@@ -56,7 +56,7 @@ public class LoginTokenFilter implements Filter {
         System.out.flush();
         if (request.getRequestURI().startsWith("/account/register") || request.getRequestURI().startsWith("/account/login")
                 || request.getRequestURI().startsWith("/account/changePassword")
-                ||  request.getRequestURI().startsWith("/account/verifyToken" )) {
+                ||  request.getRequestURI().startsWith("/account/verifyToken" )||  request.getRequestURI().startsWith("/account/sendVerificationCode" )) {
             chain.doFilter(request, response);
             return;
         }

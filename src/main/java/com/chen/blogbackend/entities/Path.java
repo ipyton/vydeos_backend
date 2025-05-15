@@ -1,17 +1,17 @@
 package com.chen.blogbackend.entities;
 
 public class Path {
-    private int roleId;
+    private Integer roleId;
     private String roleName;
     private String path;
     private String name;
-    private String version;
+    private Integer version;
     private String iconName;
     private String type;
 
 
     // Constructors
-    public Path(int roleId, String roleName, String path, String name, String version, String iconName, String type) {
+    public Path(int roleId, String roleName, String path, String name, Integer version, String iconName, String type) {
         this.roleId = roleId;
         this.roleName = roleName;
         this.path = path;
@@ -19,6 +19,19 @@ public class Path {
         this.version = version;
         this.iconName = iconName;
         this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return "Path{" +
+                "roleId=" + roleId +
+                ", roleName='" + roleName + '\'' +
+                ", path='" + path + '\'' +
+                ", name='" + name + '\'' +
+                ", version=" + version +
+                ", iconName='" + iconName + '\'' +
+                ", type='" + type + '\'' +
+                '}';
     }
 
     public String getName() {
@@ -29,11 +42,11 @@ public class Path {
         this.name = name;
     }
 
-    public String getVersion() {
+    public Integer getVersion() {
         return version;
     }
 
-    public void setVersion(String version) {
+    public void setVersion(Integer version) {
         this.version = version;
     }
 
@@ -54,11 +67,11 @@ public class Path {
     }
 
     // Getters and Setters
-    public int getRoleId() {
+    public Integer getRoleId() {
         return roleId;
     }
 
-    public void setRoleId(int roleId) {
+    public void setRoleId(Integer roleId) {
         this.roleId = roleId;
     }
 

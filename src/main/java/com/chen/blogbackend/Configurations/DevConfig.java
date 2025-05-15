@@ -48,13 +48,16 @@ public class DevConfig {
 //                Resources.getResourceAsStream("mybatis-config.xml")
 //        );
 //    }
+    static String endpoint = System.getenv("S3_ENDPOINT");
+    static String publicKey = System.getenv("S3_ACCESS_KEY");
+    static String privateKey = System.getenv("S3_SECRET_KEY");
 
     @Bean
     public static MinioClient setMinioClient(){
         return MinioClient.builder()
-                // api地址
-                .endpoint("http://" + ipAddress + ":9000")
-                .credentials("ROOTUSER", "CHANGEME123")
+
+                .endpoint(endpoint)
+                .credentials(publicKey, privateKey)
                 .build();
     }
 

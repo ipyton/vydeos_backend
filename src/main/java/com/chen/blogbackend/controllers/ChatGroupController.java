@@ -36,7 +36,7 @@ public class ChatGroupController {
         }
         boolean result = service.createGroup(email,groupName, members);
         if (result) {
-            return new LoginMessage(1, "Success");
+            return new LoginMessage(0, "Success");
         }
         return new LoginMessage(-1, "Fail");
     }
@@ -46,7 +46,7 @@ public class ChatGroupController {
         String email = (String) req.getAttribute("userEmail");
         boolean result = service.joinGroup(email, groupId);
         if (result) {
-            return new LoginMessage(1, "Success");
+            return new LoginMessage(0, "Success");
         }
         return new LoginMessage(-1, "Fail");
     }
@@ -64,7 +64,7 @@ public class ChatGroupController {
     public LoginMessage quitGroup(String operatorId, String groupId) {
         boolean result = service.quitGroup(operatorId, groupId);
         if (result) {
-            return new LoginMessage(1, "Success");
+            return new LoginMessage(0, "Success");
         }
         return new LoginMessage(-1, "Fail");
     }
@@ -73,7 +73,7 @@ public class ChatGroupController {
     public LoginMessage remove(String operatorId, String groupId, String userID) {
         boolean result = service.removeUser(operatorId, groupId, userID);
         if (result) {
-            return new LoginMessage(1, "Success");
+            return new LoginMessage(0, "Success");
         }
         return new LoginMessage(-1, "Fail");
     }
@@ -88,7 +88,7 @@ public class ChatGroupController {
     public LoginMessage dismissGroup(String operatorId, String groupId) {
         boolean result = service.dismissGroup(operatorId, groupId);
         if (result) {
-            return new LoginMessage(1, "Success");
+            return new LoginMessage(0, "Success");
         }
         return new LoginMessage(-1, "Fail");
     }
@@ -97,7 +97,7 @@ public class ChatGroupController {
     public LoginMessage joinGroupByInvitation(String userId,String username, String groupId, String invitationID) {
         boolean result = service.joinByInvitation(userId,username, groupId, invitationID);
         if (result) {
-            return new LoginMessage(1, "Success");
+            return new LoginMessage(0, "Success");
         }
         return new LoginMessage(-1, "Fail");
     }
@@ -109,13 +109,13 @@ public class ChatGroupController {
             return new LoginMessage(-1, "no sufficient data provided");
         }
         List<GroupUser> groups = service.getGroups(userId, null);
-        return new LoginMessage(1, JSON.toJSONString(groups));
+        return new LoginMessage(0, JSON.toJSONString(groups));
     }
 
     @GetMapping("get_members")
     public LoginMessage getMembers(String userId, long groupId, String pagingState) {
         List<GroupUser> result = service.getMembers(userId, groupId, pagingState);
-        return new LoginMessage(-1, JSON.toJSONString(result));
+        return new LoginMessage(0, JSON.toJSONString(result));
     }
 
 

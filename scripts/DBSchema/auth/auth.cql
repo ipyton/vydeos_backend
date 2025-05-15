@@ -14,7 +14,7 @@ create table user_registration_code (userId text primary key, code text, expire_
 CREATE TABLE IF NOT EXISTS role_auths (
                                      roleId int,
                                      roleName TEXT,
-                                     path text, name text, version int, type text, primary key ( roleId, path, version, type )
+                                     path text, name text, version int, type text, primary key ( roleId, type,path, version )
 );
 
 create table if not exists roles (
@@ -72,3 +72,10 @@ insert into role_auths (roleId, path, name, version, type) VALUES (1, '/movie/ge
 
 
 insert into role_auths (roleId, path, name, version, type) VALUES (0,  '/**', 'All Permissions ', 0, 'api');
+
+CREATE TABLE userinfo.user_registration_code (   kind text,
+                                                 userid text,
+                                                 code text,
+                                                 expire_time timestamp,
+                                                 PRIMARY KEY (kind, userid)
+);

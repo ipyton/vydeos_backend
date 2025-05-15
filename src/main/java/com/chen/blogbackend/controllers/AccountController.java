@@ -46,6 +46,10 @@ public class AccountController {
 
     @PostMapping("/login")
     public LoginMessage login(@Param("email") String email, @Param("password") String password, @Param("remember") Boolean remember) {
+        if (email == null || email.isEmpty() || password == null || password.isEmpty() || remember == null) {
+            return new LoginMessage(-1, "Email or password is empty");
+        }
+
         float days = 0.2f;
         if (remember == true) {
             days = 30;
@@ -56,7 +60,7 @@ public class AccountController {
             Token token = TokenUtil.createToken(new Token(email, auth.getRoleid(),Instant.now().plus((long) (days * 3600 * 24), ChronoUnit.SECONDS), email));
             System.out.println("account service");
             if (accountService.setToken(token)) {
-                return new LoginMessage(1, token.getTokenString());
+                return new LoginMessage(0, token.getTokenString());
             }
         }
         return new LoginMessage(-1, "Check your user name and password!");
@@ -66,7 +70,14 @@ public class AccountController {
     public LoginMessage registerStep1(String userId) {
         System.out.println(userId);
         if (AccountInfoValidator.validateUserEmail(userId)) {
-            if (accountService.insertStep1(userId)) return new LoginMessage(1, "Successfully");
+            if (accountService.insertStep1(userId)) return new LoginMessage(0, "Successfully");
+        }
+        return new LoginMessage(-1, "register error");
+    }
+    @PostMapping("/resetStep1")
+    public LoginMessage resetStep1(String userId) {
+        if (AccountInfoValidator.validateUserEmail(userId)) {
+            if (accountService.resetStep1(userId)) return new LoginMessage(0, "Successfully");
         }
         return new LoginMessage(-1, "register error");
     }
@@ -74,7 +85,9 @@ public class AccountController {
     @PostMapping("/sendVerificationCode")
     public Message sendVerification(String userId) {
         try {
-            accountService.sendVerificationEmail(userId);
+            if (! accountService.sendVerificationEmail(userId)){
+                return new Message(-1, "Send verification failed");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return new Message(-1, "failed");
@@ -83,10 +96,11 @@ public class AccountController {
     }
 
     @PostMapping("/registerStep2")
-    public Message registerStep2(Auth accountInfo, String verificationCode) {
+    public Message registerStep2(String userId, String code) {
         try {
-            if (accountService.verifyCode(accountInfo.getEmail(), verificationCode)) {
-                return new Message(0, "success");
+            String result = accountService.verifyCode(userId, code);
+            if ( result != null ) {
+                return new Message(0, result);
             }
             else {
                 return new Message(-1, "error code");
@@ -98,10 +112,17 @@ public class AccountController {
     }
 
     @PostMapping("/registerStep3")
-    public LoginMessage registerStep3(String password, String userId) {
+    public LoginMessage registerStep3(String token, String password, String userId) {
+        if (token == null || password == null || userId == null ||
+                token.equals("") || password.equals("") || password.equals(""))
+            return new LoginMessage(-1, "check your input!");
+
+        if (!AccountInfoValidator.validateUserEmail(userId)) {
+            return new LoginMessage(-1, "register error");
+        }
         ValidationResult validationResult = AccountInfoValidator.validateUserPassword(password);
         if (validationResult.getCode() == 0) {
-            if (accountService.insertStep3(password, userId)) return new LoginMessage(1, "Registered Successfully");
+            if (accountService.insertStep3(token, password, userId)) return new LoginMessage(0, "Registered Successfully");
         }
         return new LoginMessage(-1, validationResult.getResult());
     }
@@ -118,7 +139,7 @@ public class AccountController {
         System.out.println(request);
         boolean result = pictureService.uploadAvatarPicture((String) request.getAttribute("userEmail"), multipartFile);
         if (!result) return new LoginMessage(-1, "error");
-        else return new LoginMessage(1, "success");
+        else return new LoginMessage(0, "success");
     }
 
     @GetMapping(value = "/getAvatar")
@@ -144,7 +165,7 @@ public class AccountController {
         if (null == result) {
             return new LoginMessage(-1, "Do not have get any information.");
         }
-        return new LoginMessage(1, JSON.toJSONString(result));
+        return new LoginMessage(0, JSON.toJSONString(result));
     }
 
     @GetMapping("/getAuthById")
@@ -154,14 +175,14 @@ public class AccountController {
         if (null == result) {
             return new LoginMessage(-1, "Do not have get any information.");
         }
-        return new LoginMessage(1, JSON.toJSONString(result));
+        return new LoginMessage(0, JSON.toJSONString(result));
     }
 
     @PostMapping("/setinfo")
     public LoginMessage setAccountInformation(Account account)  {
         boolean result = accountService.insertUserDetails(account);
         if (result) {
-            return new LoginMessage(1, "Success");
+            return new LoginMessage(0, "Success");
         }
         return new LoginMessage(-1, "setError");
     }
@@ -174,23 +195,12 @@ public class AccountController {
         if (null != token) {
             if (accountService.haveValidLogin(token)) {
                 System.out.println("---------------------return");
-                return new LoginMessage(1, TokenUtil.resolveToken(token).getUserId());
+                return new LoginMessage(0, TokenUtil.resolveToken(token).getUserId());
             }
         }
         return new LoginMessage(-1, "invalid token");
     }
 
-    @PostMapping("/reset_password")
-    public LoginMessage resetPassword(HttpServletRequest request,@Param("oldPassword") String oldPassword, @Param("newPassword") String newPassword ) {
-        Object email = request.getAttribute("userEmail");
-        boolean result = accountService.resetPassword(email, oldPassword, newPassword);
-        if (result) {
-            return new LoginMessage(1, "Success");
-        }
-        else {
-            return new LoginMessage(-1, "reset password error");
-        }
-    }
 
 
 
@@ -198,7 +208,7 @@ public class AccountController {
     public LoginMessage deleteAccount(String userId) {
         boolean result = accountService.deleteUser(userId);
         if (result) {
-            return new LoginMessage(1, "Success");
+            return new LoginMessage(0, "Success");
         } else {
             return new LoginMessage(-1, "change role error");
         }

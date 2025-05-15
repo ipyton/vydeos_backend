@@ -6,6 +6,7 @@ public class Verification {
     private String code;
     private String email;
     private Instant expiration;
+
     public Verification(String code, String email, Instant expiration) {
         this.code = code;
         this.email = email;

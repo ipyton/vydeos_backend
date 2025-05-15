@@ -19,7 +19,7 @@ public class PathMapper {
                     !columnDefinitions.contains("role_name") ? null : row.getString("role_name"),
                     !columnDefinitions.contains("path") ? null : row.getString("path"),
                     !columnDefinitions.contains("name") ? null : row.getString("name"),
-                    !columnDefinitions.contains("version") ? null : row.getString("version"),
+                    !columnDefinitions.contains("version") ? null : row.getInt("version"),
                     !columnDefinitions.contains("icon_name") ? null : row.getString("icon_name"),
                     !columnDefinitions.contains("type") ? null : row.getString("type")
             ));
