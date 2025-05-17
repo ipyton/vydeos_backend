@@ -191,10 +191,8 @@ public class AccountController {
     public LoginMessage verifyToken(@RequestBody Map<String, String> requestBody) {
         String token = requestBody.get("token");
 
-        System.out.println("------=======-----" +token);
         if (null != token) {
             if (accountService.haveValidLogin(token)) {
-                System.out.println("---------------------return");
                 return new LoginMessage(0, TokenUtil.resolveToken(token).getUserId());
             }
         }
