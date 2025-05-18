@@ -59,6 +59,7 @@ public class LoginTokenFilter implements Filter {
                 || request.getRequestURI().startsWith("/account/changePassword")
                 || request.getRequestURI().startsWith("/account/verifyToken" )
                 || request.getRequestURI().startsWith("/account/sendVerificationCode")
+                || request.getRequestURI().startsWith("/authorization/hasPermission")
                 || request.getRequestURI().startsWith("/hello")) {
             chain.doFilter(request, response);
             return;

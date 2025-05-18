@@ -187,6 +187,7 @@ public class AccountController {
         return new LoginMessage(-1, "setError");
     }
 
+
     @PostMapping("/verifyToken")
     public LoginMessage verifyToken(@RequestBody Map<String, String> requestBody) {
         String token = requestBody.get("token");

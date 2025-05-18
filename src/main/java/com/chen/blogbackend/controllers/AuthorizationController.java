@@ -120,4 +120,23 @@ public class AuthorizationController {
         return new LoginMessage(0, "Success");
     }
 
+    @PostMapping("hasPermission")
+    public Message hasPermission(HttpServletRequest servletRequest, String permission) {
+        try {
+            String userEmail = (String) servletRequest.getAttribute("userEmail");
+            boolean b = service.hasPermissionForUser(userEmail, permission);
+            if (b) {
+                return new Message(0, "Success");
+            } else {
+                return new Message(-1, "has permission error");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Message(-1, e.getMessage());
+        }
+
+    }
+
+
+
 }

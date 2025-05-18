@@ -85,11 +85,22 @@ public class AuthorizationService {
         return parsedPaths;
     }
 
-    public List<PathDTO> getUIPathsByEmail(String Email) {
-        ResultSet execute = session.execute(getRoleId.bind(Email));
+    public Integer getRoleIdByEmail(String email) {
+        ResultSet execute = session.execute(getRoleId.bind(email));
         List<Row> all = execute.all();
         Row row = all.get(0);
-        Integer roleid = row.getInt("roleid");
+        return row.getInt("roleid");
+    }
+
+
+    public boolean hasPermissionForUser(String userId, String permission) {
+        Integer roleIdByEmail = getRoleIdByEmail(userId);
+        return hasAccess(roleIdByEmail, permission);
+    }
+
+
+    public List<PathDTO> getUIPathsByEmail(String Email) {
+        Integer roleid = getRoleIdByEmail(Email);
         List<PathDTO> uiPathsByRoleId = getUIPathsByRoleId(roleid);
         return uiPathsByRoleId;
     }
@@ -106,7 +117,6 @@ public class AuthorizationService {
 
     public boolean hasAccess(int roleId, String path) {
         // 1. 查询角色权限
-        System.out.println(roleId);
         System.out.println(allowedPaths.toString());
         List<String> patterns = allowedPaths.get(roleId);
         boolean match = PathMatcher.match(patterns, path);
