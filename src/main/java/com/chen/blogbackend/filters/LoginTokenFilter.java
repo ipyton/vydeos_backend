@@ -54,17 +54,17 @@ public class LoginTokenFilter implements Filter {
         System.err.println(request.getRequestURI());
         System.out.println(request.getRequestURI());
         System.out.flush();
-        if (request.getRequestURI().startsWith("/account/register") || request.getRequestURI().startsWith("/account/login")
+        if (request.getRequestURI().startsWith("/account/register")
+                || request.getRequestURI().startsWith("/account/login")
                 || request.getRequestURI().startsWith("/account/changePassword")
-                ||  request.getRequestURI().startsWith("/account/verifyToken" )||  request.getRequestURI().startsWith("/account/sendVerificationCode" )) {
+                || request.getRequestURI().startsWith("/account/verifyToken" )
+                || request.getRequestURI().startsWith("/account/sendVerificationCode")
+                || request.getRequestURI().startsWith("/hello")) {
             chain.doFilter(request, response);
             return;
         }
 
         String token = request.getHeader("Token");
-        System.out.println("_____" + request.getHeader("Token"));
-//        request.getHeaderNames().asIterator().forEachRemaining(System.out::println);
-//        System.out.println(request.getHeader("token"));
         if (token == null) {
             System.out.println("unauthorized token is null");
             servletResponse.setContentType("application/json");
