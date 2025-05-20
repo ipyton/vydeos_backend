@@ -1,4 +1,4 @@
-name: Deploy Java App to Oracle Linux on release push
+name: Deploy Java Apps to Oracle Linux on release push
 
 on:
   push:
@@ -19,55 +19,74 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Build with Maven
+    # ---------- Build Notification ----------
+    - name: Build Notification
+      working-directory: ./Notification
       run: mvn clean package -DskipTests
 
-    - name: Upload JAR to Oracle Linux (opc@SERVER)
+    # ---------- Upload Notification JAR ----------
+    - name: Upload Notification JAR to Oracle Linux
       uses: appleboy/scp-action@v0.1.3
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: opc
         key: ${{ secrets.SERVER_SSH_KEY }}
-        source: "target/*.jar"
-        target: "~/blog"
+        source: "Notification/target/*.jar"
+        target: "~/notification"
 
-    - name: Restart Java App without systemd (using nohup)
+    # ---------- Restart Notification Service ----------
+    - name: Restart Notification Java App
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: opc
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
-          cd ~/blog
-
-          echo "Killing old Java processes (if any)..."
-          pkill -f 'java -jar'echo "Killing old Java processes (if any)..."
-          # 仅杀掉当前目录下由 java -jar 启动的进程
-            pgrep -f "java -jar .*$(pwd)" | while read pid; do
+          cd ~/notification
+          echo "Stopping old Notification service..."
+          pgrep -f "java -jar .*$(pwd)" | while read pid; do
             echo "Killing process $pid"
             kill "$pid"
-            done
-            
-            echo "Locating latest JAR file..."
-            latest_jar=$(ls -t *.jar | head -n 1)
-          echo "Found: $latest_jar"
-            
-            echo "Updating symlink to latest JAR..."
-            ln -sf "$latest_jar" app.jar
-            
-            echo "Starting Java app in background..."
-            nohup java -jar app.jar > app.log 2>&1 &
-            
-            echo "Deployment complete. Logs at $(pwd)/app.log" || true
-
-          echo "Locating latest JAR file..."
+          done
+          echo "Locating latest Notification JAR..."
           latest_jar=$(ls -t *.jar | head -n 1)
           echo "Found: $latest_jar"
-
-          echo "Updating symlink to latest JAR..."
           ln -sf "$latest_jar" app.jar
-
-          echo "Starting Java app in background..."
           nohup java -jar app.jar > app.log 2>&1 &
+          echo "Notification deployed. Logs at $(pwd)/app.log"
 
-          echo "Deployment complete. Logs at ~/blog/app.log"
+    # ---------- Build blog_backend ----------
+    - name: Build blog_backend
+      working-directory: ./blog_backend
+      run: mvn clean package -DskipTests
+
+    # ---------- Upload blog_backend JAR ----------
+    - name: Upload blog_backend JAR to Oracle Linux
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: opc
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "blog_backend/target/*.jar"
+        target: "~/blog_backend"
+
+    # ---------- Restart blog_backend Service ----------
+    - name: Restart blog_backend Java App
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: opc
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd ~/blog_backend
+          echo "Stopping old blog_backend service..."
+          pgrep -f "java -jar .*$(pwd)" | while read pid; do
+            echo "Killing process $pid"
+            kill "$pid"
+          done
+          echo "Locating latest blog_backend JAR..."
+          latest_jar=$(ls -t *.jar | head -n 1)
+          echo "Found: $latest_jar"
+          ln -sf "$latest_jar" app.jar
+          nohup java -jar app.jar > app.log 2>&1 &
+          echo "blog_backend deployed. Logs at $(pwd)/app.log"
