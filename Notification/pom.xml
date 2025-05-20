@@ -93,12 +93,6 @@
             <version>3.24.1</version>
         </dependency>
         <dependency>
-            <groupId>com.chen</groupId>
-            <artifactId>blogBackend</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
         </dependency>
