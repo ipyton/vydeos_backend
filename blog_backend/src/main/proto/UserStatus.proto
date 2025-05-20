@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package com.chen.blogbackend;
+
+service NotificationSrv {
+  rpc OnlineHandler(UserOnlineInformation) returns (MessageResponse);
+}
+
+//status: 代表用户现在的状态online/隐身/不在线
+message UserOnlineInformation {
+  int64 userId = 1;
+  int64 last_received_timestamp = 2;
+  string status = 3;
+}
+
+
+message SingleMessage {
+  string messageId = 1;
+  string userId = 2;
+  string receiverId = 3;
+  string type = 4;
+  int64 sendTime = 5;  // Using int64 for timestamps
+  string content = 6;
+  string referMessageId = 7;
+  repeated string referUserIds = 8;
+}
+
+message GroupMessage {
+  string messageId = 1;
+  string userId = 2;
+  string groupId = 3;
+  string type = 4;
+  int64 timestamp = 5;  // Using int64 for timestamps
+  string content = 6;
+  string media = 7;
+  string referUserId = 8;
+  string referMessageId = 9;
+}
+
+message MessageResponse {
+  repeated SingleMessage singleMessages = 1;
+  repeated GroupMessage groupMessages = 2;
+  int64 userId = 3;
+}

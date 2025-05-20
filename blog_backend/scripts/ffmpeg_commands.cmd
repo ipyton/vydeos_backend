@@ -1,0 +1,1 @@
+ffmpeg -threads 10 -fflags +genpts -i "Tom & Jerry Kids 101a Flippin' Fido [foo].avi" -hls_time 30 -hls_list_size 0 -c:v copy -c:a copy -hls_segment_filename "output/segment_%03d.ts" output/index.m3u8
