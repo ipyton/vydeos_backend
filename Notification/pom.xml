@@ -101,6 +101,18 @@
             <artifactId>java-driver-core</artifactId>
             <version>4.17.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>6.3.0.RELEASE</version>
+        </dependency>
+
+        <!-- Apache Commons IO -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+        </dependency>
 
         <dependency>
             <groupId>com.scylladb</groupId>
