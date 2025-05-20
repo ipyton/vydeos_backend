@@ -52,9 +52,11 @@ jobs:
           latest_jar=$(ls -t *.jar | head -n 1)
           echo "Found: $latest_jar"
           ln -sf "$latest_jar" app.jar
-          nohup java -jar app.jar > app.log 2>&1 &
+    
+          # 修改这里，指定 config name（去掉默认 application.yml）
+          nohup java -jar app.jar --spring.config.name=application-endpoint > app.log 2>&1 &
+    
           echo "Notification deployed. Logs at $(pwd)/app.log"
-
     # ---------- Build blog_backend ----------
     - name: Build blog_backend
       working-directory: ./blog_backend
