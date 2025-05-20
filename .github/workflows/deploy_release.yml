@@ -48,7 +48,7 @@ jobs:
             kill -15 "$pid" || kill -9 "$pid"
             sleep 2
           done
-          
+    
           echo "Locating latest Notification JAR..."
           latest_jar=$(ls -t *.jar | head -n 1)
           if [ -z "$latest_jar" ]; then
@@ -56,12 +56,14 @@ jobs:
             exit 1
           fi
           echo "Found: $latest_jar"
-          
+    
           # Create symlink with absolute path
           ln -sf "$(pwd)/$latest_jar" "$(pwd)/app.jar"
-          echo "Starting Notification service..."
-          nohup java -jar "$(pwd)/app.jar" > app.log 2>&1 &
+    
+          echo "Starting Notification service with custom config..."
+          nohup java -jar "$(pwd)/app.jar" --spring.config.name=application-endpoint > app.log 2>&1 &
           sleep 5
+    
           # Check if application started successfully
           if pgrep -f "java -jar.*$(pwd)/app.jar"; then
             echo "Notification service started successfully"
@@ -70,8 +72,9 @@ jobs:
             tail -n 50 app.log
             exit 1
           fi
+    
           echo "Notification deployed. Logs at $(pwd)/app.log"
-          
+
     # ---------- Build blog_backend ----------
     - name: Build blog_backend
       working-directory: ./blog_backend
