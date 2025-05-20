@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Controller()
 @RequestMapping("auth")
@@ -119,5 +120,26 @@ public class AuthorizationController {
         service.reload();
         return new LoginMessage(0, "Success");
     }
+
+    @PostMapping("hasPermission")
+    public Message hasPermission(HttpServletRequest servletRequest, @RequestBody Map<String, Object> payload) {
+        try {
+            String path = (String) payload.get("path");
+            if (null == path || path.length() == 0) return new Message(-1, "path is null");
+            String userEmail = (String) servletRequest.getAttribute("userEmail");
+            boolean b = service.hasPermissionForUser(userEmail, path);
+            if (b) {
+                return new Message(0, "Success");
+            } else {
+                return new Message(-1, "has permission error");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Message(-1, e.getMessage());
+        }
+
+    }
+
+
 
 }

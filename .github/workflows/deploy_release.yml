@@ -1,0 +1,92 @@
+name: Deploy Java Apps to Oracle Linux on release push
+
+on:
+  push:
+    branches:
+      - release
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Java 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    # ---------- Build Notification ----------
+    - name: Build Notification
+      working-directory: ./Notification
+      run: mvn clean package -DskipTests
+
+    # ---------- Upload Notification JAR ----------
+    - name: Upload Notification JAR to Oracle Linux
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: opc
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "Notification/target/*.jar"
+        target: "~/notification"
+
+    # ---------- Restart Notification Service ----------
+    - name: Restart Notification Java App
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: opc
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd ~/notification
+          echo "Stopping old Notification service..."
+          pgrep -f "java -jar .*$(pwd)" | while read pid; do
+            echo "Killing process $pid"
+            kill "$pid"
+          done
+          echo "Locating latest Notification JAR..."
+          latest_jar=$(ls -t *.jar | head -n 1)
+          echo "Found: $latest_jar"
+          ln -sf "$latest_jar" app.jar
+          nohup java -jar app.jar > app.log 2>&1 &
+          echo "Notification deployed. Logs at $(pwd)/app.log"
+
+    # ---------- Build blog_backend ----------
+    - name: Build blog_backend
+      working-directory: ./blog_backend
+      run: mvn clean package -DskipTests
+
+    # ---------- Upload blog_backend JAR ----------
+    - name: Upload blog_backend JAR to Oracle Linux
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: opc
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        source: "blog_backend/target/*.jar"
+        target: "~/blog_backend"
+
+    # ---------- Restart blog_backend Service ----------
+    - name: Restart blog_backend Java App
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: opc
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd ~/blog_backend
+          echo "Stopping old blog_backend service..."
+          pgrep -f "java -jar .*$(pwd)" | while read pid; do
+            echo "Killing process $pid"
+            kill "$pid"
+          done
+          echo "Locating latest blog_backend JAR..."
+          latest_jar=$(ls -t *.jar | head -n 1)
+          echo "Found: $latest_jar"
+          ln -sf "$latest_jar" app.jar
+          nohup java -jar app.jar > app.log 2>&1 &
+          echo "blog_backend deployed. Logs at $(pwd)/app.log"
