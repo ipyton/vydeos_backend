@@ -72,9 +72,9 @@ jobs:
             tail -n 50 app.log
             exit 1
           fi
+
     
           echo "Notification deployed. Logs at $(pwd)/app.log"
-
     # ---------- Build blog_backend ----------
     - name: Build blog_backend
       working-directory: ./blog_backend
