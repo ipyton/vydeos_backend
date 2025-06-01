@@ -23,8 +23,7 @@ create table if not exists roles (
 
 insert into roles (roleId,roleName) values(0,'admin');
 insert into roles (roleId,roleName) values(1, 'new_user');
-
-
+use userinfo;
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/chat', 'Chat', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/trending', 'Trending', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/', 'Posts', 0, 'nav');
@@ -34,26 +33,25 @@ insert into role_auths (roleId, path, name, version, type) VALUES (1, '/logs', '
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/qa', 'Ask', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/settings', 'Settings', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/friends', 'Friends', 0, 'nav');
--- insert into role_auths (roleId, roleName, path, name, version) VALUES (1, 'new_user', '/', '', 0 );
-
-
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/downloadRequestManager', 'Handle Download Request', 0, 'nav' );
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/userManage', 'User Management', 0, 'nav' );
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/role', 'Role Management', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/download', 'Download', 0, 'nav');
+
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/edit', 'Edit', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/chat', 'Chat', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/trending', 'Trending', 0, 'nav' );
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/', 'Posts', 0, 'nav' );
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/videolist', 'Videos', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/about', 'About', 0, 'nav' );
+
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/logs', 'Version Log', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/qa', 'Ask', 0, 'nav' );
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/settings', 'Settings', 0,'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/friends', 'Friends', 0, 'nav');
-
-
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/i18n/**', 'languages', 0, 'api');
+
+
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/account/**', 'Friends', 0, 'api');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/auth/**', 'Friends', 0, 'api');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/article/**', 'Friends', 0, 'api');
@@ -69,11 +67,9 @@ insert into role_auths (roleId, path, name, version, type) VALUES (1, '/comment/
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/play_videos/**', 'Friends', 0, 'api');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/movie_management/**', 'Friends', 0, 'api');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/movie/get_meta', 'Friends', 0, 'api');
-
-
 insert into role_auths (roleId, path, name, version, type) VALUES (0,  '/**', 'All Permissions ', 0, 'api');
 
-CREATE TABLE userinfo.user_registration_code (   kind text,
+CREATE TABLE if not exists userinfo.user_registration_code  (   kind text,
                                                  userid text,
                                                  code text,
                                                  expire_time timestamp,
