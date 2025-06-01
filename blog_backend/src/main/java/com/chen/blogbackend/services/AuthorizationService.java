@@ -118,6 +118,9 @@ public class AuthorizationService {
     public boolean hasAccess(int roleId, String path) {
         // 1. 查询角色权限
         System.out.println(allowedPaths.toString());
+        if (allowedPaths == null) {
+            return false;
+        }
         List<String> patterns = allowedPaths.get(roleId);
         boolean match = PathMatcher.match(patterns, path);
         return match;
