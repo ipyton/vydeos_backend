@@ -137,7 +137,7 @@ public class EndpointAutoRunner {
 //                        HttpResponse send = sender.send(new Notification(endpoint, p256dh, auth, mapper.writeValueAsBytes(webPushMessage)));
 //                        System.out.println(send.toString());
 //                        int statusCode = send.getStatusLine().getStatusCode();
-                        restTemplate.postForObject("http://localhost:5000/send", webPushMessage, String.class);
+                        restTemplate.postForObject("http://localhost:8081/send", webPushMessage, String.class);
                     }
                     service.sendMessages(List.of(notificationMessage));
 

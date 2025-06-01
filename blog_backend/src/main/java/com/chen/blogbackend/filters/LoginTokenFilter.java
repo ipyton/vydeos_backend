@@ -47,9 +47,9 @@ public class LoginTokenFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
-        response.addHeader("Access-Control-Allow-Origin","*");
-        response.addHeader("Access-Control-Allow-Methods","*");
-        response.addHeader("Access-Control-Allow-Headers","*");
+//        response.addHeader("Access-Control-Allow-Origin","*");
+//        response.addHeader("Access-Control-Allow-Methods","*");
+//        response.addHeader("Access-Control-Allow-Headers","*");
         request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR, true);
         System.err.println(request.getRequestURI());
         System.out.println(request.getRequestURI());
@@ -69,7 +69,7 @@ public class LoginTokenFilter implements Filter {
         if (token == null) {
             System.out.println("unauthorized token is null");
             servletResponse.setContentType("application/json");
-            servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "please login")).getBytes(StandardCharsets.UTF_8));
+            servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(401, "please login")).getBytes(StandardCharsets.UTF_8));
             return;
         }
         else {
@@ -78,21 +78,18 @@ public class LoginTokenFilter implements Filter {
                 token1 = TokenUtil.resolveToken(token);
             }
             catch (Exception e) {
-                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "expired token")).getBytes(StandardCharsets.UTF_8));
+                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(401, "expired token")).getBytes(StandardCharsets.UTF_8));
                 return;
             }
             if (token1 == null) {
-                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "invalid token")).getBytes(StandardCharsets.UTF_8));
-                return;
+                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(401, "invalid token")).getBytes(StandardCharsets.UTF_8));
             } else {
-                System.out.println(token1.toString());
                 if (token1.getRoleId() == -1 || authorizationService.hasAccess(token1.getRoleId(), request.getRequestURI())) {
                     request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
                     chain.doFilter(request, response);
                 } else {
                     servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "do not have permission")).getBytes(StandardCharsets.UTF_8));
                 }
-                return;
             }
         }
 //        boolean result = accountService.haveValidLogin(request.getHeader("token"));
