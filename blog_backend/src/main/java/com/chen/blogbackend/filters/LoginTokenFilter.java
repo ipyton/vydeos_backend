@@ -44,73 +44,84 @@ public class LoginTokenFilter implements Filter {
 
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
+            throws IOException, ServletException {
+
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
-//        response.addHeader("Access-Control-Allow-Origin","*");
-//        response.addHeader("Access-Control-Allow-Methods","*");
-//        response.addHeader("Access-Control-Allow-Headers","*");
+
         request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR, true);
-        System.err.println(request.getRequestURI());
-        System.out.println(request.getRequestURI());
-        System.out.flush();
-        if (request.getRequestURI().startsWith("/account/register")
-                || request.getRequestURI().startsWith("/account/login")
-                || request.getRequestURI().startsWith("/account/changePassword")
-                || request.getRequestURI().startsWith("/account/verifyToken" )
-                || request.getRequestURI().startsWith("/account/sendVerificationCode")
-                || request.getRequestURI().startsWith("/authorization/hasPermission")
-                || request.getRequestURI().startsWith("/hello")) {
+        System.out.println("Request URI: " + request.getRequestURI());
+
+        // Skip authentication for public endpoints
+        if (isPublicEndpoint(request.getRequestURI())) {
             chain.doFilter(request, response);
             return;
         }
 
+        // Extract and validate token
         String token = request.getHeader("Token");
         if (token == null) {
-            System.out.println("unauthorized token is null");
-            servletResponse.setContentType("application/json");
-            servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(401, "please login")).getBytes(StandardCharsets.UTF_8));
+            sendUnauthorizedResponse(response, "Please login");
             return;
         }
-        else {
-            Token token1 = null;
-            try {
-                token1 = TokenUtil.resolveToken(token);
-            }
-            catch (Exception e) {
-                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(401, "expired token")).getBytes(StandardCharsets.UTF_8));
-                return;
-            }
-            if (token1 == null) {
-                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(401, "invalid token")).getBytes(StandardCharsets.UTF_8));
-            } else {
-                if (token1.getRoleId() == -1 || authorizationService.hasAccess(token1.getRoleId(), request.getRequestURI())) {
-                    request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
-                    chain.doFilter(request, response);
-                } else {
-                    servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(401, "do not have permission")).getBytes(StandardCharsets.UTF_8));
-                }
+
+        Token parsedToken;
+        try {
+            parsedToken = TokenUtil.resolveToken(token);
+        } catch (Exception e) {
+            sendUnauthorizedResponse(response, "Expired token");
+            return;
+        }
+
+        if (parsedToken == null) {
+            sendUnauthorizedResponse(response, "Invalid token");
+            return;
+        }
+
+        // Check authorization (role -1 appears to be admin/bypass role)
+        if (parsedToken.getRoleId() == -1 || authorizationService.hasAccess(parsedToken.getRoleId(), request.getRequestURI())) {
+            request.setAttribute("userEmail", parsedToken.getUserId());
+            chain.doFilter(request, response);
+        } else {
+            sendUnauthorizedResponse(response, "Insufficient permissions");
+        }
+    }
+
+    /**
+     * Check if the endpoint is public and doesn't require authentication
+     */
+    private boolean isPublicEndpoint(String requestURI) {
+        String[] publicPaths = {
+                "/account/register",
+                "/account/login",
+                "/account/changePassword",
+                "/account/verifyToken",
+                "/account/sendVerificationCode",
+                "/authorization/hasPermission",
+                "/hello"
+        };
+
+        for (String path : publicPaths) {
+            if (requestURI.startsWith(path)) {
+                return true;
             }
         }
-//        boolean result = accountService.haveValidLogin(request.getHeader("token"));
-//        if(null == token) {
-//            System.out.println(request.getRequestURI());
-//            if (request.getRequestURI().equals("/account/login") || request.getRequestURI().equals("/account/register") || request.getRequestURI().equals("/account/verifyToken") ) {
-//                chain.doFilter(request, response);
-//            }
-//            else {
-//                servletResponse.setContentType("application/json");
-//                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-2, "please login first")).getBytes(StandardCharsets.UTF_8));
-//            }
-//            return;
-//        }
-//        else {
-//            if(!result) {
-//                servletResponse.setContentType("application/json");
-//                servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "wrong password or username!")).getBytes(StandardCharsets.UTF_8));
-//                return;
-//            }
-//        }
+        return false;
+    }
+
+    /**
+     * Send a proper 401 Unauthorized response
+     */
+    private void sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Sets HTTP 401 status
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        LoginMessage loginMessage = new LoginMessage(401, message);
+        String jsonResponse = JSON.toJSONString(loginMessage);
+
+        response.getOutputStream().write(jsonResponse.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
