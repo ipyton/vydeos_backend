@@ -131,10 +131,6 @@ public class FriendsService {
         return RelationshipParser.parseToRelationship(set);
     }
 
-
-
-
-
     public boolean follow(String fanId, String idolId, String name) throws Exception {
         if (fanId == null || idolId == null) return false;
 //        if (compareStrings(fanId,idolId))
