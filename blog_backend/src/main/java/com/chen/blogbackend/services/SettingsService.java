@@ -31,7 +31,7 @@ public class SettingsService {
 //        selectByUserIdAndApplication =  session.prepare("select * from setting_by_user where user_id = ? and applicationId = ?");
 //        selectSettingsByUserId = session.prepare("select * from setting_by_user where user_id=?");
 //        selectItemsByUserId = session.prepare("select applicationId where user_id=?");
-        getUserSettings = session.prepare("select * from settings where user_id=?");
+  //      getUserSettings = session.prepare("select * from settings where user_id=?");
     }
 
     public Setting getSettingByUserAndAppId(String userId, String applicationId) {
