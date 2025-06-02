@@ -1,7 +1,7 @@
 package com.chen.blogbackend.controllers;
 
+import com.chen.blogbackend.entities.Settings;
 import com.chen.blogbackend.responseMessage.LoginMessage;
-import com.chen.blogbackend.entities.Setting;
 
 import com.chen.blogbackend.services.SettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class SettingsController {
     }
 
     @PostMapping("set")
-    public LoginMessage setSettings(ArrayList<Setting> setting){
+    public LoginMessage setSettings(ArrayList<Settings> setting){
         System.out.println("");
         return new LoginMessage(-1, "setttings");
     }

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 @Service
@@ -51,6 +52,11 @@ public class AuthorizationService {
                     allowedPaths.put(item.getRoleId(), new ArrayList<>());
                     allowedPaths.get(item.getRoleId()).add(item.getPath());
                 }
+            }
+        }
+        for (Map.Entry<Integer, List<String>> entry : allowedPaths.entrySet()) {
+            for (String path : entry.getValue()) {
+                System.out.println(entry.getKey() + ":" + path);
             }
         }
     }
@@ -118,6 +124,9 @@ public class AuthorizationService {
     public boolean hasAccess(int roleId, String path) {
         // 1. 查询角色权限
         System.out.println(allowedPaths.toString());
+        if (allowedPaths == null) {
+            return false;
+        }
         List<String> patterns = allowedPaths.get(roleId);
         boolean match = PathMatcher.match(patterns, path);
         return match;

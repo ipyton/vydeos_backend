@@ -7,6 +7,9 @@ import java.util.List;
 public class PathMatcher {
 
     public static boolean match(List<String> patterns, String path) {
+        if (patterns == null || patterns.isEmpty()) {
+            return false;
+        }
         List<String> pathParts = splitAndClean(path);
 
         for (String pattern : patterns) {
