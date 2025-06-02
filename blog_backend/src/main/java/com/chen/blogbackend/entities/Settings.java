@@ -5,26 +5,26 @@ import com.datastax.oss.driver.api.mapper.annotations.Entity;
 import java.util.HashMap;
 
 @Entity
-public class Setting {
-    String name = "null";
+public class Settings {
+    String userId = "null";
     String applicationID = "3wjdikf";
     HashMap<String, String> map;
 
-    public Setting() {
+    public Settings() {
     }
 
-    public Setting(String name, String applicationID, HashMap<String, String> map) {
-        this.name = name;
+    public Settings(String userId, String applicationID, HashMap<String, String> map) {
+        this.userId = userId;
         this.applicationID = applicationID;
         this.map = map;
     }
 
-    public String getName() {
-        return name;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getApplicationID() {

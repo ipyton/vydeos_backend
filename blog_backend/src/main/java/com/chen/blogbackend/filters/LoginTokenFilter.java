@@ -88,7 +88,7 @@ public class LoginTokenFilter implements Filter {
                     request.setAttribute("userEmail", TokenUtil.resolveToken(token).getUserId());
                     chain.doFilter(request, response);
                 } else {
-                    servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(-1, "do not have permission")).getBytes(StandardCharsets.UTF_8));
+                    servletResponse.getOutputStream().write(JSON.toJSONString(new LoginMessage(401, "do not have permission")).getBytes(StandardCharsets.UTF_8));
                 }
             }
         }
