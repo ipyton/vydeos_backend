@@ -78,7 +78,7 @@ public class FriendsService {
     }
 
     public List<Relationship> getFollowersByUserId(String userId) {
-        ResultSet execute = session.execute(getIdolsById.bind(userId));
+        ResultSet execute = session.execute(getFollowersByUserId.bind(userId));
         return RelationshipParser.parseToRelationship(execute);
     }
 
@@ -127,7 +127,7 @@ public class FriendsService {
 
 
     public List<Relationship> getIdolsByUserId(String userId){
-        ResultSet set = session.execute(getFollowersByUserId.bind(userId));
+        ResultSet set = session.execute(getIdolsById.bind(userId));
         return RelationshipParser.parseToRelationship(set);
     }
 
@@ -227,7 +227,7 @@ public class FriendsService {
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
-    public boolean sendInvitation(Invitation invitation) {
+    public boolean verifyInvitation(Invitation invitation) {
         return true;
     }
 

@@ -137,25 +137,20 @@ public class FriendsController {
     }
 
 
-    @PostMapping("get_invitations")
-    public LoginMessage getInvitations(String userId) {
+    @PostMapping("get_invitation_code")
+    public LoginMessage getInvitationCode(String userId) {
         List<Invitation> invitations = friendsService.getInvitations(userId);
         return new LoginMessage(1, JSON.toJSONString(invitations));
     }
 
-    @PostMapping("send_invitations")
-    public LoginMessage sendInvitations(Invitation invitation) {
-        boolean result = friendsService.sendInvitation(invitation);
+    @PostMapping("verify_invitation_code")
+    public LoginMessage verifyInvitationCode(Invitation invitation) {
+        boolean result = friendsService.verifyInvitation(invitation);
         if (result) {
             return new LoginMessage(1, "failed");
         }
         return new LoginMessage(-1, "success");
 
-    }
-
-    @PostMapping("get_black_list")
-    public LoginMessage getBlackList(String userId) {
-        return new LoginMessage(1, "[]");
     }
 
 }
