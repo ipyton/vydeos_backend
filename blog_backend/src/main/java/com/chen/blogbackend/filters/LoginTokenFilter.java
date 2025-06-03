@@ -81,7 +81,7 @@ public class LoginTokenFilter implements Filter {
 
         // Check authorization (role -1 appears to be admin/bypass role)
         if (parsedToken.getRoleId() == -1 || authorizationService.hasAccess(parsedToken.getRoleId(), request.getRequestURI())) {
-            request.setAttribute("userEmail", parsedToken.getUserId());
+            request.setAttribute("userEmail", parsedToken.getUserId().toLowerCase());
             chain.doFilter(request, response);
         } else {
             sendUnauthorizedResponse(response, "Insufficient permissions");

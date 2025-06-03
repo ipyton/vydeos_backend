@@ -178,7 +178,7 @@ public class AccountService {
 
     public boolean sendVerificationEmail(String email) {
         try {
-
+            email = email.toLowerCase();
             ResultSet execute = session.execute(getVerificationCode.bind("step2", email));
             Verification verification = CodeMapper.codeMapper(execute);
             if (verification != null) {
@@ -198,6 +198,7 @@ public class AccountService {
     }
 
     public String verifyCode(String email,String code) {
+
         ResultSet execute = session.execute(getVerificationCode.bind("step2",email));
         Verification verification = CodeMapper.codeMapper(execute);
         System.out.println(verification.getCode());
