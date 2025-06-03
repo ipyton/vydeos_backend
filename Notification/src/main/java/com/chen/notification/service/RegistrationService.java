@@ -39,7 +39,7 @@ public class RegistrationService {
                 return response;
             }
             response.status = "success";
-            response.code = 1;
+            response.code = 0;
             response.endpointAddress = candidate.split("_")[1];
             redisClient.zincrby(key, 1, candidate);
             redisClient.hset("active_status", userId, endpoint_meta);

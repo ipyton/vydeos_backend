@@ -68,8 +68,9 @@ public class AccountController {
 
     @PostMapping("/registerStep1")
     public LoginMessage registerStep1(String userId) {
-        System.out.println(userId);
+
         if (AccountInfoValidator.validateUserEmail(userId)) {
+            userId = userId.toLowerCase();
             if (accountService.insertStep1(userId)) return new LoginMessage(0, "Successfully");
         }
         return new LoginMessage(-1, "register error");
@@ -98,6 +99,10 @@ public class AccountController {
     @PostMapping("/registerStep2")
     public Message registerStep2(String userId, String code) {
         try {
+            if (userId == null || userId.isEmpty() || code == null || code.isEmpty()) {
+                return new Message(-1, "userId or code is empty");
+            }
+            userId = userId.toLowerCase();
             String result = accountService.verifyCode(userId, code);
             if ( result != null ) {
                 return new Message(0, result);
@@ -116,7 +121,7 @@ public class AccountController {
         if (token == null || password == null || userId == null ||
                 token.equals("") || password.equals("") || password.equals(""))
             return new LoginMessage(-1, "check your input!");
-
+        userId = userId.toLowerCase();
         if (!AccountInfoValidator.validateUserEmail(userId)) {
             return new LoginMessage(-1, "register error");
         }
@@ -144,8 +149,9 @@ public class AccountController {
 
     @GetMapping(value = "/getAvatar")
     public String getAvatar(HttpServletRequest request) throws IOException {
-        System.out.println(request.getAttribute("userEmail"));
-        InputStream fileStream = pictureService.getAvatar((String) request.getAttribute("userEmail"));
+        String userEmail = (String) request.getAttribute("userEmail");
+        userEmail = userEmail.toLowerCase();
+        InputStream fileStream = pictureService.getAvatar(userEmail);
         if (fileStream == null) {
             return "data:image/jpeg;base64," + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/08FHiYAAAAASUVORK5CYII=";
         }
@@ -160,7 +166,7 @@ public class AccountController {
     @PostMapping("/getinfo")
     public LoginMessage getAccountInformation(HttpServletRequest request) {
         String userEmail = (String) request.getAttribute("userEmail");
-
+        userEmail = userEmail.toLowerCase();
         Account result = accountService.getAccountDetailsById(userEmail);
         if (null == result) {
             return new LoginMessage(-1, "Do not have get any information.");
@@ -171,6 +177,7 @@ public class AccountController {
     @GetMapping("/getAuthById")
     public LoginMessage getInfoById(@Param("userEmail") String userEmail) {
         System.out.println(userEmail);
+        userEmail = userEmail.toLowerCase();
         Auth result = accountService.getAccountRoleById(userEmail);
         if (null == result) {
             return new LoginMessage(-1, "Do not have get any information.");
@@ -180,6 +187,7 @@ public class AccountController {
 
     @PostMapping("/setinfo")
     public LoginMessage setAccountInformation(Account account)  {
+        account.setUserEmail(account.getUserEmail().toLowerCase());
         boolean result = accountService.insertUserDetails(account);
         if (result) {
             return new LoginMessage(0, "Success");
@@ -205,6 +213,7 @@ public class AccountController {
 
     @PostMapping("/deleteUser")
     public LoginMessage deleteAccount(String userId) {
+        userId = userId.toLowerCase();
         boolean result = accountService.deleteUser(userId);
         if (result) {
             return new LoginMessage(0, "Success");

@@ -39,7 +39,7 @@ public class SearchController {
         List<Account> userDetails = accountService.searchUserById(userId);
         System.out.println(JSON.toJSONString(userDetails));
 
-        return new LoginMessage(1, JSON.toJSONString(userDetails, SerializerFeature.SkipTransientField, SerializerFeature.WriteMapNullValue));
+        return new LoginMessage(0, JSON.toJSONString(userDetails, SerializerFeature.SkipTransientField, SerializerFeature.WriteMapNullValue));
     }
 
     @GetMapping("getProfileById")
