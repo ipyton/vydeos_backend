@@ -119,8 +119,14 @@ public class SingleMessageService {
 
             return receipt;
         }
+        String result;
+        if (userId.compareTo(receiverId) <= 0) {
+            result = userId + receiverId;
+        } else {
+            result = receiverId + userId;
+        }
 
-        receipt.sequenceId = keyService.getIntKey("singleMessage");
+        receipt.sequenceId = keyService.getIntKey(result);
         singleMessage.setMessageId(receipt.sequenceId);
         //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
 //        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getSenderId(),
