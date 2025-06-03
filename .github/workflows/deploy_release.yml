@@ -61,7 +61,7 @@ jobs:
           ln -sf "$(pwd)/$latest_jar" "$(pwd)/app.jar"
     
           echo "Starting Notification service with custom config..."
-          nohup java -jar "$(pwd)/app.jar" --spring.config.name=application-endpoint > app.log 2>&1 &
+          nohup java -jar "$(pwd)/app.jar" --spring.profiles.active=endpoint > app.log 2>&1 &
           sleep 5
     
           # Check if application started successfully
