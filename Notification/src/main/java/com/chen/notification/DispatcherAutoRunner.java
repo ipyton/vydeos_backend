@@ -29,7 +29,6 @@ import java.util.concurrent.Executors;
 @Profile("dispatcher")
 public class DispatcherAutoRunner {
 
-    KafkaConsumer<String, String> consumer;
 
     @Autowired
     KafkaProducer<String, String> producer;
@@ -47,6 +46,8 @@ public class DispatcherAutoRunner {
     PreparedStatement insertMessage;
     PreparedStatement getCount;
     PreparedStatement setCount;
+    KafkaConsumer<String, String> consumer;
+
 
     @PostConstruct
     private void run(){
@@ -73,7 +74,7 @@ public class DispatcherAutoRunner {
         props.setProperty("enable.auto.commit", "false");
 
 
-        consumer=  new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
+        consumer =  new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
 
         // 使用新线程异步启动 Kafka 消费
         new Thread(this::consumeMessage).start();
@@ -81,7 +82,7 @@ public class DispatcherAutoRunner {
 
 
     private void consumeMessage() {
-        //System.out.println("This is a dispatcher service");
+        System.out.println("This is a dispatcher service");
 
         consumer.subscribe(List.of("dispatch"));
 
