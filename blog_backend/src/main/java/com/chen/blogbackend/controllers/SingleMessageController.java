@@ -171,8 +171,8 @@ public class SingleMessageController {
     public Message getNewestMessageFromAllUsers(HttpServletRequest request) {
         String userId = (String) request.getAttribute("userEmail");
         try {
-            List<NotificationMessage> newestMessagesFromAllUsers = service.getNewestMessagesFromAllUsers(userId);
-            return new Message(0, JSON.toJSONString(newestMessagesFromAllUsers));
+            List<UnreadMessage> unreadMessages = service.getNewestMessagesFromAllUsers(userId);
+            return new Message(0, JSON.toJSONString(unreadMessages));
         }
         catch (Exception e) {
             e.printStackTrace();

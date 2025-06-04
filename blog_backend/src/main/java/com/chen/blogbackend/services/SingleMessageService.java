@@ -6,8 +6,10 @@ import com.chen.blogbackend.DAO.SingleMessageDao;
 import com.chen.blogbackend.entities.NotificationMessage;
 import com.chen.blogbackend.entities.NotificationSubscription;
 import com.chen.blogbackend.entities.SendingReceipt;
+import com.chen.blogbackend.entities.UnreadMessage;
 import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.mappers.MessageParser;
+import com.chen.blogbackend.mappers.UnreadMessageParser;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.datastax.oss.driver.api.core.CqlSession;
 
@@ -266,9 +268,9 @@ public class SingleMessageService {
     }
 
 
-    public List<NotificationMessage> getNewestMessagesFromAllUsers(String userId) {
+    public List<UnreadMessage> getNewestMessagesFromAllUsers(String userId) {
         ResultSet execute = session.execute(getNewestMessageFromAllUsers.bind(userId));
-        List<NotificationMessage> notificationMessages = MessageParser.parseToNotificationMessage(execute);
+        List<UnreadMessage> notificationMessages = UnreadMessageParser.parseToUnreadMessage(execute);
         return notificationMessages;
     }
 

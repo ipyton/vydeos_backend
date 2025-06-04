@@ -38,7 +38,6 @@ public class UnreadMessageParser {
                     messageId,
                     count,
                     memberId
-
             );
 
             // 将解析的消息添加到结果列表中
