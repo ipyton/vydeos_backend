@@ -18,7 +18,7 @@ public class UnreadMessageParser {
 
             // 检查并获取每列的值
             String userId = columnDefinitions.contains("user_id") ? row.getString("user_id") : null;
-            String receiverId = columnDefinitions.contains("receiver_id") ? row.getString("receiver_id") : null;
+            String senderId = columnDefinitions.contains("sender_id") ? row.getString("sender_id") : null;
             String type = columnDefinitions.contains("type") ? row.getString("type") : null;
             String messageType = columnDefinitions.contains("messageType") ? row.getString("messageType") : null;
             String content = columnDefinitions.contains("content") ? row.getString("content") : null;
@@ -26,16 +26,19 @@ public class UnreadMessageParser {
 
             long messageId = columnDefinitions.contains("message_id") ? row.getLong("message_id") : 0;
             int count = columnDefinitions.contains("count") ? row.getInt("count") : 0;
+            String memberId = columnDefinitions.contains("member_id") ? row.getString("member_id") : null;
             // 创建 UnreadMessage 对象
             UnreadMessage message = new UnreadMessage(
                     userId,
-                    receiverId,
+                    senderId,
                     type,
                     messageType,
                     content,
                     sendTime,
                     messageId,
-                    count
+                    count,
+                    memberId
+
             );
 
             // 将解析的消息添加到结果列表中

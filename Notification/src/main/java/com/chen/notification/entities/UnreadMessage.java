@@ -4,28 +4,38 @@ import java.time.Instant;
 
 public class UnreadMessage {
     private String userId;
-    private String receiverId;
+    private String senderId;
     private String type;
     private String messageType;
     private String content;
     private Instant sendTime;
     private long messageId;
     private int count;
+    private String memberId;
 
     // Default constructor
     public UnreadMessage() {}
 
     // Constructor with all fields
-    public UnreadMessage(String userId, String receiverId, String type, String messageType,
-                         String content, Instant sendTime, long messageId, int count) {
+    public UnreadMessage(String userId, String senderId, String type, String messageType,
+                         String content, Instant sendTime, long messageId, int count, String memberId) {
         this.userId = userId;
-        this.receiverId = receiverId;
+        this.senderId = senderId;
         this.type = type;
         this.messageType = messageType;
         this.content = content;
         this.sendTime = sendTime;
         this.messageId = messageId;
         this.count = count;
+        this.memberId = memberId;
+    }
+
+    public String getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(String memberId) {
+        this.memberId = memberId;
     }
 
     public int getCount() {
@@ -45,12 +55,12 @@ public class UnreadMessage {
         this.userId = userId;
     }
 
-    public String getReceiverId() {
-        return receiverId;
+    public String getSenderId() {
+        return senderId;
     }
 
-    public void setReceiverId(String receiverId) {
-        this.receiverId = receiverId;
+    public void setSenderId(String senderId) {
+        this.senderId = senderId;
     }
 
     public String getType() {
@@ -97,7 +107,7 @@ public class UnreadMessage {
     public String toString() {
         return "UnreadMessage{" +
                 "userId='" + userId + '\'' +
-                ", receiverId='" + receiverId + '\'' +
+                ", receiverId='" + senderId + '\'' +
                 ", type='" + type + '\'' +
                 ", messageType='" + messageType + '\'' +
                 ", content='" + content + '\'' +
