@@ -30,7 +30,7 @@ public class DispatcherConfiguration {
     private static final String VAPID_EMAIL = "mailto: czhdawang@163.com"; // 你自己的邮箱
 
     @Bean
-    public static PushService createPushService() throws Exception {
+    public PushService createPushService() throws Exception {
         Security.addProvider(new BouncyCastleProvider());
         PushService pushService = new PushService();
         pushService.setPublicKey(VAPID_PUBLIC_KEY);
@@ -39,26 +39,28 @@ public class DispatcherConfiguration {
     }
 
     @Bean
-    public static HttpClient setClient() {
+    public HttpClient setClient() {
         return HttpClient.newHttpClient();
     }
 
     @Bean
-    public static JedisPool configRedis() {
+    public JedisPool configRedis() {
         JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        jedisPoolConfig.setJmxNamePrefix("dispatcher-redis-pool");
+        jedisPoolConfig.setJmxEnabled(false);
         JedisPool jedisPool = new JedisPool(jedisPoolConfig, ipAddress, 6379);
         return jedisPool;
     }
 
     @Bean
-    public static KafkaProducer<String, String> configKafkaProducer() {
+    public KafkaProducer<String, String> configKafkaProducer() {
         Properties props = new Properties();
         props.put("bootstrap.servers", ipAddress + ":9092");
         return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
     }
 
     @Bean
-    public static KafkaConsumer<String, String> configKafkaConsumer() {
+    public KafkaConsumer<String, String> configKafkaConsumer() {
         Properties props = new Properties();
         props.put("bootstrap.servers", ipAddress + ":9092");
         props.setProperty("group.id", "dispatcher");
@@ -68,7 +70,7 @@ public class DispatcherConfiguration {
     }
 
     @Bean
-    public static CqlSession setScyllaSession(){
+    public CqlSession setScyllaSession(){
 
         return CqlSession.builder()
                 .addContactPoint(new InetSocketAddress(ipAddress,9042))

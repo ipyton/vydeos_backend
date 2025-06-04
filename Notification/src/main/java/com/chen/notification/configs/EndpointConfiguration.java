@@ -30,7 +30,7 @@ public class EndpointConfiguration {
     private static final String VAPID_EMAIL = "mailto: czhdawang@163.com"; // 你自己的邮箱
 
     @Bean
-    public static PushService createPushService() throws Exception {
+    public PushService createPushService() throws Exception {
         Security.addProvider(new BouncyCastleProvider());
         PushService pushService = new PushService();
         pushService.setPublicKey(VAPID_PUBLIC_KEY);
@@ -38,15 +38,16 @@ public class EndpointConfiguration {
         return pushService;
     }
 
-    @Bean
-    public static JedisPool configRedis() {
-        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
-        JedisPool jedisPool = new JedisPool(jedisPoolConfig, ipAddress, 6379);
-        return jedisPool;
-    }
+//    @Bean
+//    public JedisPool configRedis() {
+//        System.out.println("configRedis2");
+//        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+//        JedisPool jedisPool = new JedisPool(jedisPoolConfig, ipAddress, 6379);
+//        return jedisPool;
+//    }
 
     @Bean
-    public static KafkaConsumer<String, String> configKafkaConsumer() {
+    public KafkaConsumer<String, String> configKafkaConsumer() {
         Properties props = new Properties();
         props.put("bootstrap.servers", ipAddress + ":9092");
         props.setProperty("enable.auto.commit", "false");
@@ -56,7 +57,7 @@ public class EndpointConfiguration {
     }
 
     @Bean
-    public static CqlSession setScyllaSession(){
+    public CqlSession setScyllaSession(){
 
         return CqlSession.builder()
                 .addContactPoint(new InetSocketAddress(ipAddress,9042))
@@ -65,7 +66,7 @@ public class EndpointConfiguration {
 
     }
     @Bean
-    public static HttpClient setClient() {
+    public HttpClient setClient() {
         return HttpClient.newHttpClient();
     }
 

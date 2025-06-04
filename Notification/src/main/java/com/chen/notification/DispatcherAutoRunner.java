@@ -42,13 +42,36 @@ public class DispatcherAutoRunner {
 
     private ExecutorService executorService;
 
+    PreparedStatement getMembers;
+    PreparedStatement groupMessage;
+    PreparedStatement insertMessage;
+    PreparedStatement getCount;
+    PreparedStatement setCount;
+
     @PostConstruct
     private void run(){
+        insertMessage = cqlSession.prepare("insert into chat.chat_records (user_id," +
+                " message_id, content, del, messagetype, receiver_id, refer_message_id,refer_user_id, send_time, type)" +
+                "values(?,?,?,?,?,?,?,?,?,?)");
+        groupMessage = cqlSession.prepare("insert into chat.group_chat_records (user_id,"+
+                " message_id, content, del, messagetype, group_id,refer_message_id,refer_user_id, send_time, type)" +
+                "values(?,?,?,?,?,?,?,?,?,?)");
+
+
+        getMembers = cqlSession.prepare("select * from group_chat.chat_group_members where group_id = ?;");
+
+        getCount = cqlSession.prepare("select count from chat.unread_messages where user_id = ? and type= ? and sender_id = ?;");
+        setCount = cqlSession.prepare("insert into chat.unread_messages (" +
+                "user_id, sender_id, type, messageType, content, send_time , message_id,count, member_id) " +
+                "values(?,?,?,?,?,?,?,?,?);");
+
+
         executorService = Executors.newFixedThreadPool(4); // 根据需要调整线程池大小
         Properties props = new Properties();
         props.put("bootstrap.servers", "127.0.0.1" + ":9092");
         props.setProperty("group.id", "dispatcher");
         props.setProperty("enable.auto.commit", "false");
+
 
         consumer=  new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
 
@@ -59,21 +82,6 @@ public class DispatcherAutoRunner {
 
     private void consumeMessage() {
         //System.out.println("This is a dispatcher service");
-        PreparedStatement insertMessage = cqlSession.prepare("insert into chat.chat_records (user_id," +
-                " message_id, content, del, messagetype, receiver_id, refer_message_id,refer_user_id, send_time, type)" +
-                "values(?,?,?,?,?,?,?,?,?,?)");
-        PreparedStatement groupMessage = cqlSession.prepare("insert into chat.group_chat_records (user_id,"+
-                " message_id, content, del, messagetype, group_id,refer_message_id,refer_user_id, send_time, type)" +
-                "values(?,?,?,?,?,?,?,?,?,?)");
-
-        PreparedStatement updateCount = cqlSession.prepare("insert into chat.unread_messages " +
-                "(user_id text, receiver_id text, type text, messageType text, content text," +
-                " send_time int, message_id int) values (?, ?, ?, ?, ?, ?, ?);" );
-
-
-
-
-        PreparedStatement getMembers = cqlSession.prepare("select * from group_chat.chat_group_members where group_id = ?;");
 
         consumer.subscribe(List.of("dispatch"));
 
@@ -129,10 +137,7 @@ public class DispatcherAutoRunner {
     }
 
     private void addUnread(NotificationMessage notificationMessage) {
-        PreparedStatement getCount = cqlSession.prepare("select count from chat.unread_messages where user_id = ? and type= ? and sender_id = ?;");
-        PreparedStatement setCount = cqlSession.prepare("insert into chat.unread_messages (" +
-                "user_id, sender_id, type, messageType, content, send_time , message_id,count, member_id,type) " +
-                "values(?,?,?,?,?,?,?,?,?,?);");
+
 
         DistributedLockService.LockToken lockToken = distributedLockService.acquireLock(notificationMessage.getReceiverId());
         if (lockToken == null) {
@@ -149,7 +154,7 @@ public class DispatcherAutoRunner {
         unreadMessage.setMemberId(notificationMessage.getSenderId());
         cqlSession.execute(setCount.bind( unreadMessage.getUserId(), unreadMessage.getSenderId(), "single",
                 notificationMessage.getMessageType(), unreadMessage.getContent(), unreadMessage.getSendTime(),
-                unreadMessage.getMessageId(),unreadMessage.getCount(),unreadMessage.getMemberId(), notificationMessage.getType()));
+                unreadMessage.getMessageId(),unreadMessage.getCount(),unreadMessage.getMemberId()));
         distributedLockService.releaseLock(lockToken);
     }
 

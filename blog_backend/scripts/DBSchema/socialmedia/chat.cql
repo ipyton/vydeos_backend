@@ -10,8 +10,8 @@ drop table chat.chat_records;
 drop table chat.group_chat_records;
 
 
-create table chat_records(user_id text, receiver_id text,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, PRIMARY KEY ((receiver_id),send_time, user_id, message_id));
-create table group_chat_records(user_id text,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, primary key ((group_id), send_time, message_id));
+create table chat.chat_records(user_id text, receiver_id text,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, PRIMARY KEY ((receiver_id),send_time, user_id, message_id));
+create table chat.group_chat_records(user_id text,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, primary key ((group_id), send_time, message_id));
 CREATE INDEX ON chat.chat_records (user_id);
 
 
