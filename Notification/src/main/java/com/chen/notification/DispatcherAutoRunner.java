@@ -2,6 +2,8 @@ package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.notification.entities.NotificationMessage;
+import com.chen.notification.mappers.MessageParser;
+import com.chen.notification.service.DistributedLockService;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
@@ -34,6 +36,9 @@ public class DispatcherAutoRunner {
     @Autowired
     CqlSession cqlSession;
 
+    @Autowired
+    DistributedLockService distributedLockService;
+
     private ExecutorService executorService;
 
     @PostConstruct
@@ -64,7 +69,7 @@ public class DispatcherAutoRunner {
                 "(user_id text, receiver_id text, type text, messageType text, content text," +
                 " send_time int, message_id int) values (?, ?, ?, ?, ?, ?, ?);" );
 
-        PreparedStatement getCount = cqlSession.prepare("select count from chat.unread_messages where user_id = ? and type=? and receiver_id = ?");
+        PreparedStatement getCount = cqlSession.prepare("select count from chat.unread_messages where user_id = ? and type= ? and receiver_id = ?");
         PreparedStatement setCount = cqlSession.prepare("insert into chat.unread_messages (user_id, receiver_id, type, messageType, content, send_time , message_id ) values(?,?,?,?,?,?,?)");
 
 
@@ -84,12 +89,27 @@ public class DispatcherAutoRunner {
                 NotificationMessage notificationMessage = JSON.parseObject(value, NotificationMessage.class);
                 if (notificationMessage.getType().equals("single")) {
                     System.out.println("single message");
+                    DistributedLockService.LockToken lockToken = distributedLockService.acquireLock(notificationMessage.getReceiverId());
+                    if (lockToken == null) {
+                        throw new RuntimeException("lock acquisition failed");
+                    }
+
+                    ResultSet execute = cqlSession.execute(getCount.bind(notificationMessage.getSenderId(), "single", notificationMessage.getReceiverId()));
+                    List<NotificationMessage> notificationMessages = MessageParser.parseToNotificationMessage(execute);
+                    NotificationMessage newMessage = notificationMessages.get(0);
+                    newMessage
+                    cqlSession.execute(setCount.bind(notificationMessage.getSenderId(), notificationMessage.getReceiverId(), "single",
+                            notificationMessage.getMessageType(), newMessage.getContent(), newMessage.getTime(),newMessage.getMessageId()));
+                    distributedLockService.releaseLock(lockToken);
+
+
                     cqlSession.execute(insertMessage.bind(notificationMessage.getSenderId(),notificationMessage.getMessageId(),
                             notificationMessage.getContent(),false, "text", notificationMessage.getReceiverId(), 0l,new ArrayList<String>(),
                             notificationMessage.getTime(), "single"));
                     producer.send(new ProducerRecord<String, String>("single",notificationMessage.getSenderId(), JSON.toJSONString(notificationMessage)));
 
-                    System.out.println(notificationMessage);
+
+
                 }
                 else if (notificationMessage.getType().equals("group")) {
                     System.out.println("group message");
