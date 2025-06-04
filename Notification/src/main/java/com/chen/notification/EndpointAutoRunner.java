@@ -20,6 +20,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.jose4j.lang.JoseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,14 +45,13 @@ this class is used for changing the
 
  */
 @Component
-@Profile("endpoint")
+@Profile("dispatcher")
 public class EndpointAutoRunner {
 
 
     @Autowired
     NotificationServerEndpoint service;
 
-    @Autowired
     KafkaConsumer<String, String> consumer;
 
 //    @Autowired
@@ -82,7 +82,7 @@ public class EndpointAutoRunner {
         public String privateKey;
         public String endpoint;
     }
-    ObjectMapper mapper = new ObjectMapper();
+
 
 
 
@@ -91,6 +91,14 @@ public class EndpointAutoRunner {
         executorService = Executors.newFixedThreadPool(4); // 根据需要调整线程池大小
         getEndpoints = session.prepare("select endpoint,auth,p256dh from chat.web_push_endpoints where user_id = ?");
         // 使用新线程异步启动 Kafka 消费
+        System.out.println(getEndpoints.toString());
+        System.out.println("endpoint runner is doing job");
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "127.0.0.1" + ":9092");
+        props.setProperty("group.id", "endpoint");
+        props.setProperty("enable.auto.commit", "false");
+
+        consumer =  new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
         new Thread(this::consumeMessages).start();
     }
 
@@ -101,7 +109,8 @@ public class EndpointAutoRunner {
             RestTemplate restTemplate = new RestTemplate();
 
             while (true) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(100));
+                System.out.println(Thread.currentThread().getName()+ "is doing job");
+            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(500));
             Map<String, List<NotificationMessage>> topicKeyMap = new HashMap<>();
             for (ConsumerRecord<String, String> record : records) {
 //                String topic = record.topic();
@@ -137,8 +146,9 @@ public class EndpointAutoRunner {
 //                        HttpResponse send = sender.send(new Notification(endpoint, p256dh, auth, mapper.writeValueAsBytes(webPushMessage)));
 //                        System.out.println(send.toString());
 //                        int statusCode = send.getStatusLine().getStatusCode();
-                        restTemplate.postForObject("http://localhost:8081/send", webPushMessage, String.class);
+                        //restTemplate.postForObject("http://localhost:8081/send", webPushMessage, String.class);
                     }
+                    System.out.println("send web push message");
                     service.sendMessages(List.of(notificationMessage));
 
                 }

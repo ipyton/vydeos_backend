@@ -1,16 +1,22 @@
 package com.chen.notification.configs;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import nl.martijndwars.webpush.PushService;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
+import java.security.Security;
 import java.util.Properties;
 
 
@@ -19,23 +25,42 @@ import java.util.Properties;
 public class DispatcherConfiguration {
 
     private static String ipAddress = "127.0.0.1";
+    private static final String VAPID_PRIVATE_KEY = "hSMqgJnMk1W2eByorB3c1OG4TCZ_Bwf_VVuCtp6T9-s"; // 从 private.pem 获取
+    private static final String VAPID_PUBLIC_KEY = "BKN0Wn4eIWJNOkZ58-G2HZ1rMuSfi8i4XfTFsti6yaF2G25Fv8dh0K_XZmklXDZ1vp0ozTpb6ZlXdnvYg3PV01w"; // 从 public.pem 获取
+    private static final String VAPID_EMAIL = "mailto: czhdawang@163.com"; // 你自己的邮箱
 
     @Bean
-    public static Jedis configRedis() {
-        Jedis jedis = new Jedis(ipAddress,6379);
-        System.out.println("redis启动成功" + jedis.ping());
-        return jedis;
+    public PushService createPushService() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+        PushService pushService = new PushService();
+        pushService.setPublicKey(VAPID_PUBLIC_KEY);
+        pushService.setPrivateKey(VAPID_PRIVATE_KEY);
+        return pushService;
     }
 
     @Bean
-    public static KafkaProducer<String, String> configKafkaProducer() {
+    public HttpClient setClient() {
+        return HttpClient.newHttpClient();
+    }
+
+    @Bean
+    public JedisPool configRedis() {
+        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        jedisPoolConfig.setJmxNamePrefix("dispatcher-redis-pool");
+        jedisPoolConfig.setJmxEnabled(false);
+        JedisPool jedisPool = new JedisPool(jedisPoolConfig, ipAddress, 6379);
+        return jedisPool;
+    }
+
+    @Bean
+    public KafkaProducer<String, String> configKafkaProducer() {
         Properties props = new Properties();
         props.put("bootstrap.servers", ipAddress + ":9092");
         return new KafkaProducer<>(props, new StringSerializer(), new StringSerializer());
     }
 
     @Bean
-    public static KafkaConsumer<String, String> configKafkaConsumer() {
+    public KafkaConsumer<String, String> configKafkaConsumer() {
         Properties props = new Properties();
         props.put("bootstrap.servers", ipAddress + ":9092");
         props.setProperty("group.id", "dispatcher");
@@ -45,7 +70,7 @@ public class DispatcherConfiguration {
     }
 
     @Bean
-    public static CqlSession setScyllaSession(){
+    public CqlSession setScyllaSession(){
 
         return CqlSession.builder()
                 .addContactPoint(new InetSocketAddress(ipAddress,9042))

@@ -6,8 +6,10 @@ import com.chen.blogbackend.DAO.SingleMessageDao;
 import com.chen.blogbackend.entities.NotificationMessage;
 import com.chen.blogbackend.entities.NotificationSubscription;
 import com.chen.blogbackend.entities.SendingReceipt;
+import com.chen.blogbackend.entities.UnreadMessage;
 import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.mappers.MessageParser;
+import com.chen.blogbackend.mappers.UnreadMessageParser;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.datastax.oss.driver.api.core.CqlSession;
 
@@ -59,7 +61,9 @@ public class SingleMessageService {
     PreparedStatement addEndpoint;
     PreparedStatement getEndpoints;
     PreparedStatement getGroupRecord;
-    SingleMessageDao messageDao;
+    PreparedStatement getNewestMessageFromAllUsers;
+    PreparedStatement deleteUnread;
+
     @Autowired
     private ChatGroupService chatGroupService;
 
@@ -80,6 +84,8 @@ public class SingleMessageService {
 //        updateEndpoint = session.prepare("UPDATE chat.web_push_endpoints SET endpoint = ?, p256dh = ?, auth = ? WHERE user_id = ?;");
         getEndpoints = session.prepare("select * from chat.web_push_endpoints where user_id = ?");
         getAllRecords = session.prepare("select * from chat.chat_records where receiver_id = ? and send_time>?");
+        getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
+        deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ?;");
     }
 
     public boolean blockUser(String userId, String blockUser) {
@@ -262,11 +268,14 @@ public class SingleMessageService {
     }
 
 
+    public List<UnreadMessage> getNewestMessagesFromAllUsers(String userId) {
+        ResultSet execute = session.execute(getNewestMessageFromAllUsers.bind(userId));
+        List<UnreadMessage> notificationMessages = UnreadMessageParser.parseToUnreadMessage(execute);
+        return notificationMessages;
+    }
 
+    public void markUnread(String userId) {
+        session.execute(deleteUnread.bind(userId));
 
-
-
-
-
-
+    }
 }
