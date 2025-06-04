@@ -240,7 +240,7 @@ public class NotificationServerEndpoint {
 
             if (userMessages != null) {
                 // Get up to 5 messages
-                for (int i = 0; i < 5 && !userMessages.isEmpty(); i++) {
+                for (int i = 0; i < userMessages.size() && !userMessages.isEmpty(); i++) {
                     NotificationMessage notificationMessage = userMessages.poll();
                     if (notificationMessage != null) {
                         messageResults.add(JSON.toJSONString(notificationMessage));
@@ -250,6 +250,7 @@ public class NotificationServerEndpoint {
 
             // Send response
             if (session.isOpen()) {
+                System.out.println("send web push message");
                 String response = "[" + String.join(",", messageResults) + "]";
                 session.getBasicRemote().sendText(response);
             }
