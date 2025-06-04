@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Profile;
 import redis.clients.jedis.Jedis;
 
 import java.net.InetSocketAddress;
+import java.net.http.HttpClient;
 import java.util.Properties;
 
 
@@ -19,6 +20,11 @@ import java.util.Properties;
 public class DispatcherConfiguration {
 
     private static String ipAddress = "127.0.0.1";
+
+    @Bean
+    public static HttpClient setClient() {
+        return HttpClient.newHttpClient();
+    }
 
     @Bean
     public static Jedis configRedis() {
