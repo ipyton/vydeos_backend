@@ -268,7 +268,7 @@ public class NotificationServerEndpoint {
             if (userMessages != null && !userMessages.isEmpty() && session.isOpen()) {
                 // Send a few pending messages immediately
                 List<String> pendingMessages = new ArrayList<>();
-                for (int i = 0; i < 3 && !userMessages.isEmpty(); i++) {
+                for (int i = 0; i < 15 && !userMessages.isEmpty(); i++) {
                     NotificationMessage message = userMessages.poll();
                     if (message != null) {
                         pendingMessages.add(JSON.toJSONString(message));

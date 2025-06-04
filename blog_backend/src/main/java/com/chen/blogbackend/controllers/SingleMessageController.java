@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.ChatGroupService;
 import com.chen.blogbackend.services.FriendsService;
 import com.chen.blogbackend.services.SearchService;
@@ -164,4 +165,18 @@ public class SingleMessageController {
 //    public LoginMessage getRequestCache(String userId) {
 //
 //    }
+
+
+    @RequestMapping("getNewestMessageFromAllUsers")
+    public Message getNewestMessageFromAllUsers(HttpServletRequest request) {
+        String userId = (String) request.getAttribute("userEmail");
+        try {
+            List<NotificationMessage> newestMessagesFromAllUsers = service.getNewestMessagesFromAllUsers(userId);
+            return new Message(0, JSON.toJSONString(newestMessagesFromAllUsers));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return new Message(-1, "An error occurred while fetching newest message");
+        }
+    }
 }

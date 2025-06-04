@@ -60,6 +60,15 @@ public class DispatcherAutoRunner {
                 " message_id, content, del, messagetype, group_id,refer_message_id,refer_user_id, send_time, type)" +
                 "values(?,?,?,?,?,?,?,?,?,?)");
 
+        PreparedStatement updateCount = cqlSession.prepare("insert into chat.unread_messages " +
+                "(user_id text, receiver_id text, type text, messageType text, content text," +
+                " send_time int, message_id int) values (?, ?, ?, ?, ?, ?, ?);" );
+
+        PreparedStatement getCount = cqlSession.prepare("select count from chat.unread_messages where user_id = ? and type=? and receiver_id = ?");
+        PreparedStatement setCount = cqlSession.prepare("insert into chat.unread_messages (user_id, receiver_id, type, messageType, content, send_time , message_id ) values(?,?,?,?,?,?,?)");
+
+
+
         PreparedStatement getMembers = cqlSession.prepare("select * from group_chat.chat_group_members where group_id = ?");
 
         consumer.subscribe(List.of("dispatch"));

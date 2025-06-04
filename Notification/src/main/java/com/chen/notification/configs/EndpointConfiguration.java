@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
@@ -37,10 +39,10 @@ public class EndpointConfiguration {
     }
 
     @Bean
-    public static Jedis configRedis() {
-        Jedis jedis = new Jedis(ipAddress,6379);
-        System.out.println("redis启动成功" + jedis.ping());
-        return jedis;
+    public static JedisPool configRedis() {
+        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        JedisPool jedisPool = new JedisPool(jedisPoolConfig, ipAddress, 6379);
+        return jedisPool;
     }
 
     @Bean
