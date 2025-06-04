@@ -23,8 +23,9 @@ public class UnreadMessageParser {
             String messageType = columnDefinitions.contains("messageType") ? row.getString("messageType") : null;
             String content = columnDefinitions.contains("content") ? row.getString("content") : null;
             Instant sendTime = columnDefinitions.contains("send_time") ? row.getInstant("send_time") : null;
-            int messageId = columnDefinitions.contains("message_id") ? row.getInt("message_id") : 0;
 
+            long messageId = columnDefinitions.contains("message_id") ? row.getLong("message_id") : 0;
+            int count = columnDefinitions.contains("count") ? row.getInt("count") : 0;
             // 创建 UnreadMessage 对象
             UnreadMessage message = new UnreadMessage(
                     userId,
@@ -33,7 +34,8 @@ public class UnreadMessageParser {
                     messageType,
                     content,
                     sendTime,
-                    messageId
+                    messageId,
+                    count
             );
 
             // 将解析的消息添加到结果列表中

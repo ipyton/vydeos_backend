@@ -60,7 +60,7 @@ public class SingleMessageService {
     PreparedStatement getEndpoints;
     PreparedStatement getGroupRecord;
     PreparedStatement getNewestMessageFromAllUsers;
-
+    PreparedStatement deleteUnread;
 
     @Autowired
     private ChatGroupService chatGroupService;
@@ -82,7 +82,8 @@ public class SingleMessageService {
 //        updateEndpoint = session.prepare("UPDATE chat.web_push_endpoints SET endpoint = ?, p256dh = ?, auth = ? WHERE user_id = ?;");
         getEndpoints = session.prepare("select * from chat.web_push_endpoints where user_id = ?");
         getAllRecords = session.prepare("select * from chat.chat_records where receiver_id = ? and send_time>?");
-        getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where receiver_id = ? order by send_time asc");
+        getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
+        deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ?;");
     }
 
     public boolean blockUser(String userId, String blockUser) {
@@ -269,5 +270,10 @@ public class SingleMessageService {
         ResultSet execute = session.execute(getNewestMessageFromAllUsers.bind(userId));
         List<NotificationMessage> notificationMessages = MessageParser.parseToNotificationMessage(execute);
         return notificationMessages;
+    }
+
+    public void markUnread(String userId) {
+        session.execute(deleteUnread.bind(userId));
+
     }
 }

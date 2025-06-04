@@ -9,14 +9,15 @@ public class UnreadMessage {
     private String messageType;
     private String content;
     private Instant sendTime;
-    private int messageId;
+    private long messageId;
+    private int count;
 
     // Default constructor
     public UnreadMessage() {}
 
     // Constructor with all fields
     public UnreadMessage(String userId, String receiverId, String type, String messageType,
-                         String content, Instant sendTime, int messageId) {
+                         String content, Instant sendTime, long messageId, int count) {
         this.userId = userId;
         this.receiverId = receiverId;
         this.type = type;
@@ -24,6 +25,15 @@ public class UnreadMessage {
         this.content = content;
         this.sendTime = sendTime;
         this.messageId = messageId;
+        this.count = count;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
     }
 
     // Getters and Setters
@@ -75,11 +85,11 @@ public class UnreadMessage {
         this.sendTime = sendTime;
     }
 
-    public int getMessageId() {
+    public long getMessageId() {
         return messageId;
     }
 
-    public void setMessageId(int messageId) {
+    public void setMessageId(long messageId) {
         this.messageId = messageId;
     }
 

@@ -2,7 +2,9 @@ package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.notification.entities.NotificationMessage;
+import com.chen.notification.entities.UnreadMessage;
 import com.chen.notification.mappers.MessageParser;
+import com.chen.notification.mappers.UnreadMessageParser;
 import com.chen.notification.service.DistributedLockService;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
@@ -69,12 +71,10 @@ public class DispatcherAutoRunner {
                 "(user_id text, receiver_id text, type text, messageType text, content text," +
                 " send_time int, message_id int) values (?, ?, ?, ?, ?, ?, ?);" );
 
-        PreparedStatement getCount = cqlSession.prepare("select count from chat.unread_messages where user_id = ? and type= ? and receiver_id = ?");
-        PreparedStatement setCount = cqlSession.prepare("insert into chat.unread_messages (user_id, receiver_id, type, messageType, content, send_time , message_id ) values(?,?,?,?,?,?,?)");
 
 
 
-        PreparedStatement getMembers = cqlSession.prepare("select * from group_chat.chat_group_members where group_id = ?");
+        PreparedStatement getMembers = cqlSession.prepare("select * from group_chat.chat_group_members where group_id = ?;");
 
         consumer.subscribe(List.of("dispatch"));
 
@@ -89,18 +89,8 @@ public class DispatcherAutoRunner {
                 NotificationMessage notificationMessage = JSON.parseObject(value, NotificationMessage.class);
                 if (notificationMessage.getType().equals("single")) {
                     System.out.println("single message");
-                    DistributedLockService.LockToken lockToken = distributedLockService.acquireLock(notificationMessage.getReceiverId());
-                    if (lockToken == null) {
-                        throw new RuntimeException("lock acquisition failed");
-                    }
 
-                    ResultSet execute = cqlSession.execute(getCount.bind(notificationMessage.getSenderId(), "single", notificationMessage.getReceiverId()));
-                    List<NotificationMessage> notificationMessages = MessageParser.parseToNotificationMessage(execute);
-                    NotificationMessage newMessage = notificationMessages.get(0);
-                    newMessage
-                    cqlSession.execute(setCount.bind(notificationMessage.getSenderId(), notificationMessage.getReceiverId(), "single",
-                            notificationMessage.getMessageType(), newMessage.getContent(), newMessage.getTime(),newMessage.getMessageId()));
-                    distributedLockService.releaseLock(lockToken);
+                    addUnread(notificationMessage);
 
 
                     cqlSession.execute(insertMessage.bind(notificationMessage.getSenderId(),notificationMessage.getMessageId(),
@@ -127,6 +117,7 @@ public class DispatcherAutoRunner {
 
                         System.out.println(user_id);
                         notificationMessage.setReceiverId(user_id);
+                        addUnread(notificationMessage);
                         producer.send(new ProducerRecord<String, String>("single",user_id, JSON.toJSONString(notificationMessage)));
                     }
 
@@ -136,6 +127,27 @@ public class DispatcherAutoRunner {
             consumer.commitSync();
         }
 
+    }
+
+    private void addUnread(NotificationMessage notificationMessage) {
+        PreparedStatement getCount = cqlSession.prepare("select count from chat.unread_messages where user_id = ? and type= ? and receiver_id = ?;");
+        PreparedStatement setCount = cqlSession.prepare("insert into chat.unread_messages (user_id, receiver_id, type, messageType, content, send_time , message_id,count ) values(?,?,?,?,?,?,?,?);");
+
+        DistributedLockService.LockToken lockToken = distributedLockService.acquireLock(notificationMessage.getReceiverId());
+        if (lockToken == null) {
+            throw new RuntimeException("lock acquisition failed");
+        }
+
+        ResultSet execute = cqlSession.execute(getCount.bind(notificationMessage.getSenderId(), "single", notificationMessage.getReceiverId()));
+        List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(execute);
+        UnreadMessage unreadMessage = unreadMessages.get(0);
+        unreadMessage.setCount(unreadMessage.getCount() + 1);
+        unreadMessage.setMessageId(notificationMessage.getMessageId());
+        unreadMessage.setContent(notificationMessage.getContent());
+        unreadMessage.setSendTime(notificationMessage.getTime());
+        cqlSession.execute(setCount.bind(unreadMessage.getUserId(), unreadMessage.getReceiverId(), "single",
+                notificationMessage.getMessageType(), unreadMessage.getContent(), unreadMessage.getSendTime(),unreadMessage.getMessageId()));
+        distributedLockService.releaseLock(lockToken);
     }
 
 }
