@@ -39,6 +39,7 @@ public class NotificationProducer {
 //        SendReceipt send = producer.send(messageToSend);
 //        MessageId messageId = send.getMessageId();
 //        System.out.println("message Id" + messageId);
+        System.out.println("dispatch");
     producer.send(new ProducerRecord<>("dispatch", message.getReceiverId() ,JSON.toJSONString(message)));
     }
 
