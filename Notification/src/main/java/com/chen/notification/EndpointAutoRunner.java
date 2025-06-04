@@ -82,7 +82,7 @@ public class EndpointAutoRunner {
         public String privateKey;
         public String endpoint;
     }
-    ObjectMapper mapper = new ObjectMapper();
+
 
 
 
