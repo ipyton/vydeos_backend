@@ -32,7 +32,7 @@ import java.util.logging.Logger;
         configurator = WebSocketConfig.class,  // Add this for Spring integration
         decoders = {MessageDecoder.class},     // Optional: for message decoding
         encoders = {MessageEncoder.class})     // Optional: for message encoding
-@Profile("endpoint")
+@Profile("dispatcher")
 public class NotificationServerEndpoint {
 
     private static final Logger logger = Logger.getLogger(NotificationServerEndpoint.class.getName());
