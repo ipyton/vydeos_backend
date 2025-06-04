@@ -174,7 +174,6 @@ public class NotificationServerEndpoint {
             activeConnections.decrementAndGet();
             closedConnections.incrementAndGet();
 
-            // Log statistics periodically
             if (closedConnections.get() % 100 == 0) {
                 logger.info("Connection statistics - Active: " + activeConnections.get() +
                         ", Total closed: " + closedConnections.get());
