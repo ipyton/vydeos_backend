@@ -321,7 +321,7 @@ public class NotificationServerEndpoint {
                 logger.warning("Message has empty receiverId, skipping");
                 return;
             }
-
+            System.out.println("receiverId----=====" + receiverId);
             Session session = sessionPool.get(receiverId);
             if (session != null && session.isOpen()) {
                 try {
