@@ -20,6 +20,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.jose4j.lang.JoseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,7 +52,6 @@ public class EndpointAutoRunner {
     @Autowired
     NotificationServerEndpoint service;
 
-    @Autowired
     KafkaConsumer<String, String> consumer;
 
 //    @Autowired
@@ -93,6 +93,12 @@ public class EndpointAutoRunner {
         // 使用新线程异步启动 Kafka 消费
         System.out.println(getEndpoints.toString());
         System.out.println("endpoint runner is doing job");
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "127.0.0.1" + ":9092");
+        props.setProperty("group.id", "endpoint");
+        props.setProperty("enable.auto.commit", "false");
+
+        consumer =  new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
         new Thread(this::consumeMessages).start();
     }
 

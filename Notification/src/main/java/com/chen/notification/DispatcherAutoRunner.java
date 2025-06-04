@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,6 @@ import java.util.concurrent.Executors;
 @Profile("dispatcher")
 public class DispatcherAutoRunner {
 
-    @Autowired
     KafkaConsumer<String, String> consumer;
 
     @Autowired
@@ -39,6 +39,12 @@ public class DispatcherAutoRunner {
     @PostConstruct
     private void run(){
         executorService = Executors.newFixedThreadPool(4); // 根据需要调整线程池大小
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "127.0.0.1" + ":9092");
+        props.setProperty("group.id", "dispatcher");
+        props.setProperty("enable.auto.commit", "false");
+
+        consumer=  new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
 
         // 使用新线程异步启动 Kafka 消费
         new Thread(this::consumeMessage).start();
