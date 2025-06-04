@@ -87,7 +87,8 @@ public class DispatcherAutoRunner {
         consumer.subscribe(List.of("dispatch"));
 
         while (true) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(100));
+            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(1000));
+            System.out.println("dispatcher running step1");
             for (ConsumerRecord<String, String> record : records) {
                 String topic = record.topic();
                 String key = record.key();
