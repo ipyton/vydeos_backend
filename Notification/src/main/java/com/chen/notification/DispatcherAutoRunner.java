@@ -104,7 +104,7 @@ public class DispatcherAutoRunner {
                             notificationMessage.getContent(),false, "text", notificationMessage.getReceiverId(), 0l,new ArrayList<String>(),
                             notificationMessage.getTime(), "single"));
                     producer.send(new ProducerRecord<String, String>("single",notificationMessage.getSenderId(), JSON.toJSONString(notificationMessage)));
-
+                    System.out.println(notificationMessage.getContent() + " step1");
 
 
                 }
@@ -155,6 +155,7 @@ public class DispatcherAutoRunner {
         cqlSession.execute(setCount.bind( unreadMessage.getUserId(), unreadMessage.getSenderId(), "single",
                 notificationMessage.getMessageType(), unreadMessage.getContent(), unreadMessage.getSendTime(),
                 unreadMessage.getMessageId(),unreadMessage.getCount(),unreadMessage.getMemberId()));
+        System.out.println("unread message: " + unreadMessage);
         distributedLockService.releaseLock(lockToken);
     }
 

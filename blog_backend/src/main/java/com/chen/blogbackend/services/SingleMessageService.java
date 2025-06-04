@@ -116,8 +116,10 @@ public class SingleMessageService {
         Instant now = Instant.now();
         SendingReceipt receipt = new SendingReceipt();
         NotificationMessage singleMessage =  new NotificationMessage(null, userId, receiverId,0, null, null, "single", content, -1, now,-1);
+        System.out.println("sending message");
         System.out.println(singleMessage.getSenderId());
         System.out.println(singleMessage.getReceiverId());
+
         if (friendsService.getRelationship(singleMessage.getSenderId(), singleMessage.getReceiverId()) != 11) {
             System.out.println("they are not friends");
             receipt.sequenceId = -1;
