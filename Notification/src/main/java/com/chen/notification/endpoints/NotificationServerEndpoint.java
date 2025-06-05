@@ -313,6 +313,7 @@ public class NotificationServerEndpoint {
 
     public void sendMessages(List<NotificationMessage> messages) {
         if (messages == null || messages.isEmpty()) {
+            System.out.println("is empty");
             return;
         }
 
@@ -332,17 +333,20 @@ public class NotificationServerEndpoint {
                 } catch (IOException e) {
                     logger.warning("Failed to send message to " + receiverId + ": " + e.getMessage());
                     cleanupSession(session);
+                    System.out.println("Failed to send message to " + receiverId + ": " + e.getMessage());
                     // Store message for later delivery
-                    updateMessageList(receiverId, message);
+                    //updateMessageList(receiverId, message);
                 }
             } else {
                 // Clean up invalid sessions
                 if (session != null) {
                     cleanupSession(session);
                 }
+                System.out.println("Failed to send message to " + receiverId + ", deprecated");
+
                 // Store message for later delivery
-                updateMessageList(receiverId, message);
-                logger.fine("User " + receiverId + " is offline, message queued");
+                //updateMessageList(receiverId, message);
+                //logger.fine("User " + receiverId + " is offline, message queued");
             }
         });
     }
