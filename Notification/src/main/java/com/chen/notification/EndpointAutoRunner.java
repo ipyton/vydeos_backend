@@ -110,44 +110,45 @@ public class EndpointAutoRunner {
 
             while (true) {
                 System.out.println(Thread.currentThread().getName()+ "is doing job");
-            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(500));
+            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(1000));
             Map<String, List<NotificationMessage>> topicKeyMap = new HashMap<>();
             for (ConsumerRecord<String, String> record : records) {
 //                String topic = record.topic();
                 String key = record.key();
                 String value = record.value();
+                System.out.println("step2");
                 System.out.println(value);
                 topicKeyMap.putIfAbsent(key, new ArrayList<>());
                 NotificationMessage notificationMessage = JSON.parseObject(value, NotificationMessage.class);
                 topicKeyMap.get(key).add(notificationMessage);
                 ResultSet execute = session.execute(getEndpoints.bind(notificationMessage.getReceiverId()));
                 if (execute.getExecutionInfo().getErrors().isEmpty()) {
-                    for (Row row : execute.all()) {
-                        String auth = row.getString("auth");
-                        String endpoint = row.getString("endpoint");
-                        String p256dh = row.getString("p256dh");
-                        if (auth == null || p256dh == null) {
-                            continue;
-                        }
+//                    for (Row row : execute.all()) {
+//                        String auth = row.getString("auth");
+//                        String endpoint = row.getString("endpoint");
+//                        String p256dh = row.getString("p256dh");
+//                        if (auth == null || p256dh == null) {
+//                            continue;
+//                        }
 //                        Subscription subscription = new Subscription(
 //                                endpoint, // endpoint
 //                                new Subscription.Keys(p256dh, auth)                                 // auth key
 //                        );
-                        System.out.println(endpoint);
-                        System.out.println(p256dh);
-                        System.out.println(auth);
-                        WebPushMessage webPushMessage = new WebPushMessage();
-                        webPushMessage.title = "hello";
-                        webPushMessage.message = JSON.toJSONString(notificationMessage);
-                        webPushMessage.clickTarget = "www.baidu.com";
-                        webPushMessage.endpoint = endpoint;
-                        webPushMessage.publicKey = p256dh;
-                        webPushMessage.privateKey = auth;
+//                        System.out.println(endpoint);
+//                        System.out.println(p256dh);
+//                        System.out.println(auth);
+//                        WebPushMessage webPushMessage = new WebPushMessage();
+//                        webPushMessage.title = "hello";
+//                        webPushMessage.message = JSON.toJSONString(notificationMessage);
+//                        webPushMessage.clickTarget = "www.baidu.com";
+//                        webPushMessage.endpoint = endpoint;
+//                        webPushMessage.publicKey = p256dh;
+//                        webPushMessage.privateKey = auth;
 //                        HttpResponse send = sender.send(new Notification(endpoint, p256dh, auth, mapper.writeValueAsBytes(webPushMessage)));
 //                        System.out.println(send.toString());
 //                        int statusCode = send.getStatusLine().getStatusCode();
-                        //restTemplate.postForObject("http://localhost:8081/send", webPushMessage, String.class);
-                    }
+//                        restTemplate.postForObject("http://localhost:8081/send", webPushMessage, String.class);
+//                    }
                     System.out.println("send web push message");
                     service.sendMessages(List.of(notificationMessage));
 

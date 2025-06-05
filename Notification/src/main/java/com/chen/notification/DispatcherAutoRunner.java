@@ -10,152 +10,482 @@ import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
+
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 @Profile("dispatcher")
 public class DispatcherAutoRunner {
 
-    KafkaConsumer<String, String> consumer;
+    private static final Logger logger = LoggerFactory.getLogger(DispatcherAutoRunner.class);
+    private static final int MAX_RETRY_ATTEMPTS = 3;
+    private static final long RETRY_DELAY_MS = 1000;
+    private static final long LOCK_TIMEOUT_MS = 5000;
 
     @Autowired
-    KafkaProducer<String, String> producer;
+    private KafkaProducer<String, String> producer;
 
     @Autowired
-    CqlSession cqlSession;
+    private CqlSession cqlSession;
 
     @Autowired
-    DistributedLockService distributedLockService;
+    private DistributedLockService distributedLockService;
+
+    @Value("${kafka.bootstrap.servers:127.0.0.1:9092}")
+    private String bootstrapServers;
+
+    @Value("${kafka.consumer.group.id:dispatcher}")
+    private String consumerGroupId;
+
+    @Value("${dispatcher.thread.pool.size:4}")
+    private int threadPoolSize;
+
+    @Value("${kafka.consumer.poll.timeout:1000}")
+    private long pollTimeoutMs;
 
     private ExecutorService executorService;
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    private CompletableFuture<Void> consumerTask;
 
-    PreparedStatement getMembers;
-    PreparedStatement groupMessage;
-    PreparedStatement insertMessage;
-    PreparedStatement getCount;
-    PreparedStatement setCount;
+    // Prepared statements
+    private PreparedStatement getMembers;
+    private PreparedStatement groupMessage;
+    private PreparedStatement insertMessage;
+    private PreparedStatement getCount;
+    private PreparedStatement setCount;
+    private KafkaConsumer<String, String> consumer;
 
     @PostConstruct
-    private void run(){
-        insertMessage = cqlSession.prepare("insert into chat.chat_records (user_id," +
-                " message_id, content, del, messagetype, receiver_id, refer_message_id,refer_user_id, send_time, type)" +
-                "values(?,?,?,?,?,?,?,?,?,?)");
-        groupMessage = cqlSession.prepare("insert into chat.group_chat_records (user_id,"+
-                " message_id, content, del, messagetype, group_id,refer_message_id,refer_user_id, send_time, type)" +
-                "values(?,?,?,?,?,?,?,?,?,?)");
+    private void initialize() {
+        try {
+            logger.info("Initializing DispatcherAutoRunner...");
 
+            initializePreparedStatements();
+            initializeExecutorService();
+            initializeKafkaConsumer();
 
-        getMembers = cqlSession.prepare("select * from group_chat.chat_group_members where group_id = ?;");
+            // Start consumer in a separate thread
+            consumerTask = CompletableFuture.runAsync(this::consumeMessages);
 
-        getCount = cqlSession.prepare("select count from chat.unread_messages where user_id = ? and type= ? and sender_id = ?;");
-        setCount = cqlSession.prepare("insert into chat.unread_messages (" +
-                "user_id, sender_id, type, messageType, content, send_time , message_id,count, member_id) " +
-                "values(?,?,?,?,?,?,?,?,?);");
-
-
-        executorService = Executors.newFixedThreadPool(4); // 根据需要调整线程池大小
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "127.0.0.1" + ":9092");
-        props.setProperty("group.id", "dispatcher");
-        props.setProperty("enable.auto.commit", "false");
-
-
-        consumer=  new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
-
-        // 使用新线程异步启动 Kafka 消费
-        new Thread(this::consumeMessage).start();
+            logger.info("DispatcherAutoRunner initialized successfully");
+        } catch (Exception e) {
+            logger.error("Failed to initialize DispatcherAutoRunner", e);
+            throw new RuntimeException("Initialization failed", e);
+        }
     }
 
+    private void initializePreparedStatements() {
+        try {
+            insertMessage = cqlSession.prepare(
+                    "INSERT INTO chat.chat_records " +
+                            "(user_id, message_id, content, del, messagetype, receiver_id, refer_message_id, refer_user_id, send_time, type) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
 
-    private void consumeMessage() {
-        //System.out.println("This is a dispatcher service");
+            groupMessage = cqlSession.prepare(
+                    "INSERT INTO chat.group_chat_records " +
+                            "(user_id, message_id, content, del, messagetype, group_id, refer_message_id, refer_user_id, send_time, type) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
 
-        consumer.subscribe(List.of("dispatch"));
+            getMembers = cqlSession.prepare(
+                    "SELECT * FROM group_chat.chat_group_members WHERE group_id = ?"
+            );
 
-        while (true) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(100));
-            for (ConsumerRecord<String, String> record : records) {
-                String topic = record.topic();
-                String key = record.key();
-                String value = record.value();
+            getCount = cqlSession.prepare(
+                    "SELECT count FROM chat.unread_messages WHERE user_id = ? AND type = ? AND sender_id = ?"
+            );
 
-                System.out.println(value);
-                NotificationMessage notificationMessage = JSON.parseObject(value, NotificationMessage.class);
-                if (notificationMessage.getType().equals("single")) {
-                    System.out.println("single message");
+            setCount = cqlSession.prepare(
+                    "INSERT INTO chat.unread_messages " +
+                            "(user_id, sender_id, type, messageType, content, send_time, message_id, count, member_id) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
 
-                    addUnread(notificationMessage);
+            logger.info("Prepared statements initialized successfully");
+        } catch (Exception e) {
+            logger.error("Failed to initialize prepared statements", e);
+            throw new RuntimeException("Failed to prepare CQL statements", e);
+        }
+    }
 
+    private void initializeExecutorService() {
+        executorService = Executors.newFixedThreadPool(threadPoolSize, r -> {
+            Thread t = new Thread(r, "dispatcher-worker");
+            t.setDaemon(true);
+            return t;
+        });
+        logger.info("Executor service initialized with {} threads", threadPoolSize);
+    }
 
-                    cqlSession.execute(insertMessage.bind(notificationMessage.getSenderId(),notificationMessage.getMessageId(),
-                            notificationMessage.getContent(),false, "text", notificationMessage.getReceiverId(), 0l,new ArrayList<String>(),
-                            notificationMessage.getTime(), "single"));
-                    producer.send(new ProducerRecord<String, String>("single",notificationMessage.getSenderId(), JSON.toJSONString(notificationMessage)));
+    private void initializeKafkaConsumer() {
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroupId);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000); // 5 minutes
+        props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 30000); // 30 seconds
+        props.put(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG, 10000); // 10 seconds
 
+        consumer = new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
+        consumer.subscribe(Arrays.asList("dispatch"));
 
+        logger.info("Kafka consumer initialized and subscribed to 'dispatch' topic");
+    }
 
-                }
-                else if (notificationMessage.getType().equals("group")) {
-                    System.out.println("group message");
-                    ResultSet execute = cqlSession.execute(getMembers.bind(notificationMessage.getGroupId()));
-                    List<Row> all = execute.all();
-                    cqlSession.execute(groupMessage.bind(notificationMessage.getSenderId(),notificationMessage.getMessageId(),
-                            notificationMessage.getContent(),false, "text", notificationMessage.getGroupId(),0l,new ArrayList<String>(),
-                            notificationMessage.getTime(), "group"));
+    private void consumeMessages() {
+        running.set(true);
+        logger.info("Starting message consumption...");
 
-                    for (Row row : all) {
-                        String user_id = row.getString("user_id");
-                        if (user_id.equals(notificationMessage.getSenderId())) {
-                            continue;
-                        }
+        try {
+            while (running.get()) {
+                try {
+                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(pollTimeoutMs));
 
-                        System.out.println(user_id);
-                        notificationMessage.setReceiverId(user_id);
-                        addUnread(notificationMessage);
-                        producer.send(new ProducerRecord<String, String>("single",user_id, JSON.toJSONString(notificationMessage)));
+                    if (records.isEmpty()) {
+                        continue;
                     }
 
-                    System.out.println(notificationMessage);
+                    logger.debug("Received {} records", records.count());
+
+                    List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+                    for (ConsumerRecord<String, String> record : records) {
+                        CompletableFuture<Void> future = CompletableFuture.runAsync(
+                                () -> processRecord(record), executorService
+                        );
+                        futures.add(future);
+                    }
+
+                    // Wait for all tasks to complete
+                    CompletableFuture<Void> allTasks = CompletableFuture.allOf(
+                            futures.toArray(new CompletableFuture[0])
+                    );
+
+                    try {
+                        allTasks.get(30, TimeUnit.SECONDS); // Timeout after 30 seconds
+                        consumer.commitSync();
+                        logger.debug("Successfully processed and committed {} records", records.count());
+                    } catch (TimeoutException e) {
+                        logger.error("Timeout waiting for record processing to complete", e);
+                        // Don't commit if processing timed out
+                    }
+
+                } catch (WakeupException e) {
+                    logger.info("Consumer wakeup called, shutting down...");
+                    break;
+                } catch (Exception e) {
+                    logger.error("Error during message consumption", e);
+                    // Continue processing other messages
                 }
             }
-            consumer.commitSync();
+        } finally {
+            try {
+                consumer.close(Duration.ofSeconds(5));
+                logger.info("Kafka consumer closed");
+            } catch (Exception e) {
+                logger.error("Error closing Kafka consumer", e);
+            }
         }
-
     }
 
-    private void addUnread(NotificationMessage notificationMessage) {
+    private void processRecord(ConsumerRecord<String, String> record) {
+        try {
+            logger.debug("Processing record: key={}, value={}", record.key(), record.value());
 
+            if (record.value() == null || record.value().trim().isEmpty()) {
+                logger.warn("Received empty message, skipping");
+                return;
+            }
 
-        DistributedLockService.LockToken lockToken = distributedLockService.acquireLock(notificationMessage.getReceiverId());
-        if (lockToken == null) {
-            throw new RuntimeException("lock acquisition failed");
+            NotificationMessage notificationMessage = parseNotificationMessage(record.value());
+            if (notificationMessage == null) {
+                logger.error("Failed to parse notification message: {}", record.value());
+                return;
+            }
+
+            validateNotificationMessage(notificationMessage);
+
+            if ("single".equals(notificationMessage.getType())) {
+                processSingleMessage(notificationMessage);
+            } else if ("group".equals(notificationMessage.getType())) {
+                processGroupMessage(notificationMessage);
+            } else {
+                logger.warn("Unknown message type: {}", notificationMessage.getType());
+            }
+
+        } catch (Exception e) {
+            logger.error("Error processing record: {}", record.value(), e);
+            // Could implement dead letter queue here
         }
-
-        ResultSet execute = cqlSession.execute(getCount.bind(notificationMessage.getReceiverId(), "single", notificationMessage.getSenderId()));
-        List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(execute);
-        UnreadMessage unreadMessage = unreadMessages.get(0);
-        unreadMessage.setCount(unreadMessage.getCount() + 1);
-        unreadMessage.setMessageId(notificationMessage.getMessageId());
-        unreadMessage.setContent(notificationMessage.getContent());
-        unreadMessage.setSendTime(notificationMessage.getTime());
-        unreadMessage.setMemberId(notificationMessage.getSenderId());
-        cqlSession.execute(setCount.bind( unreadMessage.getUserId(), unreadMessage.getSenderId(), "single",
-                notificationMessage.getMessageType(), unreadMessage.getContent(), unreadMessage.getSendTime(),
-                unreadMessage.getMessageId(),unreadMessage.getCount(),unreadMessage.getMemberId()));
-        distributedLockService.releaseLock(lockToken);
     }
 
+    private NotificationMessage parseNotificationMessage(String value) {
+        try {
+            return JSON.parseObject(value, NotificationMessage.class);
+        } catch (Exception e) {
+            logger.error("Failed to parse JSON message: {}", value, e);
+            return null;
+        }
+    }
+
+    private void validateNotificationMessage(NotificationMessage message) {
+        if (message.getSenderId() == null ||
+                message.getContent() == null || message.getType() == null) {
+            throw new IllegalArgumentException("Invalid notification message: missing required fields");
+        }
+    }
+
+    private void processSingleMessage(NotificationMessage message) {
+        logger.debug("Processing single message from {} to {}", message.getSenderId(), message.getReceiverId());
+
+        try {
+            addUnreadMessage(message);
+
+            cqlSession.execute(insertMessage.bind(
+                    message.getSenderId(),
+                    message.getMessageId(),
+                    message.getContent(),
+                    false,
+                    message.getMessageType() != null ? message.getMessageType() : "text",
+                    message.getReceiverId(),
+                    0L,
+                    new ArrayList<String>(),
+                    message.getTime(),
+                    "single"
+            ));
+
+            sendToKafka("single", message.getReceiverId(), message);
+
+            logger.debug("Successfully processed single message: {}", message.getMessageId());
+        } catch (Exception e) {
+            logger.error("Failed to process single message: {}", message.getMessageId(), e);
+            throw e;
+        }
+    }
+
+    private void processGroupMessage(NotificationMessage message) throws ExecutionException, InterruptedException, TimeoutException {
+        logger.debug("Processing group message from {} to group {}", message.getSenderId(), message.getGroupId());
+
+        try {
+            // Insert group message record
+            cqlSession.execute(groupMessage.bind(
+                    message.getSenderId(),
+                    message.getMessageId(),
+                    message.getContent(),
+                    false,
+                    message.getMessageType() != null ? message.getMessageType() : "text",
+                    message.getGroupId(),
+                    0L,
+                    new ArrayList<String>(),
+                    message.getTime(),
+                    "group"
+            ));
+
+            // Get group members and send individual messages
+            ResultSet memberResult = cqlSession.execute(getMembers.bind(message.getGroupId()));
+            List<Row> members = memberResult.all();
+
+            if (members.isEmpty()) {
+                logger.warn("No members found for group: {}", message.getGroupId());
+                return;
+            }
+
+            List<CompletableFuture<Void>> memberTasks = new ArrayList<>();
+
+            for (Row member : members) {
+                String userId = member.getString("user_id");
+                if (userId == null || userId.equals(message.getSenderId())) {
+                    continue;
+                }
+
+                CompletableFuture<Void> memberTask = CompletableFuture.runAsync(() -> {
+                    try {
+                        NotificationMessage memberMessage = cloneMessage(message);
+                        memberMessage.setReceiverId(userId);
+
+                        addUnreadMessage(memberMessage);
+                        sendToKafka("single", userId, memberMessage);
+
+                        logger.debug("Sent group message to member: {}", userId);
+                    } catch (Exception e) {
+                        logger.error("Failed to send message to group member: {}", userId, e);
+                    }
+                }, executorService);
+
+                memberTasks.add(memberTask);
+            }
+
+            // Wait for all member notifications to complete
+            CompletableFuture.allOf(memberTasks.toArray(new CompletableFuture[0]))
+                    .get(30, TimeUnit.SECONDS);
+
+            logger.debug("Successfully processed group message: {}", message.getMessageId());
+        } catch (Exception e) {
+            logger.error("Failed to process group message: {}", message.getMessageId(), e);
+            throw e;
+        }
+    }
+
+    private NotificationMessage cloneMessage(NotificationMessage original) {
+        // Simple cloning - consider using a proper cloning library in production
+        NotificationMessage clone = new NotificationMessage();
+        clone.setMessageId(original.getMessageId());
+        clone.setSenderId(original.getSenderId());
+        clone.setContent(original.getContent());
+        clone.setType(original.getType());
+        clone.setMessageType(original.getMessageType());
+        clone.setTime(original.getTime());
+        clone.setGroupId(original.getGroupId());
+        return clone;
+    }
+
+    private void addUnreadMessage(NotificationMessage message) {
+        DistributedLockService.LockToken lockToken = null;
+
+        try {
+            lockToken = acquireLockWithTimeout(message.getReceiverId(), LOCK_TIMEOUT_MS);
+
+            ResultSet result = cqlSession.execute(getCount.bind(
+                    message.getReceiverId(), "single", message.getSenderId()
+            ));
+
+            List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
+            UnreadMessage unreadMessage = unreadMessages.isEmpty() ?
+                    new UnreadMessage() : unreadMessages.get(0);
+
+            // Set default values if null
+            if (unreadMessage.getUserId() == null) {
+                unreadMessage.setUserId(message.getReceiverId());
+            }
+            if (unreadMessage.getSenderId() == null) {
+                unreadMessage.setSenderId(message.getSenderId());
+            }
+
+            unreadMessage.setCount(unreadMessage.getCount() + 1);
+            unreadMessage.setMessageId(message.getMessageId());
+            unreadMessage.setContent(message.getContent());
+            unreadMessage.setSendTime(message.getTime());
+            unreadMessage.setMemberId(message.getSenderId());
+
+            cqlSession.execute(setCount.bind(
+                    unreadMessage.getUserId(),
+                    unreadMessage.getSenderId(),
+                    "single",
+                    message.getMessageType() != null ? message.getMessageType() : "text",
+                    unreadMessage.getContent(),
+                    unreadMessage.getSendTime(),
+                    unreadMessage.getMessageId(),
+                    unreadMessage.getCount(),
+                    unreadMessage.getMemberId()
+            ));
+
+            logger.debug("Updated unread count for user {} from sender {}: {}",
+                    message.getReceiverId(), message.getSenderId(), unreadMessage.getCount());
+
+        } catch (Exception e) {
+            logger.error("Failed to add unread message for user: {}", message.getReceiverId(), e);
+            throw e;
+        } finally {
+            if (lockToken != null) {
+                try {
+                    distributedLockService.releaseLock(lockToken);
+                } catch (Exception e) {
+                    logger.error("Failed to release lock for user: {}", message.getReceiverId(), e);
+                }
+            }
+        }
+    }
+
+    private DistributedLockService.LockToken acquireLockWithTimeout(String userId, long timeoutMs) {
+        long startTime = System.currentTimeMillis();
+
+        while (System.currentTimeMillis() - startTime < timeoutMs) {
+            DistributedLockService.LockToken lockToken = distributedLockService.acquireLock(userId);
+            if (lockToken != null) {
+                return lockToken;
+            }
+
+            try {
+                Thread.sleep(100); // Wait 100ms before retry
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Interrupted while waiting for lock", e);
+            }
+        }
+
+        throw new RuntimeException("Failed to acquire lock for user: " + userId + " within timeout: " + timeoutMs + "ms");
+    }
+
+    private void sendToKafka(String topic, String key, NotificationMessage message) {
+        try {
+            String messageJson = JSON.toJSONString(message);
+            ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, messageJson);
+
+            producer.send(record, (metadata, exception) -> {
+                if (exception != null) {
+                    logger.error("Failed to send message to Kafka topic {}: {}", topic, exception.getMessage());
+                } else {
+                    logger.debug("Message sent to Kafka topic {} partition {} offset {}",
+                            metadata.topic(), metadata.partition(), metadata.offset());
+                }
+            });
+        } catch (Exception e) {
+            logger.error("Error sending message to Kafka topic {}: {}", topic, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        logger.info("Shutting down DispatcherAutoRunner...");
+
+        running.set(false);
+
+        if (consumer != null) {
+            consumer.wakeup();
+        }
+
+        if (consumerTask != null) {
+            try {
+                consumerTask.get(10, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                logger.error("Error waiting for consumer task to complete", e);
+            }
+        }
+
+        if (executorService != null) {
+            executorService.shutdown();
+            try {
+                if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        logger.info("DispatcherAutoRunner shutdown complete");
+    }
 }

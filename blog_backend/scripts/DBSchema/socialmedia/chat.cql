@@ -28,4 +28,4 @@ CREATE TABLE web_push_endpoints (
                                              PRIMARY KEY (user_id, endpoint) -- 复合主键，确保用户的每个 endpoint 唯一
 );
 drop table chat.unread_messages;
-create table chat.unread_messages(user_id text, sender_id text,member_id text, type text, messageType text, content text, send_time int, message_id int, count int, primary key (user_id,type, sender_id)  );
+create table chat.unread_messages(user_id text, sender_id text,member_id text, type text, messageType text, content text, send_time timestamp, message_id bigint, count int, primary key (user_id,type, sender_id)  );

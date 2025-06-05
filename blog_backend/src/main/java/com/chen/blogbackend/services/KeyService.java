@@ -30,5 +30,23 @@ public class KeyService {
 
     }
 
+    public long getLongKey(String key) {
+        try {
+            // 递增键的值
+            Jedis jedis = jedisPool.getResource();
+            long incrementedValue = jedis.incr(key);
+
+            // 打印递增后的值
+            System.out.println("Key: " + key + ", Incremented Value: " + incrementedValue);
+            jedis.close();
+            return incrementedValue;
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+        }
+        return -1L;
+    }
+
 
 }

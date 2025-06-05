@@ -118,6 +118,7 @@ public class SingleMessageService {
         NotificationMessage singleMessage =  new NotificationMessage(null, userId, receiverId,0, null, null, "single", content, -1, now,-1);
         System.out.println(singleMessage.getSenderId());
         System.out.println(singleMessage.getReceiverId());
+
         if (friendsService.getRelationship(singleMessage.getSenderId(), singleMessage.getReceiverId()) != 11) {
             System.out.println("they are not friends");
             receipt.sequenceId = -1;
@@ -125,14 +126,9 @@ public class SingleMessageService {
 
             return receipt;
         }
-        String result;
-        if (userId.compareTo(receiverId) <= 0) {
-            result = userId + receiverId;
-        } else {
-            result = receiverId + userId;
-        }
 
-        receipt.sequenceId = keyService.getIntKey(result);
+
+        receipt.sequenceId = keyService.getLongKey("global");
         singleMessage.setMessageId(receipt.sequenceId);
         //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
 //        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getSenderId(),

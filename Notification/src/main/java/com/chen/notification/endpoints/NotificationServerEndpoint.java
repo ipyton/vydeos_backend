@@ -43,7 +43,7 @@ public class NotificationServerEndpoint {
     private final AtomicInteger activeConnections = new AtomicInteger();
     private final AtomicInteger closedConnections = new AtomicInteger();
 
-    public static ConcurrentHashMap<String, ConcurrentLinkedQueue<NotificationMessage>> messageList = new ConcurrentHashMap<>();
+//    public static ConcurrentHashMap<String, ConcurrentLinkedQueue<NotificationMessage>> messageList = new ConcurrentHashMap<>();
     private final String targetUrl = "http://localhost:8080/account/verifyToken";
 
     // Use a shared HttpClient with proper configuration
@@ -135,7 +135,7 @@ public class NotificationServerEndpoint {
             sessionHeartbeat.put(session, System.currentTimeMillis());
 
             // Initialize message queue for user
-            messageList.computeIfAbsent(userId, k -> new ConcurrentLinkedQueue<>());
+            //messageList.computeIfAbsent(userId, k -> new ConcurrentLinkedQueue<>());
 
             logger.info("User connected successfully: " + userId);
 
@@ -147,7 +147,7 @@ public class NotificationServerEndpoint {
             activeConnections.incrementAndGet();
 
             // Send any pending messages
-            sendPendingMessages(userId, session);
+            //sendPendingMessages(userId, session);
 
         } catch (Exception e) {
             logger.severe("Error in onOpen: " + e.getMessage());
@@ -236,17 +236,17 @@ public class NotificationServerEndpoint {
 
             // Get messages for the user
             List<String> messageResults = new ArrayList<>();
-            ConcurrentLinkedQueue<NotificationMessage> userMessages = messageList.get(userName);
+//            ConcurrentLinkedQueue<NotificationMessage> userMessages = messageList.get(userName);
 
-            if (userMessages != null) {
-                // Get up to 5 messages
-                for (int i = 0; i < userMessages.size() && !userMessages.isEmpty(); i++) {
-                    NotificationMessage notificationMessage = userMessages.poll();
-                    if (notificationMessage != null) {
-                        messageResults.add(JSON.toJSONString(notificationMessage));
-                    }
-                }
-            }
+//            if (userMessages != null) {
+//                // Get up to 5 messages
+//                for (int i = 0; i < userMessages.size() && !userMessages.isEmpty(); i++) {
+//                    NotificationMessage notificationMessage = userMessages.poll();
+//                    if (notificationMessage != null) {
+//                        messageResults.add(JSON.toJSONString(notificationMessage));
+//                    }
+//                }
+//            }
 
             // Send response
             if (session.isOpen()) {
@@ -262,28 +262,28 @@ public class NotificationServerEndpoint {
         }
     }
 
-    private void sendPendingMessages(String userId, Session session) {
-        try {
-            ConcurrentLinkedQueue<NotificationMessage> userMessages = messageList.get(userId);
-            if (userMessages != null && !userMessages.isEmpty() && session.isOpen()) {
-                // Send a few pending messages immediately
-                List<String> pendingMessages = new ArrayList<>();
-                for (int i = 0; i < 15 && !userMessages.isEmpty(); i++) {
-                    NotificationMessage message = userMessages.poll();
-                    if (message != null) {
-                        pendingMessages.add(JSON.toJSONString(message));
-                    }
-                }
-
-                if (!pendingMessages.isEmpty()) {
-                    String response = "[" + String.join(",", pendingMessages) + "]";
-                    session.getBasicRemote().sendText(response);
-                }
-            }
-        } catch (IOException e) {
-            logger.warning("Error sending pending messages: " + e.getMessage());
-        }
-    }
+//    private void sendPendingMessages(String userId, Session session) {
+//        try {
+//            ConcurrentLinkedQueue<NotificationMessage> userMessages = messageList.get(userId);
+//            if (userMessages != null && !userMessages.isEmpty() && session.isOpen()) {
+//                // Send a few pending messages immediately
+//                List<String> pendingMessages = new ArrayList<>();
+//                for (int i = 0; i < 15 && !userMessages.isEmpty(); i++) {
+//                    NotificationMessage message = userMessages.poll();
+//                    if (message != null) {
+//                        pendingMessages.add(JSON.toJSONString(message));
+//                    }
+//                }
+//
+//                if (!pendingMessages.isEmpty()) {
+//                    String response = "[" + String.join(",", pendingMessages) + "]";
+//                    session.getBasicRemote().sendText(response);
+//                }
+//            }
+//        } catch (IOException e) {
+//            logger.warning("Error sending pending messages: " + e.getMessage());
+//        }
+//    }
 
     private void cleanupSession(Session session) {
         if (session != null) {
@@ -296,23 +296,24 @@ public class NotificationServerEndpoint {
         }
     }
 
-    public void updateMessageList(String userId, NotificationMessage notificationMessage) {
-        if (userId == null || userId.trim().isEmpty()) {
-            logger.warning("Cannot update message list: userId is null or empty");
-            return;
-        }
-
-        ConcurrentLinkedQueue<NotificationMessage> queue = messageList.computeIfAbsent(userId, k -> new ConcurrentLinkedQueue<>());
-        queue.add(notificationMessage);
-
-        // Limit queue size to prevent memory issues
-        while (queue.size() > 100) {
-            queue.poll();
-        }
-    }
+//    public void updateMessageList(String userId, NotificationMessage notificationMessage) {
+//        if (userId == null || userId.trim().isEmpty()) {
+//            logger.warning("Cannot update message list: userId is null or empty");
+//            return;
+//        }
+//
+//        ConcurrentLinkedQueue<NotificationMessage> queue = messageList.computeIfAbsent(userId, k -> new ConcurrentLinkedQueue<>());
+//        queue.add(notificationMessage);
+//
+//        // Limit queue size to prevent memory issues
+//        while (queue.size() > 100) {
+//            queue.poll();
+//        }
+//    }
 
     public void sendMessages(List<NotificationMessage> messages) {
         if (messages == null || messages.isEmpty()) {
+            System.out.println("is empty");
             return;
         }
 
@@ -332,17 +333,20 @@ public class NotificationServerEndpoint {
                 } catch (IOException e) {
                     logger.warning("Failed to send message to " + receiverId + ": " + e.getMessage());
                     cleanupSession(session);
+                    System.out.println("Failed to send message to " + receiverId + ": " + e.getMessage());
                     // Store message for later delivery
-                    updateMessageList(receiverId, message);
+                    //updateMessageList(receiverId, message);
                 }
             } else {
                 // Clean up invalid sessions
                 if (session != null) {
                     cleanupSession(session);
                 }
+                System.out.println("Failed to send message to " + receiverId + ", deprecated");
+
                 // Store message for later delivery
-                updateMessageList(receiverId, message);
-                logger.fine("User " + receiverId + " is offline, message queued");
+                //updateMessageList(receiverId, message);
+                //logger.fine("User " + receiverId + " is offline, message queued");
             }
         });
     }
@@ -364,10 +368,10 @@ public class NotificationServerEndpoint {
         return closedConnections.get();
     }
 
-    public int getQueuedMessagesCount(String userId) {
-        ConcurrentLinkedQueue<NotificationMessage> queue = messageList.get(userId);
-        return queue != null ? queue.size() : 0;
-    }
+//    public int getQueuedMessagesCount(String userId) {
+//        ConcurrentLinkedQueue<NotificationMessage> queue = messageList.get(userId);
+//        return queue != null ? queue.size() : 0;
+//    }
 
     // Cleanup method to be called on application shutdown
     public void shutdown() {
