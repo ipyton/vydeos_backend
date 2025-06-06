@@ -11,13 +11,16 @@ public class SingleMessage {
     private String type;
     private String content;
     private Instant time;
-    private long messageId;
-    private long referMessageId;
-    private String messageType;
-    private boolean direction;
+    private long messageId=-1l;
+    private long referMessageId =-1l;
+    private String messageType = "single";
+    private boolean direction = false;
     private boolean deleted = false;
-    private Long sessionMessageId ;
+    private Long sessionMessageId =-1l ;
 
+    public boolean isDirection() {
+        return direction;
+    }
 
     public SingleMessage(String avatar, String userId1, String userId2, String receiverName, String senderName, String type, String content, Instant time, long messageId, long referMessageId, String messageType, boolean direction, boolean deleted, Long sessionMessageId) {
         this.avatar = avatar;

@@ -108,8 +108,8 @@ public class DispatcherAutoRunner {
 
             setCount = cqlSession.prepare(
                     "INSERT INTO chat.unread_messages " +
-                            "(user_id, sender_id, type, messageType, content, send_time, message_id, count, session_message_id,group_id) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                            "(user_id, sender_id, type, messageType, content, send_time, message_id, count, session_message_id,group_id,direction) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
 
             logger.info("Prepared statements initialized successfully");
@@ -215,7 +215,7 @@ public class DispatcherAutoRunner {
             if (jsonObject.get("type").equals("single")) {
                 processSingleMessage(jsonObject.toJavaObject(SingleMessage.class));
             }
-            else if (jsonObject.get("type").equals("single")) {
+            else if (jsonObject.get("type").equals("group")) {
                 processGroupMessage(jsonObject.toJavaObject(GroupMessage.class));
             }
 
@@ -313,33 +313,27 @@ public class DispatcherAutoRunner {
             UnreadMessage unreadMessage = unreadMessages.isEmpty() ?
                     new UnreadMessage() : unreadMessages.get(0);
 
-            // Set default values if null
-            if (unreadMessage.getUserId() == null) {
-                unreadMessage.setUserId(message.getReceiverId());
-            }
-            if (unreadMessage.getSenderId() == null) {
-                unreadMessage.setSenderId(message.getUserId());
-            }
+            long count = 0;
+            if (!unreadMessages.isEmpty()) {
+                count = unreadMessages.get(0).getCount();
 
-            unreadMessage.setCount(unreadMessage.getCount() + 1);
-            unreadMessage.setMessageId(message.getMessageId());
-            unreadMessage.setContent(message.getContent());
-            unreadMessage.setSendTime(message.getSendTime());
-            unreadMessage.setSessionMessageId(message.getSessionMessageId());
-            unreadMessage.setGroupId(message.getGroupId());
+            }
 
             cqlSession.execute(setCount.bind(
-                    unreadMessage.getUserId(),
-                    unreadMessage.getSenderId(),
-                    "group",
+                    message.getReceiverId(),
+                    message.getUserId(),
+                    "single",
                     message.getMessageType() != null ? message.getMessageType() : "text",
-                    unreadMessage.getContent(),
-                    unreadMessage.getSendTime(),
-                    unreadMessage.getMessageId(),
-                    unreadMessage.getCount(),
-                    unreadMessage.getSessionMessageId(),
-                    unreadMessage.getGroupId()
+                    message.getContent(),
+                    message.getSendTime(),
+                    message,
+                    count + 1,
+                    message.getSessionMessageId(),
+                    message.getGroupId(),
+                    false
             ));
+
+
 
             logger.debug("Updated unread count for user {} from sender {}: {}",
                     message.getReceiverId(), message.getUserId(), unreadMessage.getCount());
@@ -373,37 +367,27 @@ public class DispatcherAutoRunner {
             ));
 
             List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
-            UnreadMessage unreadMessage = unreadMessages.isEmpty() ?
-                    new UnreadMessage() : unreadMessages.get(0);
 
-            // Set default values if null
-            if (unreadMessage.getUserId() == null) {
-                unreadMessage.setUserId(receiver);
-            }
-            if (unreadMessage.getSenderId() == null) {
-                unreadMessage.setSenderId(sender);
+            long count = 0;
+            if (!unreadMessages.isEmpty()) {
+                count = unreadMessages.get(0).getCount();
+
             }
 
-            unreadMessage.setCount(unreadMessage.getCount() + 1);
-            unreadMessage.setMessageId(message.getMessageId());
-            unreadMessage.setContent(message.getContent());
-            unreadMessage.setSendTime(message.getTime());
-            unreadMessage.setSessionMessageId(message.getSessionMessageId());
             cqlSession.execute(setCount.bind(
-                    unreadMessage.getUserId(),
-                    unreadMessage.getSenderId(),
+                    receiver,
+                    sender,
                     "single",
                     message.getMessageType() != null ? message.getMessageType() : "text",
-                    unreadMessage.getContent(),
-                    unreadMessage.getSendTime(),
-                    unreadMessage.getMessageId(),
-                    unreadMessage.getCount(),
-                    unreadMessage.getSessionMessageId(),
-                    0l
+                    message.getContent(),
+                    message.getTime(),
+                    message,
+                    count + 1,
+                    message.getSessionMessageId(),
+                    0l,
+                    message.getDirection()
             ));
 
-            logger.debug("Updated unread count for user {} from group {}: {}",
-                    receiver, unreadMessage, unreadMessage.getCount());
 
         } catch (Exception e) {
             logger.error("Failed to add unread message for user: {}", receiver, e);
