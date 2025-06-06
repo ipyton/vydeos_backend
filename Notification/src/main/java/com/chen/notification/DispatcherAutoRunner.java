@@ -108,7 +108,7 @@ public class DispatcherAutoRunner {
 
             setCount = cqlSession.prepare(
                     "INSERT INTO chat.unread_messages " +
-                            "(user_id, sender_id, type, messageType, content, send_time, message_id, count, session_message_id,group_id,direction) " +
+                            "(user_id, sender_id, type, messageType, content, send_time, message_id, count, session_message_id,group_id) " +
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
 
