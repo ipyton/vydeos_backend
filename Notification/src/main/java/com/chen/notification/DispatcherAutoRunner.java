@@ -108,8 +108,8 @@ public class DispatcherAutoRunner {
 
             setCount = cqlSession.prepare(
                     "INSERT INTO chat.unread_messages " +
-                            "(user_id, sender_id, type, messageType, content, send_time, message_id, count, member_id) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                            "(user_id, sender_id, type, messageType, content, send_time, message_id, count, member_id,group_id) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
 
             logger.info("Prepared statements initialized successfully");
@@ -331,13 +331,14 @@ public class DispatcherAutoRunner {
             cqlSession.execute(setCount.bind(
                     unreadMessage.getUserId(),
                     unreadMessage.getSenderId(),
-                    "single",
+                    "group",
                     message.getMessageType() != null ? message.getMessageType() : "text",
                     unreadMessage.getContent(),
                     unreadMessage.getSendTime(),
                     unreadMessage.getMessageId(),
                     unreadMessage.getCount(),
-                    unreadMessage.getSessionMessageId()
+                    unreadMessage.getSessionMessageId(),
+                    unreadMessage.getGroupId()
             ));
 
             logger.debug("Updated unread count for user {} from sender {}: {}",
