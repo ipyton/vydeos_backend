@@ -1,8 +1,7 @@
 package com.chen.blogbackend.services;
 
 import com.alibaba.fastjson2.JSON;
-import com.chen.blogbackend.entities.NotificationMessage;
-import com.chen.blogbackend.entities.deprecated.SingleMessage;
+import com.chen.blogbackend.entities.SingleMessage;
 import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -29,7 +28,7 @@ public class NotificationProducer {
         executorService = new ThreadPoolExecutor(2,4, 30, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
-    public void sendNotification(NotificationMessage message ) {
+    public void sendNotification(SingleMessage message ) {
 //        int partitions = 0;
 //        MessageBuilder builder = new MessageBuilderImpl();
 //        int i = message.getUserId().hashCode();
@@ -40,7 +39,7 @@ public class NotificationProducer {
 //        MessageId messageId = send.getMessageId();
 //        System.out.println("message Id" + messageId);
         System.out.println("dispatch");
-    producer.send(new ProducerRecord<>("dispatch", message.getReceiverId() ,JSON.toJSONString(message)));
+    producer.send(new ProducerRecord<>("dispatch", message.getUserId2() ,JSON.toJSONString(message)));
     }
 
 

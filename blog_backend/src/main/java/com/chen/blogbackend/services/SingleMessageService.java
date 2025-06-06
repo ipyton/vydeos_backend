@@ -1,31 +1,23 @@
 package com.chen.blogbackend.services;
 
-import com.alibaba.fastjson.TypeReference;
 import com.alibaba.fastjson2.JSON;
-import com.chen.blogbackend.DAO.SingleMessageDao;
-import com.chen.blogbackend.entities.NotificationMessage;
-import com.chen.blogbackend.entities.NotificationSubscription;
+import com.chen.blogbackend.entities.SingleMessage;
 import com.chen.blogbackend.entities.SendingReceipt;
 import com.chen.blogbackend.entities.UnreadMessage;
-import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.mappers.MessageParser;
 import com.chen.blogbackend.mappers.UnreadMessageParser;
-import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.datastax.oss.driver.api.core.CqlSession;
 
-import com.datastax.oss.driver.api.core.PagingIterable;
-import com.datastax.oss.driver.api.core.cql.PagingState;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
-import com.datastax.oss.driver.api.core.metadata.Node;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,9 +42,8 @@ public class SingleMessageService {
     JedisPool pool;
 
 
-    //PreparedStatement getRecord; //Caused by: com.datastax.oss.driver.api.core.servererrors.InvalidQueryException: Only EQ and IN relation are supported on the partition key (unless you use the token() function or allow filtering)
     PreparedStatement setRecordById;
-    PreparedStatement getAllRecords;
+    PreparedStatement getSingleRecords;
     PreparedStatement block;
     PreparedStatement unBlock;
 //    PreparedStatement recall;
@@ -63,9 +54,13 @@ public class SingleMessageService {
     PreparedStatement getGroupRecord;
     PreparedStatement getNewestMessageFromAllUsers;
     PreparedStatement deleteUnread;
+    PreparedStatement insertSingleMessage;
+
 
     @Autowired
     private ChatGroupService chatGroupService;
+    @Autowired
+    private CqlSession cqlSession;
 
 //    PreparedStatement updateEndpoint;
 
@@ -83,9 +78,11 @@ public class SingleMessageService {
         addEndpoint = session.prepare("INSERT INTO chat.web_push_endpoints (user_id, endpoint, expiration_time, p256dh, auth) VALUES (?, ?, ?, ?, ?);");
 //        updateEndpoint = session.prepare("UPDATE chat.web_push_endpoints SET endpoint = ?, p256dh = ?, auth = ? WHERE user_id = ?;");
         getEndpoints = session.prepare("select * from chat.web_push_endpoints where user_id = ?");
-        getAllRecords = session.prepare("select * from chat.chat_records where receiver_id = ? and send_time>?");
+        getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 and session_message_id > ? limit 10");
         getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
         deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ?;");
+        insertSingleMessage = session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, relationship, group_id, message_id, content, messagetype, send_time, refer_message_id, refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);\n");
+
     }
 
     public boolean blockUser(String userId, String blockUser) {
@@ -112,72 +109,89 @@ public class SingleMessageService {
 
 
     public SendingReceipt sendMessage(String userId, String receiverId, String content, String messageType) throws Exception {
-
-        Instant now = Instant.now();
         SendingReceipt receipt = new SendingReceipt();
-        NotificationMessage singleMessage =  new NotificationMessage(null, userId, receiverId,0, null, null, "single", content, -1, now,-1);
-        System.out.println(singleMessage.getSenderId());
-        System.out.println(singleMessage.getReceiverId());
 
-        if (friendsService.getRelationship(singleMessage.getSenderId(), singleMessage.getReceiverId()) != 11) {
+        if (friendsService.getRelationship(userId, receiverId) != 11) {
             System.out.println("they are not friends");
-            receipt.sequenceId = -1;
+            receipt.messageId = -1;
             receipt.result = false;
 
             return receipt;
         }
+        Instant now = Instant.now();
+        String[] users = sortUsers(userId, receiverId);
+        Boolean direction = false;
+        if (users[0].equals(userId)) {
+            direction = true;
+        }
+        userId = users[0];
+        receiverId = users[1];
+        receipt.messageId = keyService.getLongKey("chat_global");
+        receipt.sessionMessageId = keyService.getLongKey("chat_" + users[0] + "_" + users[1]);
 
 
-        receipt.sequenceId = keyService.getLongKey("global");
-        singleMessage.setMessageId(receipt.sequenceId);
-        //(user_id, receiver_id, message_id, content, send_time, type, messageType, count, refer_message_id, refer_user_id )
-//        ResultSet execute = session.execute(setRecordById.bind(singleMessage.getSenderId(),
-//                singleMessage.getReceiverId(), singleMessage.getMessageId(), singleMessage.getContent(),
-//                singleMessage.getTime(), singleMessage.getType(),
-//                singleMessage.getReferMessageId(), new ArrayList<>()));
-//        if (!execute.getExecutionInfo().getErrors().isEmpty()) {
-//            System.out.println(execute.getExecutionInfo().getErrors());
-//        }
-        //judge if a user can send message
+        SingleMessage singleMessage =  new SingleMessage("", userId, receiverId,"", "",
+                "single", content, now, receipt.getMessageId(), -1,messageType,
+                direction,false, receipt.sessionMessageId );
+        BoundStatement bound = insertSingleMessage.bind(
+                singleMessage.getUserId1(),              // user_id1
+                singleMessage.getUserId2(),              // user_id2
+                singleMessage.isDirection(),             // direction
+                false,                                   // relationship（如果没有，先设 false 或根据逻辑设定）
+                0L,                                      // group_id（私聊为 0）
+                singleMessage.getMessageId(),            // message_id
+                singleMessage.getContent(),              // content
+                singleMessage.getMessageType(),          // messagetype
+                singleMessage.getTime(),                 // send_time (java.time.Instant)
+                "",       // refer_message_id
+                Collections.emptyList(),                 // refer_user_id（无@人可设为空列表）
+                singleMessage.isDeleted(),               // del
+                singleMessage.getSessionMessageId()      // session_message_id
+        );
+        cqlSession.execute(bound);
         producer.sendNotification(singleMessage);
         receipt.result = true;
         receipt.timestamp = now.toEpochMilli();
 
-        //    private String userId;
-        //    private String title;
-        //    private String content;
-        //    private String type;
-        //    private String time;
-        //producer.sendNotification(singleMessage);
-
-        //producer.sendNotification(new Notification());
         return receipt;
     }
 
-//    public boolean recall(String userId, String receiverId, String messageId){
-//        ResultSet set = session.execute(recall.bind(userId, receiverId, messageId));
-//        return set.getExecutionInfo().getErrors().isEmpty();
-//    }
-
-
-    public List<NotificationMessage> getNewestMessages(String userId, long timestamp, String pageState) {
-        if (timestamp == -1) {
-            timestamp = 0;
+    public static String[] sortUsers(String userId1, String userId2) {
+        if (userId1 == null || userId2 == null) {
+            throw new IllegalArgumentException("User IDs cannot be null");
         }
-        List<NotificationMessage> newestMessages = chatGroupService.getNewestMessages(userId, timestamp);
 
-        ResultSet execute = session.execute(getAllRecords.bind(userId, Instant.ofEpochMilli(timestamp)));
+        String[] result = new String[2];
+        if (userId1.compareTo(userId2) < 0) {
+            result[0] = userId1;
+            result[1] = userId2;
+        } else {
+            result[0] = userId2;
+            result[1] = userId1;
+        }
+        return result;
+    }
+
+
+
+
+    public List<SingleMessage> getNewestMessages(String userId, String anotherUserId, Long sessionMessageId) {
+        String[] strings = sortUsers(userId, anotherUserId);
+        userId = strings[0];
+        anotherUserId = strings[1];
+
+
+        ResultSet execute = session.execute(getSingleRecords.bind(userId, anotherUserId, sessionMessageId));
         //System.out.println(execute.all().size());
-        List<NotificationMessage> notificationMessages = MessageParser.parseToNotificationMessage(execute);
-        System.out.println(notificationMessages.size());
-        notificationMessages.addAll(newestMessages);
-        return notificationMessages;
+        List<SingleMessage> singleMessages = MessageParser.parseToNotificationMessage(execute);
+        System.out.println(singleMessages.size());
+        return singleMessages;
     }
 
 
     //点进去的时候再全拉
 
-    public List<NotificationMessage> getUnreadCount(String userId) {
+    public List<SingleMessage> getUnreadCount(String userId) {
         Jedis jedis = pool.getResource();
 
         // 获取 Redis 中的 Hash
@@ -191,10 +205,10 @@ public class SingleMessageService {
 
 
         // 假设值是 JSON 序列化对象
-        List<NotificationMessage> deserializedList = redisHash.values().stream()
+        List<SingleMessage> deserializedList = redisHash.values().stream()
                 .map(value -> {
                     try {
-                        return JSON.parseObject(value, NotificationMessage.class);
+                        return JSON.parseObject(value, SingleMessage.class);
                     } catch (Exception e) {
                         throw new RuntimeException("Error deserializing value: " + value, e);
                     }

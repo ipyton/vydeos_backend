@@ -1,7 +1,10 @@
 package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.chen.notification.entities.GroupMessage;
 import com.chen.notification.entities.NotificationMessage;
+import com.chen.notification.entities.SingleMessage;
 import com.chen.notification.entities.UnreadMessage;
 import com.chen.notification.mappers.UnreadMessageParser;
 import com.chen.notification.service.DistributedLockService;
@@ -217,22 +220,21 @@ public class DispatcherAutoRunner {
                 logger.warn("Received empty message, skipping");
                 return;
             }
-
-            NotificationMessage notificationMessage = parseNotificationMessage(record.value());
-            if (notificationMessage == null) {
-                logger.error("Failed to parse notification message: {}", record.value());
-                return;
+            JSONObject jsonObject = JSON.parseObject(record.value());
+            if (jsonObject == null || jsonObject.isEmpty() || jsonObject.get("type") == null) {
+                throw new RuntimeException("Received empty message, skipping");
+            }
+            if (jsonObject.get("type").equals("single")) {
+                processSingleMessage(jsonObject.toJavaObject(SingleMessage.class));
+            }
+            else if (jsonObject.get("type").equals("single")) {
+                processGroupMessage(jsonObject.toJavaObject(GroupMessage.class));
             }
 
-            validateNotificationMessage(notificationMessage);
 
-            if ("single".equals(notificationMessage.getType())) {
-                processSingleMessage(notificationMessage);
-            } else if ("group".equals(notificationMessage.getType())) {
-                processGroupMessage(notificationMessage);
-            } else {
-                logger.warn("Unknown message type: {}", notificationMessage.getType());
-            }
+
+
+
 
         } catch (Exception e) {
             logger.error("Error processing record: {}", record.value(), e);
@@ -240,42 +242,16 @@ public class DispatcherAutoRunner {
         }
     }
 
-    private NotificationMessage parseNotificationMessage(String value) {
-        try {
-            return JSON.parseObject(value, NotificationMessage.class);
-        } catch (Exception e) {
-            logger.error("Failed to parse JSON message: {}", value, e);
-            return null;
-        }
-    }
 
-    private void validateNotificationMessage(NotificationMessage message) {
-        if (message.getSenderId() == null ||
-                message.getContent() == null || message.getType() == null) {
-            throw new IllegalArgumentException("Invalid notification message: missing required fields");
-        }
-    }
 
-    private void processSingleMessage(NotificationMessage message) {
-        logger.debug("Processing single message from {} to {}", message.getSenderId(), message.getReceiverId());
+
+    private void processSingleMessage(SingleMessage message) {
+        logger.debug("Processing single message {} {}", message.getUserId1(), message.getUserId2());
 
         try {
             addUnreadMessage(message);
 
-            cqlSession.execute(insertMessage.bind(
-                    message.getSenderId(),
-                    message.getMessageId(),
-                    message.getContent(),
-                    false,
-                    message.getMessageType() != null ? message.getMessageType() : "text",
-                    message.getReceiverId(),
-                    0L,
-                    new ArrayList<String>(),
-                    message.getTime(),
-                    "single"
-            ));
-
-            sendToKafka("single", message.getReceiverId(), message);
+            sendToKafka("single", message.getUserId1() + "_" + message.getUserId2(), message);
 
             logger.debug("Successfully processed single message: {}", message.getMessageId());
         } catch (Exception e) {
@@ -284,23 +260,11 @@ public class DispatcherAutoRunner {
         }
     }
 
-    private void processGroupMessage(NotificationMessage message) throws ExecutionException, InterruptedException, TimeoutException {
-        logger.debug("Processing group message from {} to group {}", message.getSenderId(), message.getGroupId());
+    private void processGroupMessage(GroupMessage message) throws ExecutionException, InterruptedException, TimeoutException {
+        logger.debug("Processing group message from {} to group {}", message.getUserId(), message.getGroupId());
 
         try {
             // Insert group message record
-            cqlSession.execute(groupMessage.bind(
-                    message.getSenderId(),
-                    message.getMessageId(),
-                    message.getContent(),
-                    false,
-                    message.getMessageType() != null ? message.getMessageType() : "text",
-                    message.getGroupId(),
-                    0L,
-                    new ArrayList<String>(),
-                    message.getTime(),
-                    "group"
-            ));
 
             // Get group members and send individual messages
             ResultSet memberResult = cqlSession.execute(getMembers.bind(message.getGroupId()));
@@ -315,17 +279,17 @@ public class DispatcherAutoRunner {
 
             for (Row member : members) {
                 String userId = member.getString("user_id");
-                if (userId == null || userId.equals(message.getSenderId())) {
+                if (userId == null || userId.equals(message.getUserId())) {
                     continue;
                 }
 
                 CompletableFuture<Void> memberTask = CompletableFuture.runAsync(() -> {
                     try {
-                        NotificationMessage memberMessage = cloneMessage(message);
-                        memberMessage.setReceiverId(userId);
+                        message.setUserId(userId);
 
-                        addUnreadMessage(memberMessage);
-                        sendToKafka("single", userId, memberMessage);
+
+                        addUnreadMessage(message);
+                        sendToKafka("single", userId, message);
 
                         logger.debug("Sent group message to member: {}", userId);
                     } catch (Exception e) {
@@ -347,20 +311,64 @@ public class DispatcherAutoRunner {
         }
     }
 
-    private NotificationMessage cloneMessage(NotificationMessage original) {
-        // Simple cloning - consider using a proper cloning library in production
-        NotificationMessage clone = new NotificationMessage();
-        clone.setMessageId(original.getMessageId());
-        clone.setSenderId(original.getSenderId());
-        clone.setContent(original.getContent());
-        clone.setType(original.getType());
-        clone.setMessageType(original.getMessageType());
-        clone.setTime(original.getTime());
-        clone.setGroupId(original.getGroupId());
-        return clone;
+    private void addUnreadMessage(GroupMessage message) {
+        DistributedLockService.LockToken lockToken = null;
+
+        try {
+            lockToken = acquireLockWithTimeout(message.getU(), LOCK_TIMEOUT_MS);
+
+            ResultSet result = cqlSession.execute(getCount.bind(
+                    message.getReceiverId(), "single", message.getSenderId()
+            ));
+
+            List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
+            UnreadMessage unreadMessage = unreadMessages.isEmpty() ?
+                    new UnreadMessage() : unreadMessages.get(0);
+
+            // Set default values if null
+            if (unreadMessage.getUserId() == null) {
+                unreadMessage.setUserId(message.getReceiverId());
+            }
+            if (unreadMessage.getSenderId() == null) {
+                unreadMessage.setSenderId(message.getSenderId());
+            }
+
+            unreadMessage.setCount(unreadMessage.getCount() + 1);
+            unreadMessage.setMessageId(message.getMessageId());
+            unreadMessage.setContent(message.getContent());
+            unreadMessage.setSendTime(message.getTime());
+            unreadMessage.setMemberId(message.getSenderId());
+
+            cqlSession.execute(setCount.bind(
+                    unreadMessage.getUserId(),
+                    unreadMessage.getSenderId(),
+                    "single",
+                    message.getMessageType() != null ? message.getMessageType() : "text",
+                    unreadMessage.getContent(),
+                    unreadMessage.getSendTime(),
+                    unreadMessage.getMessageId(),
+                    unreadMessage.getCount(),
+                    unreadMessage.getMemberId()
+            ));
+
+            logger.debug("Updated unread count for user {} from sender {}: {}",
+                    message.getReceiverId(), message.getSenderId(), unreadMessage.getCount());
+
+        } catch (Exception e) {
+            logger.error("Failed to add unread message for user: {}", message.getReceiverId(), e);
+            throw e;
+        } finally {
+            if (lockToken != null) {
+                try {
+                    distributedLockService.releaseLock(lockToken);
+                } catch (Exception e) {
+                    logger.error("Failed to release lock for user: {}", message.getReceiverId(), e);
+                }
+            }
+        }
     }
 
-    private void addUnreadMessage(NotificationMessage message) {
+    private void addUnreadMessage(SingleMessage message) {
         DistributedLockService.LockToken lockToken = null;
 
         try {
@@ -437,7 +445,26 @@ public class DispatcherAutoRunner {
         throw new RuntimeException("Failed to acquire lock for user: " + userId + " within timeout: " + timeoutMs + "ms");
     }
 
-    private void sendToKafka(String topic, String key, NotificationMessage message) {
+    private void sendToKafka(String topic, String key, SingleMessage message) {
+        try {
+            String messageJson = JSON.toJSONString(message);
+            ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, messageJson);
+
+            producer.send(record, (metadata, exception) -> {
+                if (exception != null) {
+                    logger.error("Failed to send message to Kafka topic {}: {}", topic, exception.getMessage());
+                } else {
+                    logger.debug("Message sent to Kafka topic {} partition {} offset {}",
+                            metadata.topic(), metadata.partition(), metadata.offset());
+                }
+            });
+        } catch (Exception e) {
+            logger.error("Error sending message to Kafka topic {}: {}", topic, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private void sendToKafka(String topic, String key, GroupMessage message) {
         try {
             String messageJson = JSON.toJSONString(message);
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, messageJson);

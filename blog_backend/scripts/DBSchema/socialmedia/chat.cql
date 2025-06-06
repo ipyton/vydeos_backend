@@ -10,9 +10,11 @@ drop table chat.chat_records;
 drop table chat.group_chat_records;
 
 
-create table chat.chat_records(user_id text, receiver_id text,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, PRIMARY KEY ((receiver_id),send_time, user_id, message_id));
-create table chat.group_chat_records(user_id text,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, primary key ((group_id), send_time, message_id));
-CREATE INDEX ON chat.chat_records (user_id);
+// 发送方+ 接收方+ id范围查询
+//direction user1->user2 true
+create table chat.chat_records(user_id1 text, user_id2 text, direction boolean,relationship boolean,group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp, refer_message_id bigint, refer_user_id list<text>,  del boolean,session_message_id bigint, PRIMARY KEY ((user_id1, user_id2), session_message_id));
+
+create table chat.group_chat_records(user_id text,group_id bigint, message_id bigint, content text, messagetype text, send_time timestamp, type text, refer_message_id bigint, refer_user_id list<text>,  del boolean, session_message_id bigint, primary key ((group_id), session_message_id));
 
 
 
@@ -28,4 +30,4 @@ CREATE TABLE web_push_endpoints (
                                              PRIMARY KEY (user_id, endpoint) -- 复合主键，确保用户的每个 endpoint 唯一
 );
 drop table chat.unread_messages;
-create table chat.unread_messages(user_id text, sender_id text,member_id text, type text, messageType text, content text, send_time timestamp, message_id bigint, count int, primary key (user_id,type, sender_id)  );
+create table chat.unread_messages(user_id text, sender_id text,member_id text,group_id bigint, type text, messageType text, content text, send_time timestamp, message_id bigint, count int, primary key (user_id,type, sender_id,group_id)  );
