@@ -313,7 +313,7 @@ public class DispatcherAutoRunner {
             UnreadMessage unreadMessage = unreadMessages.isEmpty() ?
                     new UnreadMessage() : unreadMessages.get(0);
 
-            long count = 0;
+            int count = 0;
             if (!unreadMessages.isEmpty()) {
                 count = unreadMessages.get(0).getCount();
 
@@ -366,7 +366,7 @@ public class DispatcherAutoRunner {
 
             List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
 
-            long count = 0;
+            int count = 0;
             if (!unreadMessages.isEmpty()) {
                 count = unreadMessages.get(0).getCount();
 
