@@ -360,10 +360,10 @@ public class NotificationServerEndpoint {
         }
 
         messages.parallelStream().forEach(message -> {
-            String receiverId = message.getUserId2();
+            String receiverId = message.getUserId1();
 
             if (message.getDirection()) {
-                receiverId = message.getUserId1();
+                receiverId = message.getUserId2();
             }
             if (receiverId == null || receiverId.trim().isEmpty()) {
                 logger.warning("Message has empty receiverId, skipping");
