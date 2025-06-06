@@ -329,9 +329,7 @@ public class DispatcherAutoRunner {
                     message,
                     count + 1,
                     message.getSessionMessageId(),
-                    message.getGroupId(),
-                    false
-            ));
+                    message.getGroupId()));
 
 
 
@@ -384,8 +382,7 @@ public class DispatcherAutoRunner {
                     message,
                     count + 1,
                     message.getSessionMessageId(),
-                    0l,
-                    message.getDirection()
+                    0l
             ));
 
 

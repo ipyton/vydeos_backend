@@ -28,6 +28,7 @@ public class UnreadMessageParser {
             int count = columnDefinitions.contains("count") ? row.getInt("count") : 0;
             Long session_message_id = columnDefinitions.contains("session_message_id") ? row.getLong("session_message_id") : 0l;
             // 创建 UnreadMessage 对象
+            long group_id = columnDefinitions.contains("group_id") ? row.getLong("group_id") : 0l;
             UnreadMessage message = new UnreadMessage(
                     userId,
                     senderId,
@@ -39,6 +40,7 @@ public class UnreadMessageParser {
                     count,
                     session_message_id
             );
+            message.setGroupId(group_id);
             System.out.println(message.toString());
 
             // 将解析的消息添加到结果列表中
