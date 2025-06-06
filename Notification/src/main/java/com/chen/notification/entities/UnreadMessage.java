@@ -25,6 +25,22 @@ public class UnreadMessage {
     // Default constructor
     public UnreadMessage() {}
 
+    @Override
+    public String toString() {
+        return "UnreadMessage{" +
+                "userId='" + userId + '\'' +
+                ", senderId='" + senderId + '\'' +
+                ", type='" + type + '\'' +
+                ", messageType='" + messageType + '\'' +
+                ", content='" + content + '\'' +
+                ", sendTime=" + sendTime +
+                ", messageId=" + messageId +
+                ", count=" + count +
+                ", sessionMessageId=" + sessionMessageId +
+                ", groupId=" + groupId +
+                '}';
+    }
+
     // Constructor with all fields
     public UnreadMessage(String userId, String senderId, String type, String messageType,
                          String content, Instant sendTime, long messageId, int count, long sessionMessageId) {
@@ -113,16 +129,4 @@ public class UnreadMessage {
         this.messageId = messageId;
     }
 
-    @Override
-    public String toString() {
-        return "UnreadMessage{" +
-                "userId='" + userId + '\'' +
-                ", receiverId='" + senderId + '\'' +
-                ", type='" + type + '\'' +
-                ", messageType='" + messageType + '\'' +
-                ", content='" + content + '\'' +
-                ", sendTime=" + sendTime +
-                ", messageId=" + messageId +
-                '}';
-    }
 }
