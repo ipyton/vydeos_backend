@@ -3,7 +3,6 @@ package com.chen.notification.endpoints;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.chen.notification.DecodersAndEncoders.MessageDecoder;
-import com.chen.notification.DecodersAndEncoders.MessageEncoder;
 import com.chen.notification.configs.WebSocketConfig;
 import com.chen.notification.entities.GroupMessage;
 import com.chen.notification.entities.Negotiation;
@@ -12,7 +11,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -31,8 +29,7 @@ import java.util.logging.Logger;
 @Component
 @ServerEndpoint(value = "/notification/{token}",
         configurator = WebSocketConfig.class,  // Add this for Spring integration
-        decoders = {MessageDecoder.class},     // Optional: for message decoding
-        encoders = {MessageEncoder.class})     // Optional: for message encoding
+        decoders = {MessageDecoder.class})     // Optional: for message encoding
 @Profile("dispatcher")
 public class NotificationServerEndpoint {
 

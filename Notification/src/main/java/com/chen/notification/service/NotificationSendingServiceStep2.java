@@ -2,7 +2,8 @@ package com.chen.notification.service;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.notification.entities.ActiveStatus;
-import com.chen.notification.entities.NotificationMessage;
+import com.chen.notification.entities.GroupMessage;
+import com.chen.notification.entities.SingleMessage;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
@@ -96,7 +97,7 @@ public class NotificationSendingServiceStep2 {
         prepare = session.prepare("select * from chat_group_by_id where group_id = ?");
     }
 
-    private void handleGroupMessage(NotificationMessage message, org.apache.kafka.clients.consumer.ConsumerRecord<String, String> record) {
+    private void handleGroupMessage(GroupMessage message, org.apache.kafka.clients.consumer.ConsumerRecord<String, String> record) {
         String groupId = message.getReceiverId();
         // Simulate retrieving user ids from database
         // Replace this with your actual database query logic
@@ -105,7 +106,8 @@ public class NotificationSendingServiceStep2 {
         execute.forEach((res) -> {
             String userId = res.get(0, String.class);
                 // Send the message to single message producer
-            handleSingleMessage(userId, message, record);
+            SingleMessage singleMessage = new SingleMessage();
+            handleSingleMessage(userId, singleMessage, record);
         });
 
 
@@ -117,71 +119,71 @@ public class NotificationSendingServiceStep2 {
         producer.send(errorRecord);
     }
 
-    public void start() {
-        // Subscribe to the topic
-        consumer.subscribe(Collections.singletonList(TOPIC_ALL_MESSAGES));
-        int corePoolSize = 4;    // 核心线程数
-        int maximumPoolSize = 8; // 最大线程数
-        long keepAliveTime = 60; // 空闲线程存活时间
-        TimeUnit timeUnit = TimeUnit.SECONDS; // 时间单位
-        BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(100); // 任务队列
-        ThreadFactory threadFactory =  new NamedThreadFactory("Step2");
-        RejectedExecutionHandler handler = new RejectedExecutionHandler() {
+//    public void start() {
+//        // Subscribe to the topic
+//        consumer.subscribe(Collections.singletonList(TOPIC_ALL_MESSAGES));
+//        int corePoolSize = 4;    // 核心线程数
+//        int maximumPoolSize = 8; // 最大线程数
+//        long keepAliveTime = 60; // 空闲线程存活时间
+//        TimeUnit timeUnit = TimeUnit.SECONDS; // 时间单位
+//        BlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(100); // 任务队列
+//        ThreadFactory threadFactory =  new NamedThreadFactory("Step2");
+//        RejectedExecutionHandler handler = new RejectedExecutionHandler() {
+//
+//            @Override
+//            public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+//                if (!executor.isShutdown()) {
+//                    r.run();
+//                }
+//                RestTemplate restTemplate = new RestTemplate();
+//                restTemplate.postForEntity("localhost:9092", r, String.class);
+//
+//            }
+//        };
+//
+//        // 创建线程池
+//        ThreadPoolExecutor executor = new ThreadPoolExecutor(
+//                corePoolSize,
+//                maximumPoolSize,
+//                keepAliveTime,
+//                timeUnit,
+//                workQueue,
+//                threadFactory,
+//                handler
+//        );
+//
+//
+//
+//
+//        while (true) {
+//            // Poll for messages
+//            var records = consumer.poll(1000);
+//            records.forEach(record -> {
+//                try {
+//                    // Deserialize the message
+//                    NotificationMessage message = JSON.parseObject(record.value(), NotificationMessage.class);
+//                    executor.execute(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            if ("group".equals(message.getType())) {
+//                                handleGroupMessage(message, record);
+//                            } else {
+//                                // Handle single message type here
+//                                handleSingleMessage(message.getReceiverId(), message,record);
+//                            }
+//                            consumer.commitAsync();
+//                        }
+//                    });
+//
+//                } catch (Exception e) {
+//                    sendErrorMessage(record);
+//                    e.printStackTrace();
+//                }
+//            });
+//        }
+//    }
 
-            @Override
-            public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-                if (!executor.isShutdown()) {
-                    r.run();
-                }
-                RestTemplate restTemplate = new RestTemplate();
-                restTemplate.postForEntity("localhost:9092", r, String.class);
-
-            }
-        };
-
-        // 创建线程池
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(
-                corePoolSize,
-                maximumPoolSize,
-                keepAliveTime,
-                timeUnit,
-                workQueue,
-                threadFactory,
-                handler
-        );
-
-
-
-
-        while (true) {
-            // Poll for messages
-            var records = consumer.poll(1000);
-            records.forEach(record -> {
-                try {
-                    // Deserialize the message
-                    NotificationMessage message = JSON.parseObject(record.value(), NotificationMessage.class);
-                    executor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            if ("group".equals(message.getType())) {
-                                handleGroupMessage(message, record);
-                            } else {
-                                // Handle single message type here
-                                handleSingleMessage(message.getReceiverId(), message,record);
-                            }
-                            consumer.commitAsync();
-                        }
-                    });
-
-                } catch (Exception e) {
-                    sendErrorMessage(record);
-                    e.printStackTrace();
-                }
-            });
-        }
-    }
-
-    public void handleSingleMessage(String userId, NotificationMessage message, org.apache.kafka.clients.consumer.ConsumerRecord<String, String> record) {
+    public void handleSingleMessage(String userId, SingleMessage message, org.apache.kafka.clients.consumer.ConsumerRecord<String, String> record) {
         ActiveStatus status = getActiveStatus(userId);  // Simulate retrieving user status
         if (status!=null) {
             ProducerRecord<String, String> producerRecord = new ProducerRecord<>(TOPIC_SINGLE_MESSAGE, userId, JSON.toJSONString(message));
