@@ -108,7 +108,7 @@ public class DispatcherAutoRunner {
 
             setCount = cqlSession.prepare(
                     "INSERT INTO chat.unread_messages " +
-                            "(user_id, sender_id, type, messageType, content, send_time, message_id, count, member_id,group_id) " +
+                            "(user_id, sender_id, type, messageType, content, send_time, message_id, count, session_message_id,group_id) " +
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
 
@@ -398,7 +398,8 @@ public class DispatcherAutoRunner {
                     unreadMessage.getSendTime(),
                     unreadMessage.getMessageId(),
                     unreadMessage.getCount(),
-                    unreadMessage.getSessionMessageId()
+                    unreadMessage.getSessionMessageId(),
+                    0
             ));
 
             logger.debug("Updated unread count for user {} from group {}: {}",
