@@ -11,14 +11,24 @@ public class UnreadMessage {
     private Instant sendTime;
     private long messageId;
     private int count;
-    private String memberId;
+    private long sessionMessageId;
+    private long groupId;
+
+    public long getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(long groupId) {
+        this.groupId = groupId;
+    }
 
     // Default constructor
     public UnreadMessage() {}
 
     // Constructor with all fields
     public UnreadMessage(String userId, String senderId, String type, String messageType,
-                         String content, Instant sendTime, long messageId, int count, String memberId) {
+                         String content, Instant sendTime, long messageId, int count, long sessionMessageId) {
+
         this.userId = userId;
         this.senderId = senderId;
         this.type = type;
@@ -27,15 +37,15 @@ public class UnreadMessage {
         this.sendTime = sendTime;
         this.messageId = messageId;
         this.count = count;
-        this.memberId = memberId;
+        this.sessionMessageId = sessionMessageId;
     }
 
-    public String getMemberId() {
-        return memberId;
+    public long getSessionMessageId() {
+        return sessionMessageId;
     }
 
-    public void setMemberId(String memberId) {
-        this.memberId = memberId;
+    public void setSessionMessageId(long sessionMessageId) {
+        this.sessionMessageId = sessionMessageId;
     }
 
     public int getCount() {

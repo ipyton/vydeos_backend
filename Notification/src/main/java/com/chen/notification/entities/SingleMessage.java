@@ -56,7 +56,7 @@ public class SingleMessage {
         this.sessionMessageId = sessionMessageId;
     }
 
-    public boolean isDirection() {
+    public boolean getDirection() {
         return direction;
     }
 

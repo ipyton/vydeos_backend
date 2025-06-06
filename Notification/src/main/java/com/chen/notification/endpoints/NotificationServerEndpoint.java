@@ -5,8 +5,9 @@ import com.alibaba.fastjson.JSONObject;
 import com.chen.notification.DecodersAndEncoders.MessageDecoder;
 import com.chen.notification.DecodersAndEncoders.MessageEncoder;
 import com.chen.notification.configs.WebSocketConfig;
+import com.chen.notification.entities.GroupMessage;
 import com.chen.notification.entities.Negotiation;
-import com.chen.notification.entities.NotificationMessage;
+import com.chen.notification.entities.SingleMessage;
 import jakarta.annotation.PostConstruct;
 import jakarta.websocket.*;
 import jakarta.websocket.server.PathParam;
@@ -311,7 +312,7 @@ public class NotificationServerEndpoint {
 //        }
 //    }
 
-    public void sendMessages(List<NotificationMessage> messages) {
+    public void sendGroupMessages(List<GroupMessage> messages) {
         if (messages == null || messages.isEmpty()) {
             System.out.println("is empty");
             return;
@@ -319,35 +320,61 @@ public class NotificationServerEndpoint {
 
         messages.parallelStream().forEach(message -> {
             String receiverId = message.getReceiverId();
+
             if (receiverId == null || receiverId.trim().isEmpty()) {
                 logger.warning("Message has empty receiverId, skipping");
                 return;
             }
-            System.out.println("receiverId----=====" + receiverId);
-            Session session = sessionPool.get(receiverId);
-            if (session != null && session.isOpen()) {
-                try {
-                    String jsonMessage = JSON.toJSONString(message);
-                    session.getBasicRemote().sendText(jsonMessage);
-                    logger.fine("Message sent to user: " + receiverId);
-                } catch (IOException e) {
-                    logger.warning("Failed to send message to " + receiverId + ": " + e.getMessage());
-                    cleanupSession(session);
-                    System.out.println("Failed to send message to " + receiverId + ": " + e.getMessage());
-                    // Store message for later delivery
-                    //updateMessageList(receiverId, message);
-                }
-            } else {
-                // Clean up invalid sessions
-                if (session != null) {
-                    cleanupSession(session);
-                }
-                System.out.println("Failed to send message to " + receiverId + ", deprecated");
+            pushText(receiverId, JSON.toJSONString(message));
+        });
+    }
 
+    private void pushText(String receiverId, String jsonString) {
+        Session session = sessionPool.get(receiverId);
+        if (session != null && session.isOpen()) {
+            try {
+                String jsonMessage = jsonString;
+                session.getBasicRemote().sendText(jsonMessage);
+                logger.fine("Message sent to user: " + receiverId);
+            } catch (IOException e) {
+                logger.warning("Failed to send message to " + receiverId + ": " + e.getMessage());
+                cleanupSession(session);
+                System.out.println("Failed to send message to " + receiverId + ": " + e.getMessage());
                 // Store message for later delivery
                 //updateMessageList(receiverId, message);
-                //logger.fine("User " + receiverId + " is offline, message queued");
             }
+        } else {
+            // Clean up invalid sessions
+            if (session != null) {
+                cleanupSession(session);
+            }
+            System.out.println("Failed to send message to " + receiverId + ", deprecated");
+
+            // Store message for later delivery
+            //updateMessageList(receiverId, message);
+            //logger.fine("User " + receiverId + " is offline, message queued");
+        }
+    }
+
+    public void sendMessages(List<SingleMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            System.out.println("is empty");
+            return;
+        }
+
+        messages.parallelStream().forEach(message -> {
+            String receiverId = message.getUserId2();
+
+            if (message.getDirection()) {
+                receiverId = message.getUserId1();
+            }
+            if (receiverId == null || receiverId.trim().isEmpty()) {
+                logger.warning("Message has empty receiverId, skipping");
+                return;
+            }
+
+            System.out.println("receiverId----=====" + receiverId);
+            pushText(receiverId, JSON.toJSONString(message));
         });
     }
 

@@ -1,6 +1,7 @@
 package com.chen.blogbackend.services;
 
 import com.alibaba.fastjson2.JSON;
+import com.chen.blogbackend.entities.GroupMessage;
 import com.chen.blogbackend.entities.SingleMessage;
 import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.producer.Producer;
@@ -40,6 +41,21 @@ public class NotificationProducer {
 //        System.out.println("message Id" + messageId);
         System.out.println("dispatch");
     producer.send(new ProducerRecord<>("dispatch", message.getUserId2() ,JSON.toJSONString(message)));
+    }
+
+
+    public void sendNotification(GroupMessage message ) {
+//        int partitions = 0;
+//        MessageBuilder builder = new MessageBuilderImpl();
+//        int i = message.getUserId().hashCode();
+//        Message messageToSend = builder.setTopic("notificationTopic").setKeys().setTag("1")
+//                .setBody(JSON.toJSONBytes(message)).build();
+//
+//        SendReceipt send = producer.send(messageToSend);
+//        MessageId messageId = send.getMessageId();
+//        System.out.println("message Id" + messageId);
+        System.out.println("dispatch");
+        producer.send(new ProducerRecord<>("dispatch", String.valueOf(message.getGroupId()) ,JSON.toJSONString(message)));
     }
 
 

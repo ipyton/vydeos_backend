@@ -3,7 +3,6 @@ package com.chen.notification;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.chen.notification.entities.GroupMessage;
-import com.chen.notification.entities.NotificationMessage;
 import com.chen.notification.entities.SingleMessage;
 import com.chen.notification.entities.UnreadMessage;
 import com.chen.notification.mappers.UnreadMessageParser;
@@ -315,10 +314,10 @@ public class DispatcherAutoRunner {
         DistributedLockService.LockToken lockToken = null;
 
         try {
-            lockToken = acquireLockWithTimeout(message.getU(), LOCK_TIMEOUT_MS);
+            lockToken = acquireLockWithTimeout(message.getReceiverId(), LOCK_TIMEOUT_MS);
 
             ResultSet result = cqlSession.execute(getCount.bind(
-                    message.getReceiverId(), "single", message.getSenderId()
+                    message.getReceiverId(), "group", message.getUserId()
             ));
 
             List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
@@ -330,14 +329,15 @@ public class DispatcherAutoRunner {
                 unreadMessage.setUserId(message.getReceiverId());
             }
             if (unreadMessage.getSenderId() == null) {
-                unreadMessage.setSenderId(message.getSenderId());
+                unreadMessage.setSenderId(message.getUserId());
             }
 
             unreadMessage.setCount(unreadMessage.getCount() + 1);
             unreadMessage.setMessageId(message.getMessageId());
             unreadMessage.setContent(message.getContent());
-            unreadMessage.setSendTime(message.getTime());
-            unreadMessage.setMemberId(message.getSenderId());
+            unreadMessage.setSendTime(message.getSendTime());
+            unreadMessage.setSessionMessageId(message.getSessionMessageId());
+            unreadMessage.setGroupId(message.getGroupId());
 
             cqlSession.execute(setCount.bind(
                     unreadMessage.getUserId(),
@@ -348,11 +348,11 @@ public class DispatcherAutoRunner {
                     unreadMessage.getSendTime(),
                     unreadMessage.getMessageId(),
                     unreadMessage.getCount(),
-                    unreadMessage.getMemberId()
+                    unreadMessage.getSessionMessageId()
             ));
 
             logger.debug("Updated unread count for user {} from sender {}: {}",
-                    message.getReceiverId(), message.getSenderId(), unreadMessage.getCount());
+                    message.getReceiverId(), message.getUserId(), unreadMessage.getCount());
 
         } catch (Exception e) {
             logger.error("Failed to add unread message for user: {}", message.getReceiverId(), e);
@@ -371,11 +371,15 @@ public class DispatcherAutoRunner {
     private void addUnreadMessage(SingleMessage message) {
         DistributedLockService.LockToken lockToken = null;
 
+        Boolean flag = message.getDirection();
+        String sender = flag ? message.getUserId1() : message.getUserId2();
+        String receiver = flag ? message.getUserId2() : message.getUserId1();
+
         try {
-            lockToken = acquireLockWithTimeout(message.getReceiverId(), LOCK_TIMEOUT_MS);
+            lockToken = acquireLockWithTimeout(receiver, LOCK_TIMEOUT_MS);
 
             ResultSet result = cqlSession.execute(getCount.bind(
-                    message.getReceiverId(), "single", message.getSenderId()
+                    receiver, "single", sender
             ));
 
             List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
@@ -384,18 +388,17 @@ public class DispatcherAutoRunner {
 
             // Set default values if null
             if (unreadMessage.getUserId() == null) {
-                unreadMessage.setUserId(message.getReceiverId());
+                unreadMessage.setUserId(receiver);
             }
             if (unreadMessage.getSenderId() == null) {
-                unreadMessage.setSenderId(message.getSenderId());
+                unreadMessage.setSenderId(sender);
             }
 
             unreadMessage.setCount(unreadMessage.getCount() + 1);
             unreadMessage.setMessageId(message.getMessageId());
             unreadMessage.setContent(message.getContent());
             unreadMessage.setSendTime(message.getTime());
-            unreadMessage.setMemberId(message.getSenderId());
-
+            unreadMessage.setSessionMessageId(message.getSessionMessageId());
             cqlSession.execute(setCount.bind(
                     unreadMessage.getUserId(),
                     unreadMessage.getSenderId(),
@@ -405,21 +408,21 @@ public class DispatcherAutoRunner {
                     unreadMessage.getSendTime(),
                     unreadMessage.getMessageId(),
                     unreadMessage.getCount(),
-                    unreadMessage.getMemberId()
+                    unreadMessage.getSessionMessageId()
             ));
 
-            logger.debug("Updated unread count for user {} from sender {}: {}",
-                    message.getReceiverId(), message.getSenderId(), unreadMessage.getCount());
+            logger.debug("Updated unread count for user {} from group {}: {}",
+                    receiver, unreadMessage, unreadMessage.getCount());
 
         } catch (Exception e) {
-            logger.error("Failed to add unread message for user: {}", message.getReceiverId(), e);
+            logger.error("Failed to add unread message for user: {}", receiver, e);
             throw e;
         } finally {
             if (lockToken != null) {
                 try {
                     distributedLockService.releaseLock(lockToken);
                 } catch (Exception e) {
-                    logger.error("Failed to release lock for user: {}", message.getReceiverId(), e);
+                    logger.error("Failed to release lock for user: {}", receiver, e);
                 }
             }
         }

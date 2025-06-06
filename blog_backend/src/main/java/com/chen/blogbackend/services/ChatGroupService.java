@@ -31,7 +31,6 @@ public class ChatGroupService {
     @Autowired
     NotificationProducer notificationProducer;
 
-
     //PreparedStatement insertChatRecordById;
 
     PreparedStatement getGroups;
@@ -197,13 +196,18 @@ public class ChatGroupService {
     public SendingReceipt sendGroupMessage(String userId, long groupId, String content, String messageType) throws Exception {
         Instant now = Instant.now();
         SendingReceipt receipt = new SendingReceipt();
-        SingleMessage singleMessage =  new SingleMessage(null, userId, "",groupId, null, null, "group", content, -1, now,-1);
+
+
+        receipt.messageId = keyService.getLongKey("chat_global");
+        receipt.sessionMessageId = keyService.getLongKey("group_chat_" + groupId);
+
+        GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.messageId, content, messageType, Instant.now(), "group", -1,new ArrayList<>(),false ,receipt.sessionMessageId);
         if (isInGroup(userId, groupId)) {
             receipt.messageId = keyService.getIntKey("groupMessage");
-            singleMessage.setMessageId(receipt.messageId);
+            groupMessage.setMessageId(receipt.messageId);
             receipt.result = true;
             receipt.timestamp = now.toEpochMilli();
-            notificationProducer.sendNotification(singleMessage);
+            notificationProducer.sendNotification(groupMessage);
             return receipt;
         }
 

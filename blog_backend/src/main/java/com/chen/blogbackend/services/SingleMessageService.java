@@ -42,7 +42,7 @@ public class SingleMessageService {
     JedisPool pool;
 
 
-    PreparedStatement setRecordById;
+//    PreparedStatement setRecordById;
     PreparedStatement getSingleRecords;
     PreparedStatement block;
     PreparedStatement unBlock;
@@ -67,8 +67,8 @@ public class SingleMessageService {
 
     @PostConstruct
     public void init(){
-        setRecordById = session.prepare("insert into chat.chat_records (user_id, receiver_id, message_id, content, " +
-                "send_time, type, refer_message_id, refer_user_id ) values (?,?,?,?,?,?,?,?);");
+//        setRecordById = session.prepare("insert into chat.chat_records (user_id, receiver_id, message_id, content, " +
+//                "send_time, type, refer_message_id, refer_user_id ) values (?,?,?,?,?,?,?,?);");
         //getRecord = session.prepare("select * from chat.chat_records where user_id = ? and  send_time>? and receiver_id = ?");
         block = session.prepare("insert into userinfo.black_list (user_id, black_user_id, black_user_name, black_user_avatar) values(?, ?, ?, ?)");
         unBlock = session.prepare("delete from userInfo.black_list where user_id = ? and black_user_id = ?");
@@ -78,7 +78,7 @@ public class SingleMessageService {
         addEndpoint = session.prepare("INSERT INTO chat.web_push_endpoints (user_id, endpoint, expiration_time, p256dh, auth) VALUES (?, ?, ?, ?, ?);");
 //        updateEndpoint = session.prepare("UPDATE chat.web_push_endpoints SET endpoint = ?, p256dh = ?, auth = ? WHERE user_id = ?;");
         getEndpoints = session.prepare("select * from chat.web_push_endpoints where user_id = ?");
-        getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 and session_message_id > ? limit 10");
+        getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 = ?and session_message_id > ? limit 10");
         getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
         deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ?;");
         insertSingleMessage = session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, relationship, group_id, message_id, content, messagetype, send_time, refer_message_id, refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);\n");
@@ -129,14 +129,13 @@ public class SingleMessageService {
         receipt.messageId = keyService.getLongKey("chat_global");
         receipt.sessionMessageId = keyService.getLongKey("chat_" + users[0] + "_" + users[1]);
 
-
         SingleMessage singleMessage =  new SingleMessage("", userId, receiverId,"", "",
                 "single", content, now, receipt.getMessageId(), -1,messageType,
                 direction,false, receipt.sessionMessageId );
         BoundStatement bound = insertSingleMessage.bind(
                 singleMessage.getUserId1(),              // user_id1
                 singleMessage.getUserId2(),              // user_id2
-                singleMessage.isDirection(),             // direction
+                singleMessage.getDirection(),             // direction
                 false,                                   // relationship（如果没有，先设 false 或根据逻辑设定）
                 0L,                                      // group_id（私聊为 0）
                 singleMessage.getMessageId(),            // message_id
