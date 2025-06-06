@@ -379,7 +379,7 @@ public class DispatcherAutoRunner {
                     message.getMessageType() != null ? message.getMessageType() : "text",
                     message.getContent(),
                     message.getTime(),
-                    message,
+                    message.getMessageId(),
                     count + 1,
                     message.getSessionMessageId(),
                     0l
