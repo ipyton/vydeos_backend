@@ -399,7 +399,7 @@ public class DispatcherAutoRunner {
                     unreadMessage.getMessageId(),
                     unreadMessage.getCount(),
                     unreadMessage.getSessionMessageId(),
-                    0
+                    0l
             ));
 
             logger.debug("Updated unread count for user {} from group {}: {}",
