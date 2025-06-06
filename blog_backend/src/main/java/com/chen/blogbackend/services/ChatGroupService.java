@@ -67,7 +67,7 @@ public class ChatGroupService {
         getMembers = session.prepare("select * from group_chat.chat_group_members where group_id = ? ");
         //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
-        getRecordByGroupId = session.prepare("select * from chat.group_chat_records where group_id= ? and send_time > ?");
+        getRecordByGroupId = session.prepare("select * from chat.group_chat_records where group_id= ? and session_message_id > ? limit 10");
         //getRecordByMemberId = session.prepare("select * from chat.chat_messages_mailbox where user_id= ? ");
         insertGroupMember = session.prepare("insert into group_chat.chat_group_members (group_id, user_id, user_name, group_name) values (?, ?, ?, ?)");
         getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
