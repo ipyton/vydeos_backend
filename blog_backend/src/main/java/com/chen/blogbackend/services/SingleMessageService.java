@@ -81,7 +81,9 @@ public class SingleMessageService {
         getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 = ?and session_message_id > ? limit 10");
         getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
         deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ?;");
-        insertSingleMessage = session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, relationship, group_id, message_id, content, messagetype, send_time, refer_message_id, refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);\n");
+        insertSingleMessage = session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, " +
+                "relationship, group_id, message_id, content, messagetype, send_time, refer_message_id," +
+                " refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 
     }
 
@@ -132,17 +134,25 @@ public class SingleMessageService {
         SingleMessage singleMessage =  new SingleMessage("", userId, receiverId,"", "",
                 "single", content, now, receipt.getMessageId(), -1,messageType,
                 direction,false, receipt.sessionMessageId );
+        //session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, " +
+        //                "relationship, group_id, message_id, content, messagetype, send_time, refer_message_id," +
+        //                " refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+
+        //create table chat.chat_records(user_id1 text, user_id2 text, direction boolean,relationship boolean,
+        // group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp,
+        // refer_message_id bigint, refer_user_id list<text>,  del boolean,session_message_id bigint,
+        // PRIMARY KEY ((user_id1, user_id2), session_message_id));
         BoundStatement bound = insertSingleMessage.bind(
                 singleMessage.getUserId1(),              // user_id1
                 singleMessage.getUserId2(),              // user_id2
-                singleMessage.getDirection(),             // direction
+                direction,             // direction
                 false,                                   // relationship（如果没有，先设 false 或根据逻辑设定）
                 0L,                                      // group_id（私聊为 0）
                 singleMessage.getMessageId(),            // message_id
                 singleMessage.getContent(),              // content
                 singleMessage.getMessageType(),          // messagetype
                 singleMessage.getTime(),                 // send_time (java.time.Instant)
-                "",       // refer_message_id
+                -1,       // refer_message_id
                 Collections.emptyList(),                 // refer_user_id（无@人可设为空列表）
                 singleMessage.isDeleted(),               // del
                 singleMessage.getSessionMessageId()      // session_message_id
