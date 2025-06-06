@@ -97,17 +97,6 @@ public class DispatcherAutoRunner {
 
     private void initializePreparedStatements() {
         try {
-            insertMessage = cqlSession.prepare(
-                    "INSERT INTO chat.chat_records " +
-                            "(user_id, message_id, content, del, messagetype, receiver_id, refer_message_id, refer_user_id, send_time, type) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            );
-
-            groupMessage = cqlSession.prepare(
-                    "INSERT INTO chat.group_chat_records " +
-                            "(user_id, message_id, content, del, messagetype, group_id, refer_message_id, refer_user_id, send_time, type) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            );
 
             getMembers = cqlSession.prepare(
                     "SELECT * FROM group_chat.chat_group_members WHERE group_id = ?"
