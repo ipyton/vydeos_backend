@@ -80,7 +80,7 @@ public class SingleMessageService {
         getEndpoints = session.prepare("select * from chat.web_push_endpoints where user_id = ?");
         getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 = ?and session_message_id > ? limit 10");
         getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
-        deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ?;");
+        deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ? and type =? and sender_id =? and group_id = ?;");
         insertSingleMessage = session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, " +
                 "relationship, group_id, message_id, content, messagetype, send_time, refer_message_id," +
                 " refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
@@ -293,8 +293,9 @@ public class SingleMessageService {
         return notificationMessages;
     }
 
-    public void markUnread(String userId) {
-        session.execute(deleteUnread.bind(userId));
+    public boolean markUnread(String userId,String senderId, String type, Long groupId) {
+        ResultSet execute = session.execute(deleteUnread.bind(userId, type, senderId, groupId));
+        return execute.getExecutionInfo().getErrors().isEmpty();
 
     }
 }
