@@ -294,6 +294,7 @@ public class SingleMessageService {
     }
 
     public boolean markUnread(String userId,String senderId, String type, Long groupId) {
+
         ResultSet execute = session.execute(deleteUnread.bind(userId, type, senderId, groupId));
         return execute.getExecutionInfo().getErrors().isEmpty();
 

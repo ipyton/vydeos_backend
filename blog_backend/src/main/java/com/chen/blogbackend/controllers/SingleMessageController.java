@@ -193,12 +193,11 @@ public class SingleMessageController {
 
         // groupId 可能是 Integer 类型或 Long 类型或 null
         if (body.get("groupId") != null) {
-            Object groupIdObj = body.get("groupId");
-            if (groupIdObj instanceof Number) {
-                groupId = ((Number) groupIdObj).longValue();
-            } else {
-                return new Message(-1, "Invalid groupId format");
-            }
+            groupId = (Long) body.get("groupId");
+
+        }
+        else {
+            groupId = 0l;
         }
 
         // 简单的参数校验
