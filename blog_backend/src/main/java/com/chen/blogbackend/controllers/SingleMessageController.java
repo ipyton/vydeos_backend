@@ -64,7 +64,7 @@ public class SingleMessageController {
             System.out.println(groupId);
             return groupService.sendGroupMessage(senderId, groupId, content, type);
         }
-        return new SendingReceipt(false, -1, -1);
+        return new SendingReceipt(false, -1, -1,-1,true);
     }
 
     @RequestMapping("block")

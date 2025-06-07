@@ -198,20 +198,20 @@ public class ChatGroupService {
         SendingReceipt receipt = new SendingReceipt();
 
 
-        receipt.messageId = keyService.getLongKey("chat_global");
-        receipt.sessionMessageId = keyService.getLongKey("group_chat_" + groupId);
+        receipt.setMessageId(keyService.getLongKey("chat_global"));
+        receipt.setSessionMessageId(keyService.getLongKey("group_chat_" + groupId));
 
-        GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.messageId, content, messageType, Instant.now(), "group", -1,new ArrayList<>(),false ,receipt.sessionMessageId);
+        GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1,new ArrayList<>(),false , receipt.getSessionMessageId());
         if (isInGroup(userId, groupId)) {
-            receipt.messageId = keyService.getIntKey("groupMessage");
-            groupMessage.setMessageId(receipt.messageId);
-            receipt.result = true;
-            receipt.timestamp = now.toEpochMilli();
+            receipt.setMessageId(keyService.getIntKey("groupMessage"));
+            groupMessage.setMessageId(receipt.getMessageId());
+            receipt.setResult(true);
+            receipt.setTimestamp(now.toEpochMilli());
             notificationProducer.sendNotification(groupMessage);
             return receipt;
         }
 
-        receipt.result = false;
+        receipt.setResult(false);
         return receipt;
     }
 

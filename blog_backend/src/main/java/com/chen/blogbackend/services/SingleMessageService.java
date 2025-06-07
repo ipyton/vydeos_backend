@@ -115,8 +115,8 @@ public class SingleMessageService {
 
         if (friendsService.getRelationship(userId, receiverId) != 11) {
             System.out.println("they are not friends");
-            receipt.messageId = -1;
-            receipt.result = false;
+            receipt.setMessageId(-1);
+            receipt.setResult(false);
 
             return receipt;
         }
@@ -128,12 +128,12 @@ public class SingleMessageService {
         }
         userId = users[0];
         receiverId = users[1];
-        receipt.messageId = keyService.getLongKey("chat_global");
-        receipt.sessionMessageId = keyService.getLongKey("chat_" + users[0] + "_" + users[1]);
-
+        receipt.setMessageId(keyService.getLongKey("chat_global"));
+        receipt.setSessionMessageId(keyService.getLongKey("chat_" + users[0] + "_" + users[1]));
+        receipt.setDelete(false);
         SingleMessage singleMessage =  new SingleMessage("", userId, receiverId,"", "",
                 "single", content, now, receipt.getMessageId(), -1,messageType,
-                direction,false, receipt.sessionMessageId );
+                direction,false, receipt.getSessionMessageId());
         //session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, " +
         //                "relationship, group_id, message_id, content, messagetype, send_time, refer_message_id," +
         //                " refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
@@ -159,8 +159,8 @@ public class SingleMessageService {
         );
         cqlSession.execute(bound);
         producer.sendNotification(singleMessage);
-        receipt.result = true;
-        receipt.timestamp = now.toEpochMilli();
+        receipt.setResult(true);
+        receipt.setTimestamp(now.toEpochMilli());
 
         return receipt;
     }
