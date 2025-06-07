@@ -179,17 +179,42 @@ public class SingleMessageController {
         }
     }
 
-    @RequestMapping("markUnread")
-    public Message markUnread(HttpServletRequest request, String senderId, String type, Long groupId) {
+    @PostMapping("/markUnread")
+    public Message markUnread(@RequestBody Map<String, Object> body, HttpServletRequest request) {
         String userId = (String) request.getAttribute("userEmail");
+
         if (userId == null) {
-            return new Message(-1, "insufficient data");
+            return new Message(-1, "Insufficient data: userId missing");
         }
+
+        String senderId = (String) body.get("senderId");
+        String type = (String) body.get("type");
+        Long groupId = null;
+
+        // groupId 可能是 Integer 类型或 Long 类型或 null
+        if (body.get("groupId") != null) {
+            Object groupIdObj = body.get("groupId");
+            if (groupIdObj instanceof Number) {
+                groupId = ((Number) groupIdObj).longValue();
+            } else {
+                return new Message(-1, "Invalid groupId format");
+            }
+        }
+
+        // 简单的参数校验
+        if (type == null || type.isEmpty()) {
+            return new Message(-1, "Missing 'type' field");
+        }
+        if (senderId == null || senderId.isEmpty()) {
+            return new Message(-1, "Missing 'senderId' field");
+        }
+
         try {
-            if (service.markUnread(userId,senderId,type, groupId)){
+            boolean result = service.markUnread(userId, senderId, type, groupId);
+            if (result) {
                 return new Message(0, "Success");
             } else {
-                return new Message(-1, "An error occurred while marking unread");
+                return new Message(-1, "Failed to mark as unread");
             }
         } catch (Exception e) {
             e.printStackTrace();
