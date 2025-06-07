@@ -1,8 +1,10 @@
 package com.chen.notification;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.chen.notification.endpoints.NotificationServerEndpoint;
-import com.chen.notification.entities.NotificationMessage;
+import com.chen.notification.entities.GroupMessage;
+import com.chen.notification.entities.SingleMessage;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
@@ -111,18 +113,31 @@ public class EndpointAutoRunner {
             while (true) {
                 System.out.println(Thread.currentThread().getName()+ "is doing job");
             ConsumerRecords<String, String> records = consumer.poll(Duration. ofMillis(1000));
-            Map<String, List<NotificationMessage>> topicKeyMap = new HashMap<>();
+            //Map<String, List<NotificationMessage>> topicKeyMap = new HashMap<>();
             for (ConsumerRecord<String, String> record : records) {
 //                String topic = record.topic();
                 String key = record.key();
                 String value = record.value();
                 System.out.println("step2");
                 System.out.println(value);
-                topicKeyMap.putIfAbsent(key, new ArrayList<>());
-                NotificationMessage notificationMessage = JSON.parseObject(value, NotificationMessage.class);
-                topicKeyMap.get(key).add(notificationMessage);
-                ResultSet execute = session.execute(getEndpoints.bind(notificationMessage.getReceiverId()));
-                if (execute.getExecutionInfo().getErrors().isEmpty()) {
+                //topicKeyMap.putIfAbsent(key, new ArrayList<>());
+
+                JSONObject jsonObject = JSON.parseObject(value);
+                if (!jsonObject.containsKey("type")) {
+                    throw new RuntimeException("lost attribute type");
+                }
+                if (jsonObject.get("type").equals("single")) {
+                    SingleMessage singleMessage = jsonObject.toJavaObject(SingleMessage.class);
+                    service.sendMessages(List.of(singleMessage));
+
+                } else {
+                    GroupMessage groupMessage = JSON.parseObject(value, GroupMessage.class);
+                    service.sendGroupMessages(List.of(groupMessage));
+
+                }
+                //topicKeyMap.get(key).add(notificationMessage);
+                //ResultSet execute = session.execute(getEndpoints.bind(notificationMessage.getReceiverId()));
+               // if (execute.getExecutionInfo().getErrors().isEmpty()) {
 //                    for (Row row : execute.all()) {
 //                        String auth = row.getString("auth");
 //                        String endpoint = row.getString("endpoint");
@@ -150,13 +165,12 @@ public class EndpointAutoRunner {
 //                        restTemplate.postForObject("http://localhost:8081/send", webPushMessage, String.class);
 //                    }
                     System.out.println("send web push message");
-                    service.sendMessages(List.of(notificationMessage));
 
-                }
-                else {
-//                    DLQ.send(new ProducerRecord<>(notificationMessage.getReceiverId(), value));
-
-                }
+//                }
+//                else {
+////                    DLQ.send(new ProducerRecord<>(notificationMessage.getReceiverId(), value));
+//
+//                }
             }
             consumer.commitSync();
         }

@@ -2,14 +2,12 @@ package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.*;
-import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.ChatGroupService;
 import com.chen.blogbackend.services.FriendsService;
 import com.chen.blogbackend.services.SearchService;
 import com.chen.blogbackend.services.SingleMessageService;
-import com.chen.blogbackend.util.RandomUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +64,7 @@ public class SingleMessageController {
             System.out.println(groupId);
             return groupService.sendGroupMessage(senderId, groupId, content, type);
         }
-        return new SendingReceipt(false, -1, -1);
+        return new SendingReceipt(false, -1, -1,-1,true);
     }
 
     @RequestMapping("block")
@@ -99,21 +96,23 @@ public class SingleMessageController {
 //    }
 
 
-    ///get the newest message and it count. all newest messages
-    @PostMapping("getNewestMessages")
-    public LoginMessage getNewestRecords(HttpServletRequest request, @RequestBody Map<String, Object> payload) {
+    //get the newest message and it count. all newest messages
+    @PostMapping("getSingleMessages")
+    public Message getSingleMessages(HttpServletRequest request, @RequestBody Map<String, Object> payload) {
         String email = (String) request.getAttribute("userEmail");
-        Long timestamp = null;
-        if (payload.get("timestamp") != null) {
-            timestamp = Long.valueOf(payload.get("timestamp").toString());
+        Long sessionMessageId = (Long) payload.get("session_message_id");
+        String anotherUserId = (String) payload.get("anotherEmail");
+        if (anotherUserId == null || anotherUserId.equals("")
+                || sessionMessageId == null || sessionMessageId == 0) {
+            return new Message(-1,"Insufficient Parameters");
         }
-        System.out.println(timestamp);
-        if (email== null|| timestamp ==null ) {
-            return new LoginMessage(-1, "insufficient data");
-        }
-        List<NotificationMessage> newRecords = service.getNewestMessages(email, timestamp,null);
-        return new LoginMessage(1, JSON.toJSONString(newRecords));
 
+        try {
+            List<SingleMessage> newRecords = service.getNewestMessages(email, anotherUserId, sessionMessageId);
+            return new Message(0, JSON.toJSONString(newRecords));
+        } catch (Exception e) {
+            return new Message(-1, "Internal Error");
+        }
     }
 
     @RequestMapping("getUnreadCount")
@@ -125,7 +124,7 @@ public class SingleMessageController {
         }
 
         try {
-            List<NotificationMessage> unreadCount = service.getUnreadCount(receiverId);
+            List<SingleMessage> unreadCount = service.getUnreadCount(receiverId);
             return ResponseEntity.ok(unreadCount);
         } catch (Exception e) {
             // Logging the error can be helpful

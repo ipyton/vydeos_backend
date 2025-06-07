@@ -1,10 +1,7 @@
 package com.chen.blogbackend.services;
 
-import com.chen.blogbackend.DAO.ChatGroupDao;
-import com.chen.blogbackend.DAO.FriendDao;
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.*;
-import com.chen.blogbackend.entities.deprecated.GroupMessage;
 import com.chen.blogbackend.mappers.GroupUserParser;
 import com.chen.blogbackend.mappers.MessageParser;
 import com.chen.blogbackend.util.RandomUtil;
@@ -33,7 +30,6 @@ public class ChatGroupService {
 
     @Autowired
     NotificationProducer notificationProducer;
-
 
     //PreparedStatement insertChatRecordById;
 
@@ -71,7 +67,7 @@ public class ChatGroupService {
         getMembers = session.prepare("select * from group_chat.chat_group_members where group_id = ? ");
         //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
-        getRecordByGroupId = session.prepare("select * from chat.group_chat_records where group_id= ? and send_time > ?");
+        getRecordByGroupId = session.prepare("select * from chat.group_chat_records where group_id= ? and session_message_id > ? limit 10");
         //getRecordByMemberId = session.prepare("select * from chat.chat_messages_mailbox where user_id= ? ");
         insertGroupMember = session.prepare("insert into group_chat.chat_group_members (group_id, user_id, user_name, group_name) values (?, ?, ?, ?)");
         getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
@@ -125,7 +121,7 @@ public class ChatGroupService {
     }
 
 
-    public List<NotificationMessage> getGroupMessageByGroupIDAndTimestamp(Long groupId, long timestamp) {
+    public List<SingleMessage> getGroupMessageByGroupIDAndTimestamp(Long groupId, long timestamp) {
         ResultSet execute = session.execute(getRecordByGroupId.bind(groupId, Instant.ofEpochMilli(timestamp)));
         return MessageParser.parseToNotificationMessage(execute);
     }
@@ -200,17 +196,22 @@ public class ChatGroupService {
     public SendingReceipt sendGroupMessage(String userId, long groupId, String content, String messageType) throws Exception {
         Instant now = Instant.now();
         SendingReceipt receipt = new SendingReceipt();
-        NotificationMessage singleMessage =  new NotificationMessage(null, userId, "",groupId, null, null, "group", content, -1, now,-1);
+
+
+        receipt.setMessageId(keyService.getLongKey("chat_global"));
+        receipt.setSessionMessageId(keyService.getLongKey("group_chat_" + groupId));
+
+        GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1,new ArrayList<>(),false , receipt.getSessionMessageId());
         if (isInGroup(userId, groupId)) {
-            receipt.sequenceId = keyService.getIntKey("groupMessage");
-            singleMessage.setMessageId(receipt.sequenceId);
-            receipt.result = true;
-            receipt.timestamp = now.toEpochMilli();
-            notificationProducer.sendNotification(singleMessage);
+            receipt.setMessageId(keyService.getIntKey("groupMessage"));
+            groupMessage.setMessageId(receipt.getMessageId());
+            receipt.setResult(true);
+            receipt.setTimestamp(now.toEpochMilli());
+            notificationProducer.sendNotification(groupMessage);
             return receipt;
         }
 
-        receipt.result = false;
+        receipt.setResult(false);
         return receipt;
     }
 
@@ -240,20 +241,20 @@ public class ChatGroupService {
         }
     }
 
-    public List<NotificationMessage> getNewestMessages(String userId, long timestamp) {
+    public List<SingleMessage> getNewestMessages(String userId, long timestamp) {
         ResultSet execute = session.execute(getGroups.bind(userId));
-        List<NotificationMessage> notificationMessages = new ArrayList<>();
+        List<SingleMessage> singleMessages = new ArrayList<>();
         if (!execute.getExecutionInfo().getErrors().isEmpty()) {
-            return notificationMessages;
+            return singleMessages;
         }
         List<Row> all = execute.all();
         for (Row row : all) {
             Long groupId = row.getLong("group_id");
-            List<NotificationMessage> groupMessageByGroupID = getGroupMessageByGroupIDAndTimestamp(groupId, timestamp);
-            notificationMessages.addAll(groupMessageByGroupID);
+            List<SingleMessage> groupMessageByGroupID = getGroupMessageByGroupIDAndTimestamp(groupId, timestamp);
+            singleMessages.addAll(groupMessageByGroupID);
 
         }
-        return notificationMessages;
+        return singleMessages;
     }
 
 

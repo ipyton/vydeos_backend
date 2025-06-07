@@ -1,9 +1,8 @@
 package com.chen.blogbackend.mappers;
 
-import com.chen.blogbackend.entities.NotificationMessage;
-import com.chen.blogbackend.entities.deprecated.GroupMessage;
+import com.chen.blogbackend.entities.SingleMessage;
+import com.chen.blogbackend.entities.GroupMessage;
 import com.chen.blogbackend.entities.OnlineGroupMessage;
-import com.chen.blogbackend.entities.deprecated.SingleMessage;
 import com.datastax.oss.driver.api.core.cql.ColumnDefinitions;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
@@ -15,43 +14,48 @@ import java.util.List;
 public class MessageParser {
 
 
-    public static List<NotificationMessage> parseToNotificationMessage(ResultSet set) {
-        ArrayList<NotificationMessage> result = new ArrayList<>();
-        for (Row row : set.all()) { // 假设 resultSet 是某种支持 all() 的类型
+    public static List<SingleMessage> parseToNotificationMessage(ResultSet set) {
+        List<SingleMessage> result = new ArrayList<>();
 
+        for (Row row : set.all()) {
             ColumnDefinitions columnDefinitions = row.getColumnDefinitions();
 
-// 检查并获取每列的值
-            String senderId = columnDefinitions.contains("user_id") ? row.getString("user_id") : null;
-            String receiverId = columnDefinitions.contains("receiver_id") ? row.getString("receiver_id") : null;
-            Long messageId = columnDefinitions.contains("message_id") ? row.getLong("message_id") : null;
+            // 获取字段（如果不存在则设默认值）
+            String userId1 = columnDefinitions.contains("user_id1") ? row.getString("user_id1") : null;
+            String userId2 = columnDefinitions.contains("user_id2") ? row.getString("user_id2") : null;
+            Long messageId = columnDefinitions.contains("message_id") ? row.getLong("message_id") : 0L;
             String content = columnDefinitions.contains("content") ? row.getString("content") : null;
             Instant sendTime = columnDefinitions.contains("send_time") ? row.getInstant("send_time") : null;
-            String type = columnDefinitions.contains("type") ? row.getString("type") : null;
-            String messageType = columnDefinitions.contains("messageType") ? row.getString("messageType") : null;
-            Long referMessageId = columnDefinitions.contains("refer_message_id") ? row.getLong("refer_message_id") : null;
-            Long groupId = columnDefinitions.contains("group_id") ? row.getLong("group_id") : null;
-            System.out.println(senderId);
-// 创建 NotificationMessage 对象
-            NotificationMessage message = new NotificationMessage(
-                    "", // Assuming avatar is not provided by the database, set to null or default
-                    senderId,
-                    receiverId,
-                    groupId != null ? groupId : 0L, // 如果 groupId 为空，设置为默认值 0L
-                    "", // receiverName can be set to null or fetched if available
-                    "", // senderName can be set to null or fetched if available
-                    type,
+//            String type = columnDefinitions.contains("type") ? row.getString("type") : "single";
+            String messageType = columnDefinitions.contains("messagetype") ? row.getString("messagetype") : null;
+            Long referMessageId = columnDefinitions.contains("refer_message_id") ? row.getLong("refer_message_id") : 0L;
+            boolean direction = columnDefinitions.contains("direction") ? row.getBoolean("direction") : false;
+            boolean deleted = columnDefinitions.contains("del") ? row.getBoolean("del") : false;
+            Long sessionMessageId = columnDefinitions.contains("session_message_id") ? row.getLong("session_message_id") : 0L;
+
+            // 创建 SingleMessage 对象（avatar、receiverName、senderName 可留空或后续补齐）
+            SingleMessage message = new SingleMessage(
+                    "",               // avatar
+                    userId1,
+                    userId2,
+                    "",               // receiverName
+                    "",               // senderName
+                    "single",
                     content,
-                    messageId != null ? messageId : 0L, // 如果 messageId 为空，设置为默认值 0L
                     sendTime,
-                    0L // 这里是固定值
+                    messageId,
+                    referMessageId,
+                    messageType,
+                    direction,
+                    deleted,
+                    sessionMessageId
             );
 
-            // 将解析的消息添加到结果列表中
             result.add(message);
         }
         return result;
     }
+
 
     public static List<OnlineGroupMessage> parseToOnlineGroupMessage(ResultSet set) {
         ArrayList<OnlineGroupMessage> result = new ArrayList<>();
@@ -70,22 +74,24 @@ public class MessageParser {
     }
 
     public static List<GroupMessage> parseToGroupMessage(ResultSet set) {
-        ArrayList<GroupMessage> result = new ArrayList<>();
+        List<GroupMessage> result = new ArrayList<>();
         for (Row row : set.all()) {
-            result.add(new GroupMessage(
-                    row.getBool("recall"),                 // recall 是 boolean 类型
-                    row.getLong("referMessageId"),         // referMessageId 是 bigint
-                    row.getLong("referUserID"),            // referUserID 是 bigint
-                    row.getString("media"),                // media 是 text
-                    row.getString("content"),              // content 是 text
-                    row.getInstant("send_time"),         // send_time 是 timestamp
-                    row.getString("type"),                 // type 是 text
-                    row.getLong("group_id"),               // group_id 是 bigint
-                    row.getLong("user_id"),                // user_id 是 bigint
-                    row.getLong("message_id")              // message_id 是 bigint
-            ));
+            GroupMessage message = new GroupMessage();
+            message.setUserId(row.getString("user_id"));
+            message.setGroupId(row.getLong("group_id"));
+            message.setMessageId(row.getLong("message_id"));
+            message.setContent(row.getString("content"));
+            message.setMessageType(row.getString("messagetype"));
+            message.setSendTime(row.getInstant("send_time"));
+            message.setType(row.getString("type"));
+            message.setReferMessageId(row.getLong("refer_message_id"));
+            message.setReferUserId(row.getList("refer_user_id", String.class));
+            message.setDel(row.getBoolean("del"));
+            message.setSessionMessageId(row.getLong("session_message_id"));
+            result.add(message);
         }
         System.out.println(result.size());
         return result;
     }
+
 }

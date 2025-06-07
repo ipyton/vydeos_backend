@@ -1,21 +1,12 @@
 package com.chen.notification.service;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.notification.entities.NotificationMessage;
-import org.springframework.stereotype.Service;
-import com.chen.notification.service.NotificationSendingServiceStep1;
+import com.chen.notification.entities.SingleMessage;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.http.ResponseEntity;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.Properties;
+import org.springframework.http.ResponseEntity;
+
 
 
 public class NotificationSendingServiceStep1 {
@@ -23,7 +14,7 @@ public class NotificationSendingServiceStep1 {
     KafkaProducer<String, String> producer;
 
 
-    public ResponseEntity<?> sendMessageHandler(NotificationMessage message) {
+    public ResponseEntity<?> sendMessageHandler(SingleMessage message) {
 
         String jsonString = JSON.toJSONString(message);
         try {

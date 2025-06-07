@@ -1,17 +1,35 @@
 package com.chen.blogbackend.entities;
 
 
-import java.time.Instant;
-
 public class SendingReceipt {
-    public boolean result;
-    public long sequenceId;
-    public long timestamp;
+    private boolean result;
+    private long messageId;
+    private long timestamp;
+    private long sessionMessageId;
+    private boolean delete;
 
-    public SendingReceipt(boolean result, long sequenceId, long timestamp) {
+    public SendingReceipt(boolean result, long messageId, long timestamp,long sessionMessageId, boolean delete) {
         this.result = result;
-        this.sequenceId = sequenceId;
+        this.messageId = messageId;
         this.timestamp = timestamp;
+        this.sessionMessageId = sessionMessageId;
+        this.delete = delete;
+    }
+
+    public long getSessionMessageId() {
+        return sessionMessageId;
+    }
+
+    public void setSessionMessageId(long sessionMessageId) {
+        this.sessionMessageId = sessionMessageId;
+    }
+
+    public boolean isDelete() {
+        return delete;
+    }
+
+    public void setDelete(boolean delete) {
+        this.delete = delete;
     }
 
     public void setTimestamp(long timestamp) {
@@ -30,12 +48,12 @@ public class SendingReceipt {
         this.result = result;
     }
 
-    public long getSequenceId() {
-        return sequenceId;
+    public long getMessageId() {
+        return messageId;
     }
 
-    public void setSequenceId(long sequenceId) {
-        this.sequenceId = sequenceId;
+    public void setMessageId(long messageId) {
+        this.messageId = messageId;
     }
 
     public SendingReceipt() {

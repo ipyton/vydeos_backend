@@ -1,12 +1,11 @@
-package com.chen.notification.entities;
+package com.chen.blogbackend.entities;
 
 import java.time.Instant;
 
-public class NotificationMessage {
+public class SingleMessage {
     private String avatar;
-    private String senderId;
-    private String receiverId;
-    private long groupId;
+    private String userId1;
+    private String userId2;
     private String receiverName;
     private String senderName;
     private String type;
@@ -15,17 +14,15 @@ public class NotificationMessage {
     private long messageId;
     private long referMessageId;
     private String messageType;
+    private boolean direction;
+    private boolean deleted = false;
+    private Long sessionMessageId ;
 
 
-    public String getReceiverName() {
-        return receiverName;
-    }
-
-    public NotificationMessage(String avatar, String senderId, String receiverId, long groupId, String receiverName, String senderName,
-                               String type, String content, long messageId, Instant time, long referMessageId) {
+    public SingleMessage(String avatar, String userId1, String userId2, String receiverName, String senderName, String type, String content, Instant time, long messageId, long referMessageId, String messageType, boolean direction, boolean deleted, Long sessionMessageId) {
         this.avatar = avatar;
-        this.senderId = senderId;
-        this.receiverId = receiverId;
+        this.userId1 = userId1;
+        this.userId2 = userId2;
         this.receiverName = receiverName;
         this.senderName = senderName;
         this.type = type;
@@ -33,7 +30,38 @@ public class NotificationMessage {
         this.time = time;
         this.messageId = messageId;
         this.referMessageId = referMessageId;
-        this.groupId = groupId;
+        this.messageType = messageType;
+        this.direction = direction;
+        this.deleted = deleted;
+        this.sessionMessageId = sessionMessageId;
+    }
+
+    public String getReceiverName() {
+        return receiverName;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public Long getSessionMessageId() {
+        return sessionMessageId;
+    }
+
+    public void setSessionMessageId(Long sessionMessageId) {
+        this.sessionMessageId = sessionMessageId;
+    }
+
+    public boolean getDirection() {
+        return direction;
+    }
+
+    public void setDirection(boolean direction) {
+        this.direction = direction;
     }
 
     public String getMessageType() {
@@ -44,13 +72,6 @@ public class NotificationMessage {
         this.messageType = messageType;
     }
 
-    public long getGroupId() {
-        return groupId;
-    }
-
-    public void setGroupId(long groupId) {
-        this.groupId = groupId;
-    }
 
     public long getReferMessageId() {
         return referMessageId;
@@ -72,20 +93,20 @@ public class NotificationMessage {
         this.receiverName = receiverName;
     }
 
-    public String getSenderId() {
-        return senderId;
+    public String getUserId1() {
+        return userId1;
     }
 
-    public void setSenderId(String senderId) {
-        this.senderId = senderId;
+    public void setUserId1(String userId1) {
+        this.userId1 = userId1;
     }
 
-    public String getReceiverId() {
-        return receiverId;
+    public String getUserId2() {
+        return userId2;
     }
 
-    public void setReceiverId(String receiverId) {
-        this.receiverId = receiverId;
+    public void setUserId2(String userId2) {
+        this.userId2 = userId2;
     }
 
 
@@ -130,7 +151,7 @@ public class NotificationMessage {
         this.time = time;
     }
 
-    public NotificationMessage(String avatar, String name, String title, String content, Instant time) {
+    public SingleMessage(String avatar, String name, String title, String content, Instant time) {
         this.avatar = avatar;
         this.senderName = name;
         this.type = title;
@@ -138,7 +159,7 @@ public class NotificationMessage {
         this.time = time;
     }
 
-    public NotificationMessage() {
+    public SingleMessage() {
 
 
     }

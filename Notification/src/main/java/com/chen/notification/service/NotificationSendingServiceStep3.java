@@ -1,7 +1,7 @@
 package com.chen.notification.service;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.notification.entities.NotificationMessage;
+import com.chen.notification.entities.SingleMessage;
 import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -52,7 +52,7 @@ public class NotificationSendingServiceStep3 {
             records.forEach(record -> {
                 try {
                     // Deserialize the message
-                    NotificationMessage message = JSON.parseObject(record.value(), NotificationMessage.class);
+                    SingleMessage message = JSON.parseObject(record.value(), SingleMessage.class);
                     // Acknowledge message by committing the offset
                     consumer.commitAsync();
                 } catch (Exception e) {
