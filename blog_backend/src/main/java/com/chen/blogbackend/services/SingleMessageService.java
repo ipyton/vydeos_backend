@@ -151,7 +151,7 @@ public class SingleMessageService {
                 singleMessage.getMessageId(),            // message_id
                 singleMessage.getContent(),              // content
                 singleMessage.getMessageType(),          // messagetype
-                singleMessage.getTime(),                 // send_time (java.time.Instant)
+                singleMessage.getTimestamp(),                 // send_time (java.time.Instant)
                 -1L,       // refer_message_id
                 Collections.emptyList(),                 // refer_user_id（无@人可设为空列表）
                 singleMessage.isDeleted(),               // del
