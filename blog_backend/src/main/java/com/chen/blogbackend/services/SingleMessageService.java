@@ -184,7 +184,7 @@ public class SingleMessageService {
 
 
 
-    public List<SingleMessage> getNewestMessages(String userId, String anotherUserId, Long sessionMessageId) {
+    public List<SingleMessage> getSingleMessageRecords(String userId, String anotherUserId, Long sessionMessageId) {
         String[] strings = sortUsers(userId, anotherUserId);
         userId = strings[0];
         anotherUserId = strings[1];

@@ -257,6 +257,10 @@ public class ChatGroupService {
         return singleMessages;
     }
 
+    public List<GroupMessage> getGroupMessageRecords(Long groupId, Long lastSessionMessageId) {
+        return null;
+    }
+
 
 //    @RequestMapping("setRequestCache")
 //    public LoginMessage setRequestCache(GroupMessage message) {
