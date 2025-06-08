@@ -78,7 +78,7 @@ public class SingleMessageService {
         addEndpoint = session.prepare("INSERT INTO chat.web_push_endpoints (user_id, endpoint, expiration_time, p256dh, auth) VALUES (?, ?, ?, ?, ?);");
 //        updateEndpoint = session.prepare("UPDATE chat.web_push_endpoints SET endpoint = ?, p256dh = ?, auth = ? WHERE user_id = ?;");
         getEndpoints = session.prepare("select * from chat.web_push_endpoints where user_id = ?");
-        getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 = ? and session_message_id < ? order by session_message_id desc limit 15");
+        getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 = ? and session_message_id <= ? order by session_message_id desc limit 15");
         getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
         deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ? and type =? and sender_id =? and group_id = ?;");
         insertSingleMessage = session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, " +
