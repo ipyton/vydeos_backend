@@ -19,22 +19,22 @@ import java.util.List;
 @ResponseBody
 public class ChatGroupController {
 
-
-
-
     @Autowired
     ChatGroupService service;
 
 
+
+    //{name, introduction,userIds,allowInvitesById}
     @PostMapping("create")
-    public LoginMessage createGroup(HttpServletRequest req, @RequestBody() GroupRequest groupRequest) {
+    public LoginMessage createGroup(HttpServletRequest req, @RequestParam String name, @RequestParam String introduction,
+    @RequestParam List<String> memberIds, @RequestParam Boolean allowInvitesById) {
         String email = (String) req.getAttribute("userEmail");
-        String groupName = groupRequest.getGroupName();
-        List<String> members = groupRequest.getMembers();
-        if (email == null || email.equals("") || groupName == null || groupName.equals("") || members == null || members.size() == 0) {
+
+        if (email == null || email.equals("") || name == null || name.equals("")
+                || introduction == null || memberIds.size() == 0 || allowInvitesById == null) {
             return new LoginMessage(-1, "no sufficient data provided");
         }
-        boolean result = service.createGroup(email,groupName, members);
+        boolean result = service.createGroup(email,name, memberIds,allowInvitesById);
         if (result) {
             return new LoginMessage(0, "Success");
         }

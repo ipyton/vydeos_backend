@@ -62,7 +62,7 @@ public class ChatGroupService {
         //insertChatRecordById = session.prepare("insert into group_chat.group_chat_record_by_id (group_id , message_id ,type ,  user_id  ,content , referUserID , referMessageId , send_time, media, recall) values(?,?,?,?,?,?,?,?,?,?)");
         getGroupDetails = session.prepare("select * from group_chat.chat_group_details where group_id = ?");
         removeMember = session.prepare("delete from group_chat.chat_group_members where group_id = ? and user_id = ?");
-        createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, group_description, group_name, owner,create_time) values(?, ?, ?, ?, ?, ?, ?)");
+        createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, group_description, group_name, owner,create_time,allow_invite_by_token) values(?, ?, ?, ?, ?, ?, ?)");
         getGroups = session.prepare("select * from group_chat.chat_group_members where user_id = ?");
         getMembers = session.prepare("select * from group_chat.chat_group_members where group_id = ? ");
         //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
@@ -161,11 +161,11 @@ public class ChatGroupService {
         return true;
     }
 
-    public boolean createGroup(String creatorId, String groupName, List<String> members) {
+    public boolean createGroup(String ownerId, String groupName, List<String> members, Boolean allowInvitesById) {
         long groupId = keyService.getIntKey("chatGroup"); // 你需要实现如何生成群组 ID
 
         boolean result = true;
-        members.add(creatorId);
+        members.add(ownerId);
         for (String memberId : members) {
             ResultSet execute = session.execute(insertGroupMember.bind(groupId, memberId, "", groupName));
             int size = execute.getExecutionInfo().getErrors().size();
@@ -173,12 +173,10 @@ public class ChatGroupService {
                 return false;
             }
         }
-//        createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, group_description, group_name, owner) values(?, ?, ?, ?, ?, ?)");
-        ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, creatorId, Instant.now()));
+        ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, ownerId, Instant.now()));
         if (!execute.getExecutionInfo().getErrors().isEmpty()) {
             return false;
         }
-
         return result; // 如果没有异常发生，返回 true
     }
 
