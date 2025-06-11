@@ -123,8 +123,8 @@ jobs:
               # Check if process is still running
               if ! kill -0 $app_pid 2>/dev/null; then
                 echo "❌ Process died during startup!"
-                echo "📋 Last 20 lines of log:"
-                tail -n 20 app.log
+                echo "📋 Last 50 lines of log:"
+                tail -n 50 app.log
                 exit 1
               fi
             
@@ -284,8 +284,8 @@ jobs:
               # Check if process is still running
               if ! kill -0 $app_pid 2>/dev/null; then
                 echo "❌ Process died during startup!"
-                echo "📋 Last 20 lines of log:"
-                tail -n 20 app.log
+                echo "📋 Last 50 lines of log:"
+                tail -n 50 app.log
                 exit 1
               fi
             
