@@ -2,7 +2,7 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.*;
-import com.chen.blogbackend.mappers.GroupUserParser;
+import com.chen.blogbackend.mappers.GroupParser;
 import com.chen.blogbackend.mappers.MessageParser;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -63,7 +63,7 @@ public class ChatGroupService {
         getGroupDetails = session.prepare("select * from group_chat.chat_group_details where group_id = ?");
         removeMember = session.prepare("delete from group_chat.chat_group_members where group_id = ? and user_id = ?");
         createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, introduction, name, owner_id,create_time,allow_invite_by_token) values(?, ?, ?, ?, ?, ?, ?, ?)");
-        getGroups = session.prepare("select * from group_chat.chat_group_members where user_id = ?");
+        getGroups = session.prepare("select * from group_chat.chat_group_details where user_id = ?");
         getMembers = session.prepare("select * from group_chat.chat_group_members where group_id = ? ");
         //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
@@ -116,8 +116,7 @@ public class ChatGroupService {
 
     public List<GroupUser> getMembers(String userId, long groupId, String pagingState) {
         ResultSet execute = session.execute(getMembers.bind(groupId));
-        return GroupUserParser.groupUserParser(execute);
-
+        return GroupParser.groupListParser(execute);
     }
 
 
@@ -154,7 +153,7 @@ public class ChatGroupService {
     public List<GroupUser> getGroups(String userId, String pagingState) {
         System.out.println(userId);
         ResultSet execute = session.execute(getGroups.bind(userId));
-        return GroupUserParser.groupUserParser(execute);
+        return GroupParser.groupListParser(execute);
     }
 
     public boolean recall(String operatorId, long groupID, String messageId) {

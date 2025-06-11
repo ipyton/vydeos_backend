@@ -3,6 +3,7 @@ package com.chen.blogbackend.controllers;
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.services.ChatGroupService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -54,8 +55,14 @@ public class ChatGroupController {
 
 
     @GetMapping("getDetail")
-    public ChatGroup getDetail(long groupId) {
-        return service.getGroupDetail(groupId);
+    public Message getDetail(long groupId) {
+        return new Message(0, JSON.toJSONString(service.getGroupDetail(groupId)));
+    }
+
+    @GetMapping("get")
+    public Message getGroupByUserId(HttpServletRequest req) {
+        String userEmail = (String) req.getAttribute("userEmail");
+        return new Message(0, JSON.toJSONString(service.getGroups(userEmail, null)));
     }
 
 
