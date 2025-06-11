@@ -10,7 +10,7 @@ public class SingleMessage {
     private String senderName;
     private String type;
     private String content;
-    private Instant time;
+    private Instant timestamp;
     private long messageId;
     private long referMessageId;
     private String messageType;
@@ -27,7 +27,7 @@ public class SingleMessage {
         this.senderName = senderName;
         this.type = type;
         this.content = content;
-        this.time = time;
+        this.timestamp = time;
         this.messageId = messageId;
         this.referMessageId = referMessageId;
         this.messageType = messageType;
@@ -143,12 +143,16 @@ public class SingleMessage {
         this.content = content;
     }
 
-    public Instant getTime() {
-        return time;
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
-    public void setTime(Instant time) {
-        this.time = time;
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public boolean isDirection() {
+        return direction;
     }
 
     public SingleMessage(String avatar, String name, String title, String content, Instant time) {
@@ -156,7 +160,7 @@ public class SingleMessage {
         this.senderName = name;
         this.type = title;
         this.content = content;
-        this.time = time;
+        this.timestamp = time;
     }
 
     public SingleMessage() {

@@ -2,7 +2,7 @@ package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.*;
-import com.chen.blogbackend.mappers.GroupUserParser;
+import com.chen.blogbackend.mappers.GroupParser;
 import com.chen.blogbackend.mappers.MessageParser;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -10,6 +10,8 @@ import com.datastax.oss.driver.api.core.cql.*;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ import java.util.*;
 
 @Service
 public class ChatGroupService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ChatGroupService.class);
 
     @Autowired
     CqlSession session;
@@ -31,235 +35,435 @@ public class ChatGroupService {
     @Autowired
     NotificationProducer notificationProducer;
 
-    //PreparedStatement insertChatRecordById;
-
     PreparedStatement getGroups;
     PreparedStatement getMembers;
     PreparedStatement getMembersId;
 
-
     PreparedStatement removeMember;
     PreparedStatement delAllChatGroupById;
 
-    //PreparedStatement getRecord;
     PreparedStatement getGroupDetails;
+    PreparedStatement updateGroupDetails;
     PreparedStatement getRecordByGroupId;
-//    PreparedStatement getRecordByMemberId;
-    //PreparedStatement setChatRecordCache;
+
     PreparedStatement createChatGroup;
-    PreparedStatement insertGroupMember;
+    PreparedStatement insertGroupMemberByUser;
+    PreparedStatement insertGroupMemberByGroup;
+
     PreparedStatement getGroupMember;
+    PreparedStatement getGroupOwner;
 
     //generate here.
     InvitationDao invitationDao;
 
-
-
-
     @PostConstruct
     public void init() {
+        logger.info("Initializing ChatGroupService prepared statements");
 
-        //insertChatRecordById = session.prepare("insert into group_chat.group_chat_record_by_id (group_id , message_id ,type ,  user_id  ,content , referUserID , referMessageId , send_time, media, recall) values(?,?,?,?,?,?,?,?,?,?)");
-        getGroupDetails = session.prepare("select * from group_chat.chat_group_details where group_id = ?");
-        removeMember = session.prepare("delete from group_chat.chat_group_members where group_id = ? and user_id = ?");
-        createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, group_description, group_name, owner,create_time) values(?, ?, ?, ?, ?, ?, ?)");
-        getGroups = session.prepare("select * from group_chat.chat_group_members where user_id = ?");
-        getMembers = session.prepare("select * from group_chat.chat_group_members where group_id = ? ");
-        //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
-        //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
-        getRecordByGroupId = session.prepare("select * from chat.group_chat_records where group_id= ? and session_message_id > ? limit 10");
-        //getRecordByMemberId = session.prepare("select * from chat.chat_messages_mailbox where user_id= ? ");
-        insertGroupMember = session.prepare("insert into group_chat.chat_group_members (group_id, user_id, user_name, group_name) values (?, ?, ?, ?)");
-        getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
+        try {
+            //insertChatRecordById = session.prepare("insert into group_chat.group_chat_record_by_id (group_id , message_id ,type ,  user_id  ,content , referUserID , referMessageId , send_time, media, recall) values(?,?,?,?,?,?,?,?,?,?)");
+            getGroupDetails = session.prepare("select * from group_chat.chat_group_details where group_id = ?");
+            removeMember = session.prepare("delete from group_chat.chat_group_members where group_id = ? and user_id = ?");
+            createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, introduction, name, owner_id,create_time,allow_invite_by_token) values(?, ?, ?, ?, ?, ?, ?, ?)");
+            getGroups = session.prepare("select * from group_chat.chat_group_members_by_user where user_id = ?");
+            getMembers = session.prepare("select * from group_chat.chat_group_members_by_group where group_id = ? ");
+            //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
+            //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
+            getRecordByGroupId = session.prepare("select * from chat.group_chat_records where group_id= ? and session_message_id > ? limit 10");
+            //getRecordByMemberId = session.prepare("select * from chat.chat_messages_mailbox where user_id= ? ");
+            insertGroupMemberByUser = session.prepare("insert into group_chat.chat_group_members_by_user (group_id, user_id, group_name) values (?, ?, ?)");
+            insertGroupMemberByGroup = session.prepare("insert into group_chat.chat_group_members_by_group (group_id, user_id, user_name) values (?, ?, ?)");
+            getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
+            getGroupOwner = session.prepare("select owner_id from group_chat.chat_group_details where group_id = ?;");
+            updateGroupDetails = session.prepare("UPDATE group_chat.chat_group_details SET introduction = ?, name = ?, allow_invite_by_token = ? WHERE group_id = ?;");
+
+            logger.info("ChatGroupService prepared statements initialized successfully");
+        } catch (Exception e) {
+            logger.error("Failed to initialize ChatGroupService prepared statements", e);
+            throw e;
+        }
     }
 
+    public boolean joinGroup(String userId, Long groupId) {
+        return joinGroup(userId, groupId, "");
+    }
 
-    public boolean joinGroup(String userId, String groupId) {
-        BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-        builder.addStatements(insertGroupMember.bind(groupId, userId, "", ""));
-        ResultSet execute = session.execute(builder.build());
-        return execute.getExecutionInfo().getErrors().isEmpty();
+    public boolean joinGroup(String userId, Long groupId, String groupName) {
+        logger.debug("User {} attempting to join group {} with name '{}'", userId, groupId, groupName);
+
+        try {
+            BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
+            builder.addStatements(insertGroupMemberByGroup.bind(groupId, userId, ""));
+            builder.addStatements(insertGroupMemberByUser.bind(groupId, userId, groupName));
+            ResultSet execute = session.execute(builder.build());
+
+            boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("User {} successfully joined group {}", userId, groupId);
+            } else {
+                logger.warn("User {} failed to join group {}: {}", userId, groupId, execute.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error occurred while user {} was joining group {}", userId, groupId, e);
+            return false;
+        }
     }
 
     public boolean quitGroup(String userId, String groupId) {
-        BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-        builder.addStatements(removeMember.bind(groupId, userId));
-        ResultSet execute = session.execute(builder.build());
-        return execute.getExecutionInfo().getErrors().isEmpty();
+        logger.debug("User {} attempting to quit group {}", userId, groupId);
+
+        try {
+            BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
+            builder.addStatements(removeMember.bind(groupId, userId));
+            ResultSet execute = session.execute(builder.build());
+
+            boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("User {} successfully quit group {}", userId, groupId);
+            } else {
+                logger.warn("User {} failed to quit group {}: {}", userId, groupId, execute.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error occurred while user {} was quitting group {}", userId, groupId, e);
+            return false;
+        }
     }
 
     public Invitation generateInvitation(String operator, String userId, String groupId) {
-        String invitationId = userId + System.currentTimeMillis() + RandomUtil.generateRandomString(10);
-        Invitation invitation = new Invitation(groupId, (new Date(System.currentTimeMillis() + 360000)), userId, 10);
-        invitationDao.insert(invitation);
-        return invitation;
+        logger.debug("Operator {} generating invitation for user {} to group {}", operator, userId, groupId);
+
+        try {
+            String invitationId = userId + System.currentTimeMillis() + RandomUtil.generateRandomString(10);
+            Invitation invitation = new Invitation(groupId, (new Date(System.currentTimeMillis() + 360000)), userId, 10);
+            invitationDao.insert(invitation);
+
+            logger.info("Invitation {} generated successfully for user {} to group {} by operator {}",
+                    invitationId, userId, groupId, operator);
+            return invitation;
+        } catch (Exception e) {
+            logger.error("Failed to generate invitation for user {} to group {} by operator {}", userId, groupId, operator, e);
+            throw e;
+        }
     }
 
     public boolean dismissGroup(String operatorId, String groupId) {
-        BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-        ResultSet execute = session.execute(getMembersId.bind(groupId));
-        for (Row row: execute.all()) {
-            String userId = row.get("user_id", String.class);
-            builder.addStatement(removeMember.bind(groupId, userId));
+        logger.debug("Operator {} attempting to dismiss group {}", operatorId, groupId);
+
+        try {
+            BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
+            ResultSet execute = session.execute(getMembersId.bind(groupId));
+
+            int memberCount = 0;
+            for (Row row : execute.all()) {
+                String userId = row.get("user_id", String.class);
+                builder.addStatement(removeMember.bind(groupId, userId));
+                memberCount++;
+            }
+
+            builder.addStatement(delAllChatGroupById.bind(groupId));
+            ResultSet execute1 = session.execute(builder.build());
+
+            boolean success = execute1.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("Group {} successfully dismissed by operator {}, removed {} members",
+                        groupId, operatorId, memberCount);
+            } else {
+                logger.warn("Failed to dismiss group {} by operator {}: {}",
+                        groupId, operatorId, execute1.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error occurred while operator {} was dismissing group {}", operatorId, groupId, e);
+            return false;
         }
-        builder.addStatement(delAllChatGroupById.bind(groupId));
-        ResultSet execute1 = session.execute(builder.build());
-        return execute1.getExecutionInfo().getErrors().isEmpty();
     }
 
     public boolean joinByInvitation(String userId, String username, String groupId, String invitationID) {
-        Invitation select = invitationDao.select(invitationID);
-        BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-        builder.addStatements(insertGroupMember.bind(groupId, userId, username,""));
-        return select.getReceiverId().equals(groupId) && System.currentTimeMillis() < select.getExpire_time().getTime();
+        logger.debug("User {} attempting to join group {} using invitation {}", userId, groupId, invitationID);
+
+        try {
+            Invitation select = invitationDao.select(invitationID);
+            if (select == null) {
+                logger.warn("Invitation {} not found for user {} joining group {}", invitationID, userId, groupId);
+                return false;
+            }
+
+            boolean isValidReceiver = select.getReceiverId().equals(groupId);
+            boolean isNotExpired = System.currentTimeMillis() < select.getExpire_time().getTime();
+
+            if (!isValidReceiver) {
+                logger.warn("Invalid invitation receiver for user {} joining group {}. Expected: {}, Actual: {}",
+                        userId, groupId, groupId, select.getReceiverId());
+                return false;
+            }
+
+            if (!isNotExpired) {
+                logger.warn("Expired invitation {} for user {} joining group {}", invitationID, userId, groupId);
+                return false;
+            }
+
+            BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
+            builder.addStatements(insertGroupMemberByUser.bind(groupId, userId, username));
+
+            logger.info("User {} successfully joined group {} using invitation {}", userId, groupId, invitationID);
+            return isValidReceiver && isNotExpired;
+        } catch (Exception e) {
+            logger.error("Error occurred while user {} was joining group {} with invitation {}",
+                    userId, groupId, invitationID, e);
+            return false;
+        }
     }
 
-    public List<GroupUser> getMembers(String userId, long groupId, String pagingState) {
-        ResultSet execute = session.execute(getMembers.bind(groupId));
-        return GroupUserParser.groupUserParser(execute);
+    public List<GroupUser> getMembers(long groupId) {
+        logger.debug("Retrieving members for group {}", groupId);
 
+        try {
+            ResultSet execute = session.execute(getMembers.bind(groupId));
+            List<GroupUser> members = GroupParser.groupListParser(execute);
+            logger.debug("Retrieved {} members for group {}", members.size(), groupId);
+            return members;
+        } catch (Exception e) {
+            logger.error("Error occurred while retrieving members for group {}", groupId, e);
+            return new ArrayList<>();
+        }
     }
-
 
     public List<SingleMessage> getGroupMessageByGroupIDAndTimestamp(Long groupId, long timestamp) {
-        ResultSet execute = session.execute(getRecordByGroupId.bind(groupId, Instant.ofEpochMilli(timestamp)));
-        return MessageParser.parseToNotificationMessage(execute);
-    }
+        logger.debug("Retrieving messages for group {} after timestamp {}", groupId, timestamp);
 
-//    public boolean recall(String operatorId, String groupID, String messageId) {
-//        BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.LOGGED);
-//
-//        BatchStatementBuilder batchStatementBuilder = builder.addStatements(getRecord.bind(groupID, messageId), getGroupDetails.bind(groupID));
-//
-//        ResultSet execute = session.execute(batchStatementBuilder.build());
-//        String userId = execute.all().get(0).get("user_id", String.class);
-//        String ownerId = execute.all().get(1).get("owner_id", String.class);
-//        if (null == userId || null == ownerId) {
-//            return false;
-//        }
-//        if (userId.equals(operatorId) || ownerId.equals(operatorId)) {
-//            ResultSet execute1 = session.execute(recall.bind(messageId));
-//            return true;
-//        }
-//        return false;
-//    }
+        try {
+            ResultSet execute = session.execute(getRecordByGroupId.bind(groupId, Instant.ofEpochMilli(timestamp)));
+            List<SingleMessage> messages = MessageParser.parseToNotificationMessage(execute);
+            logger.debug("Retrieved {} messages for group {} after timestamp {}", messages.size(), groupId, timestamp);
+            return messages;
+        } catch (Exception e) {
+            logger.error("Error occurred while retrieving messages for group {} after timestamp {}", groupId, timestamp, e);
+            return new ArrayList<>();
+        }
+    }
 
     public boolean removeUser(String operatorId, String groupId, String userId) {
-        BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-        builder.addStatements(removeMember.bind(userId, groupId));
-        ResultSet execute = session.execute(builder.build());
-        return execute.getExecutionInfo().getErrors().size() == 0;
+        logger.debug("Operator {} attempting to remove user {} from group {}", operatorId, userId, groupId);
+
+        try {
+            BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
+            builder.addStatements(removeMember.bind(userId, groupId));
+            ResultSet execute = session.execute(builder.build());
+
+            boolean success = execute.getExecutionInfo().getErrors().size() == 0;
+            if (success) {
+                logger.info("User {} successfully removed from group {} by operator {}", userId, groupId, operatorId);
+            } else {
+                logger.warn("Failed to remove user {} from group {} by operator {}: {}",
+                        userId, groupId, operatorId, execute.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error occurred while operator {} was removing user {} from group {}",
+                    operatorId, userId, groupId, e);
+            return false;
+        }
     }
 
-    public List<GroupUser> getGroups(String userId, String pagingState) {
-        System.out.println(userId);
-        ResultSet execute = session.execute(getGroups.bind(userId));
-        return GroupUserParser.groupUserParser(execute);
+    public List<GroupUser> getGroups(String userId) {
+        logger.debug("Retrieving groups for user {}", userId);
+
+        try {
+            ResultSet execute = session.execute(getGroups.bind(userId));
+            List<GroupUser> groups = GroupParser.groupListParser(execute);
+            logger.debug("Retrieved {} groups for user {}", groups.size(), userId);
+            return groups;
+        } catch (Exception e) {
+            logger.error("Error occurred while retrieving groups for user {}", userId, e);
+            return new ArrayList<>();
+        }
     }
 
     public boolean recall(String operatorId, long groupID, String messageId) {
+        logger.debug("Operator {} attempting to recall message {} from group {}", operatorId, messageId, groupID);
+        // TODO: Implement actual recall logic
+        logger.warn("Recall functionality not implemented yet for message {} in group {} by operator {}",
+                messageId, groupID, operatorId);
         return true;
     }
 
-    public boolean createGroup(String creatorId, String groupName, List<String> members) {
-        long groupId = keyService.getIntKey("chatGroup"); // 你需要实现如何生成群组 ID
+    public boolean createGroup(String ownerId, String groupName, List<String> members, Boolean allowInvitesByToken) {
+        logger.debug("Owner {} creating group '{}' with {} members, allowInvitesByToken: {}",
+                ownerId, groupName, members.size(), allowInvitesByToken);
 
-        boolean result = true;
-        members.add(creatorId);
-        for (String memberId : members) {
-            ResultSet execute = session.execute(insertGroupMember.bind(groupId, memberId, "", groupName));
-            int size = execute.getExecutionInfo().getErrors().size();
-            if (size != 0) {
+        try {
+            long groupId = keyService.getIntKey("chatGroup");
+            logger.debug("Generated group ID {} for new group '{}'", groupId, groupName);
+
+            boolean result = true;
+            members.add(ownerId);
+
+            for (String memberId : members) {
+                result = joinGroup(memberId, groupId, groupName);
+                if (!result) {
+                    logger.error("Failed to add member {} to group {}, rolling back group creation", memberId, groupId);
+                    return false;
+                }
+            }
+
+            ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, ownerId, Instant.now(), allowInvitesByToken));
+            if (!execute.getExecutionInfo().getErrors().isEmpty()) {
+                logger.error("Failed to create group details for group {} '{}': {}",
+                        groupId, groupName, execute.getExecutionInfo().getErrors());
                 return false;
             }
-        }
-//        createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, group_description, group_name, owner) values(?, ?, ?, ?, ?, ?)");
-        ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, creatorId, Instant.now()));
-        if (!execute.getExecutionInfo().getErrors().isEmpty()) {
+
+            logger.info("Group {} '{}' successfully created by owner {} with {} members",
+                    groupId, groupName, ownerId, members.size());
+            return true;
+        } catch (Exception e) {
+            logger.error("Error occurred while creating group '{}' by owner {}", groupName, ownerId, e);
             return false;
         }
-
-        return result; // 如果没有异常发生，返回 true
     }
 
     public boolean isInGroup(String userId, long groupId) {
-        ResultSet execute = session.execute(getGroupMember.bind(groupId, userId));
-        if (execute.getExecutionInfo().getErrors().isEmpty()) {
-            if (execute.all().isEmpty()) {
-                return false;
+        logger.debug("Checking if user {} is in group {}", userId, groupId);
+
+        try {
+            ResultSet execute = session.execute(getGroupMember.bind(groupId, userId));
+            if (execute.getExecutionInfo().getErrors().isEmpty()) {
+                boolean isInGroup = !execute.all().isEmpty();
+                logger.debug("User {} is {} in group {}", userId, isInGroup ? "" : "not", groupId);
+                return isInGroup;
             }
-            return true;
+            logger.warn("Error checking if user {} is in group {}: {}", userId, groupId, execute.getExecutionInfo().getErrors());
+            return false;
+        } catch (Exception e) {
+            logger.error("Error occurred while checking if user {} is in group {}", userId, groupId, e);
+            return false;
         }
-        return false;
     }
 
     public SendingReceipt sendGroupMessage(String userId, long groupId, String content, String messageType) throws Exception {
+        logger.debug("User {} sending message to group {}, type: {}", userId, groupId, messageType);
+
         Instant now = Instant.now();
         SendingReceipt receipt = new SendingReceipt();
 
+        try {
+            receipt.setMessageId(keyService.getLongKey("chat_global"));
+            receipt.setSessionMessageId(keyService.getLongKey("group_chat_" + groupId));
 
-        receipt.setMessageId(keyService.getLongKey("chat_global"));
-        receipt.setSessionMessageId(keyService.getLongKey("group_chat_" + groupId));
+            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1, new ArrayList<>(), false, receipt.getSessionMessageId());
 
-        GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1,new ArrayList<>(),false , receipt.getSessionMessageId());
-        if (isInGroup(userId, groupId)) {
-            receipt.setMessageId(keyService.getIntKey("groupMessage"));
-            groupMessage.setMessageId(receipt.getMessageId());
-            receipt.setResult(true);
-            receipt.setTimestamp(now.toEpochMilli());
-            notificationProducer.sendNotification(groupMessage);
-            return receipt;
+            if (isInGroup(userId, groupId)) {
+                receipt.setMessageId(keyService.getIntKey("groupMessage"));
+                groupMessage.setMessageId(receipt.getMessageId());
+                receipt.setResult(true);
+                receipt.setTimestamp(now.toEpochMilli());
+                notificationProducer.sendNotification(groupMessage);
+
+                logger.info("User {} successfully sent message {} to group {}", userId, receipt.getMessageId(), groupId);
+                return receipt;
+            } else {
+                logger.warn("User {} attempted to send message to group {} but is not a member", userId, groupId);
+                receipt.setResult(false);
+                return receipt;
+            }
+        } catch (Exception e) {
+            logger.error("Error occurred while user {} was sending message to group {}", userId, groupId, e);
+            receipt.setResult(false);
+            throw e;
         }
-
-        receipt.setResult(false);
-        return receipt;
     }
 
     public ChatGroup getGroupDetail(long groupId) {
-        Select select = QueryBuilder.selectFrom("group_chat","chat_group_details").all()
-                .whereColumn("group_id").isEqualTo(QueryBuilder.literal(groupId));
+        logger.debug("Retrieving details for group {}", groupId);
 
-        SimpleStatement build = select.build();
+        try {
+            Select select = QueryBuilder.selectFrom("group_chat", "chat_group_details").all()
+                    .whereColumn("group_id").isEqualTo(QueryBuilder.literal(groupId));
 
-        // 执行查询并获取结果
-        Row row = session.execute(build).one();
+            SimpleStatement build = select.build();
+            ChatGroup groupDetail = GroupParser.parseDetails(session.execute(build));
 
-        if (row != null) {
-            // 映射查询结果到 ChatGroupDetails 对象
-            long groupIdLong = row.getLong("group_id");
-            String groupName = row.getString("group_name");
-            String groupDescription = row.getString("group_description");
-            String owner = row.getString("owner");
-            Map<String, String> config = row.getMap("config", String.class, String.class);
-            String avatar = row.getString("avatar");
-            //Instant createDatetime = row.getInstant("createDatetime");
-
-            return new ChatGroup(groupIdLong , groupName, groupDescription, null,owner, config, avatar);
-        } else {
-            // 如果没有找到对应的群组，返回 null 或抛出异常
+            if (groupDetail != null) {
+                logger.debug("Successfully retrieved details for group {}", groupId);
+            } else {
+                logger.warn("No details found for group {}", groupId);
+            }
+            return groupDetail;
+        } catch (Exception e) {
+            logger.error("Error occurred while retrieving details for group {}", groupId, e);
             return null;
         }
     }
 
     public List<SingleMessage> getNewestMessages(String userId, long timestamp) {
-        ResultSet execute = session.execute(getGroups.bind(userId));
-        List<SingleMessage> singleMessages = new ArrayList<>();
-        if (!execute.getExecutionInfo().getErrors().isEmpty()) {
-            return singleMessages;
-        }
-        List<Row> all = execute.all();
-        for (Row row : all) {
-            Long groupId = row.getLong("group_id");
-            List<SingleMessage> groupMessageByGroupID = getGroupMessageByGroupIDAndTimestamp(groupId, timestamp);
-            singleMessages.addAll(groupMessageByGroupID);
+        logger.debug("Retrieving newest messages for user {} after timestamp {}", userId, timestamp);
 
+        try {
+            ResultSet execute = session.execute(getGroups.bind(userId));
+            List<SingleMessage> singleMessages = new ArrayList<>();
+
+            if (!execute.getExecutionInfo().getErrors().isEmpty()) {
+                logger.warn("Error retrieving groups for user {}: {}", userId, execute.getExecutionInfo().getErrors());
+                return singleMessages;
+            }
+
+            List<Row> all = execute.all();
+            int totalMessages = 0;
+
+            for (Row row : all) {
+                Long groupId = row.getLong("group_id");
+                List<SingleMessage> groupMessages = getGroupMessageByGroupIDAndTimestamp(groupId, timestamp);
+                singleMessages.addAll(groupMessages);
+                totalMessages += groupMessages.size();
+            }
+
+            logger.debug("Retrieved {} newest messages across {} groups for user {}",
+                    totalMessages, all.size(), userId);
+            return singleMessages;
+        } catch (Exception e) {
+            logger.error("Error occurred while retrieving newest messages for user {} after timestamp {}",
+                    userId, timestamp, e);
+            return new ArrayList<>();
         }
-        return singleMessages;
     }
 
+    public List<GroupMessage> getGroupMessageRecords(Long groupId, Long lastSessionMessageId) {
+        logger.debug("Retrieving message records for group {} after session message ID {}", groupId, lastSessionMessageId);
+        // TODO: Implement actual message records retrieval
+        logger.warn("getGroupMessageRecords method not implemented yet for group {} with lastSessionMessageId {}",
+                groupId, lastSessionMessageId);
+        return null;
+    }
 
-//    @RequestMapping("setRequestCache")
-//    public LoginMessage setRequestCache(GroupMessage message) {
-//
-//    }
+    public boolean updateGroup(String userEmail, long groupId, String name, String description, Boolean allowInviteByToken) {
+        logger.debug("User {} attempting to update group {}: name='{}', description='{}', allowInviteByToken={}",
+                userEmail, groupId, name, description, allowInviteByToken);
+
+        try {
+            ResultSet execute = session.execute(getGroups.bind(groupId));
+            Row one = execute.one();
+
+            if (one == null) {
+                logger.warn("Group {} not found for update by user {}", groupId, userEmail);
+                return false;
+            } else {
+                String ownerId = one.getString("ownerId");
+                if (!ownerId.equals(userEmail)) {
+                    logger.warn("User {} is not the owner of group {} (owner: {}), update denied",
+                            userEmail, groupId, ownerId);
+                    return false;
+                }
+            }
+
+            session.execute(updateGroupDetails.bind(description, name, allowInviteByToken, groupId));
+            logger.info("Group {} successfully updated by owner {}: name='{}', description='{}', allowInviteByToken={}",
+                    groupId, userEmail, name, description, allowInviteByToken);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error occurred while user {} was updating group {}", userEmail, groupId, e);
+            return false;
+        }
+    }
 }

@@ -10,8 +10,6 @@ import com.chen.blogbackend.services.SearchService;
 import com.chen.blogbackend.services.SingleMessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -80,6 +78,35 @@ public class SingleMessageController {
 
     }
 
+    @PostMapping("getMessageRecords")
+    public Message getMessageRecords(HttpServletRequest request,String userId, String type, Long lastSessionMessageId, Long groupId) {
+        String userEmail =(String) request.getAttribute("userEmail");
+        if (userId == null || userId.trim().isEmpty()) {
+            return new Message(-1, "userId is null");
+        }
+        if (type == null || type.trim().isEmpty()) {
+            return new Message(-1, "type is null");
+        }
+        if (lastSessionMessageId == null) {
+            return new Message(-1, "lastSessionMessageId is null");
+        }
+        try {
+            if (type.equals("single")) {
+                List<SingleMessage> newestMessages = service.getSingleMessageRecords(userEmail, userId, lastSessionMessageId);
+                return new Message(0, JSON.toJSONString(newestMessages));
+            } else if (type.equals("group")) {
+                List<GroupMessage> groupMessages = groupService.getGroupMessageRecords(groupId, lastSessionMessageId);
+                return new Message(0, JSON.toJSONString(groupMessages));
+            } else {
+                return new Message(-1, "unsupported type");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Message(-1, "Internal Error");
+        }
+    }
+
+
 //    @RequestMapping("recall")
 //    public LoginMessage recall(String userId, String receiverId, String messageId) {
 //        service.recall(userId, receiverId, messageId);
@@ -96,44 +123,8 @@ public class SingleMessageController {
 //    }
 
 
-    //get the newest message and it count. all newest messages
-    @PostMapping("getSingleMessages")
-    public Message getSingleMessages(HttpServletRequest request, @RequestBody Map<String, Object> payload) {
-        String email = (String) request.getAttribute("userEmail");
-        Long sessionMessageId = (Long) payload.get("session_message_id");
-        String anotherUserId = (String) payload.get("anotherEmail");
-        if (anotherUserId == null || anotherUserId.equals("")
-                || sessionMessageId == null || sessionMessageId == 0) {
-            return new Message(-1,"Insufficient Parameters");
-        }
 
-        try {
-            List<SingleMessage> newRecords = service.getNewestMessages(email, anotherUserId, sessionMessageId);
-            return new Message(0, JSON.toJSONString(newRecords));
-        } catch (Exception e) {
-            return new Message(-1, "Internal Error");
-        }
-    }
 
-//    @RequestMapping("getUnreadCount")
-//    public ResponseEntity<?> getUnreadCount(String receiverId) {
-//        if (receiverId == null) {
-//            return ResponseEntity
-//                    .status(HttpStatus.BAD_REQUEST)
-//                    .body("Receiver ID is required");
-//        }
-//
-//        try {
-//            List<SingleMessage> unreadCount = service.getUnreadCount(receiverId);
-//            return ResponseEntity.ok(unreadCount);
-//        } catch (Exception e) {
-//            // Logging the error can be helpful
-//            e.printStackTrace();
-//            return ResponseEntity
-//                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("An error occurred while fetching unread count");
-//        }
-//    }
 
 
 

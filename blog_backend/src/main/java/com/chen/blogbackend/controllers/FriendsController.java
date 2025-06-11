@@ -50,9 +50,15 @@ public class FriendsController {
 
     @RequestMapping("get_friends")
     public LoginMessage getFriends(HttpServletRequest request) {
-        String userId = (String) request.getAttribute("userEmail");
-        List<Relationship> friends = friendsService.getFriendsByUserId(userId);
-        return new LoginMessage(1, JSON.toJSONString(friends));
+        try {
+            String userId = (String) request.getAttribute("userEmail");
+            List<Relationship> friends = friendsService.getFriendsByUserId(userId);
+            return new LoginMessage(0, JSON.toJSONString(friends));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new LoginMessage(-1, "no sufficient data provided");
     }
 
     @RequestMapping("get_followers")

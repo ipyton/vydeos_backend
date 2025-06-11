@@ -3,6 +3,7 @@ package com.chen.blogbackend.controllers;
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.services.ChatGroupService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,22 +20,22 @@ import java.util.List;
 @ResponseBody
 public class ChatGroupController {
 
-
-
-
     @Autowired
     ChatGroupService service;
 
 
+
+    //{name, introduction,userIds,allowInvitesById}
     @PostMapping("create")
-    public LoginMessage createGroup(HttpServletRequest req, @RequestBody() GroupRequest groupRequest) {
+    public LoginMessage createGroup(HttpServletRequest req, @RequestParam String name, @RequestParam String introduction,
+    @RequestParam List<String> memberIds, @RequestParam Boolean allowInvitesByToken) {
         String email = (String) req.getAttribute("userEmail");
-        String groupName = groupRequest.getGroupName();
-        List<String> members = groupRequest.getMembers();
-        if (email == null || email.equals("") || groupName == null || groupName.equals("") || members == null || members.size() == 0) {
+
+        if (email == null || email.equals("") || name == null || name.equals("")
+                || introduction == null || memberIds.size() == 0 || allowInvitesByToken == null) {
             return new LoginMessage(-1, "no sufficient data provided");
         }
-        boolean result = service.createGroup(email,groupName, members);
+        boolean result = service.createGroup(email,name, memberIds,allowInvitesByToken);
         if (result) {
             return new LoginMessage(0, "Success");
         }
@@ -42,7 +43,7 @@ public class ChatGroupController {
     }
 
     @PostMapping("join")
-    public LoginMessage joinGroup(HttpServletRequest req, String groupId) {
+    public LoginMessage joinGroup(HttpServletRequest req, Long groupId) {
         String email = (String) req.getAttribute("userEmail");
         boolean result = service.joinGroup(email, groupId);
         if (result) {
@@ -53,11 +54,17 @@ public class ChatGroupController {
 
 
 
-    @GetMapping("getDetail")
-    public ChatGroup getDetail(long groupId) {
-        return service.getGroupDetail(groupId);
+    @GetMapping("getDetails")
+    public Message getDetail(long groupId) {
+        return new Message(0, JSON.toJSONString(service.getGroupDetail(groupId)));
     }
 
+    @GetMapping("updateDetails")
+    public Message updateDetail(HttpServletRequest request,long groupId, String name, String description, Boolean allowInviteByToken) {
+        String userEmail = (String) request.getAttribute("userEmail");
+        boolean result = service.updateGroup(userEmail, groupId, name, description, allowInviteByToken);
+        return new Message(0, JSON.toJSONString(result));
+    }
 
 
     @RequestMapping("quit")
@@ -108,13 +115,13 @@ public class ChatGroupController {
         if (userId == null || userId.isBlank()) {
             return new LoginMessage(-1, "no sufficient data provided");
         }
-        List<GroupUser> groups = service.getGroups(userId, null);
+        List<GroupUser> groups = service.getGroups(userId);
         return new LoginMessage(0, JSON.toJSONString(groups));
     }
 
     @GetMapping("get_members")
-    public LoginMessage getMembers(String userId, long groupId, String pagingState) {
-        List<GroupUser> result = service.getMembers(userId, groupId, pagingState);
+    public LoginMessage getMembers( long groupId ) {
+        List<GroupUser> result = service.getMembers(groupId);
         return new LoginMessage(0, JSON.toJSONString(result));
     }
 

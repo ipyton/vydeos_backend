@@ -10,19 +10,22 @@ public class ChatGroup {
     long groupId;
     String groupName;
     String groupDescription;
-    Instant createDatetime;
+    Instant createTime;
     Map<String, String> config;
     String avatar;
     String ownerId;
+    Boolean allow_invite_by_token;
 
-    public ChatGroup(long groupId, String groupName, String groupDescription, Instant createDatetime, String ownerId, Map<String, String> config, String avatar) {
+    public ChatGroup(long groupId, String groupName, String groupDescription,
+                     Instant createTime, String ownerId, Map<String, String> config, String avatar, Boolean allow_invite_by_token) {
         this.groupId = groupId;
         this.groupName = groupName;
         this.groupDescription = groupDescription;
-        this.createDatetime = createDatetime;
+        this.createTime = createTime;
         this.config = config;
         this.avatar = avatar;
         this.ownerId = ownerId;
+        this.allow_invite_by_token = allow_invite_by_token;
     }
 
     public ChatGroup() {
@@ -52,12 +55,28 @@ public class ChatGroup {
         this.groupDescription = groupDescription;
     }
 
-    public Instant getCreateDatetime() {
-        return createDatetime;
+    public Instant getCreateTime() {
+        return createTime;
     }
 
-    public void setCreateDatetime(Instant createDatetime) {
-        this.createDatetime = createDatetime;
+    public void setCreateTime(Instant createTime) {
+        this.createTime = createTime;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public Boolean getAllow_invite_by_token() {
+        return allow_invite_by_token;
+    }
+
+    public void setAllow_invite_by_token(Boolean allow_invite_by_token) {
+        this.allow_invite_by_token = allow_invite_by_token;
     }
 
     public Map<String, String> getConfig() {

@@ -13,6 +13,8 @@ import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
@@ -25,12 +27,13 @@ import java.util.stream.Collectors;
 @Service
 public class SingleMessageService {
 
+    private static final Logger logger = LoggerFactory.getLogger(SingleMessageService.class);
+
     @Autowired
     CqlSession session;
 
     @Autowired
     NotificationProducer producer;
-
 
     @Autowired
     FriendsService friendsService;
@@ -41,14 +44,9 @@ public class SingleMessageService {
     @Autowired
     JedisPool pool;
 
-
-//    PreparedStatement setRecordById;
     PreparedStatement getSingleRecords;
     PreparedStatement block;
     PreparedStatement unBlock;
-//    PreparedStatement recall;
-//    PreparedStatement getNewestRecord;
-    //PreparedStatement updateEndpoint;
     PreparedStatement addEndpoint;
     PreparedStatement getEndpoints;
     PreparedStatement getGroupRecord;
@@ -56,113 +54,145 @@ public class SingleMessageService {
     PreparedStatement deleteUnread;
     PreparedStatement insertSingleMessage;
 
-
     @Autowired
     private ChatGroupService chatGroupService;
+
     @Autowired
     private CqlSession cqlSession;
 
-//    PreparedStatement updateEndpoint;
-
-
     @PostConstruct
     public void init(){
-//        setRecordById = session.prepare("insert into chat.chat_records (user_id, receiver_id, message_id, content, " +
-//                "send_time, type, refer_message_id, refer_user_id ) values (?,?,?,?,?,?,?,?);");
-        //getRecord = session.prepare("select * from chat.chat_records where user_id = ? and  send_time>? and receiver_id = ?");
-        block = session.prepare("insert into userinfo.black_list (user_id, black_user_id, black_user_name, black_user_avatar) values(?, ?, ?, ?)");
-        unBlock = session.prepare("delete from userInfo.black_list where user_id = ? and black_user_id = ?");
-        //recall = session.prepare("update chat.chat_records set del=true where user_id = ? and message_id= ?");
-//        getNewestRecord = session.prepare("select * from chat.chat_records where user_id = ? and send_time > ?");
-        //updateEndpoint = session.prepare("update chat.web_push_endpoints set endpoints = endpoints + ? where user_id = ?");
-        addEndpoint = session.prepare("INSERT INTO chat.web_push_endpoints (user_id, endpoint, expiration_time, p256dh, auth) VALUES (?, ?, ?, ?, ?);");
-//        updateEndpoint = session.prepare("UPDATE chat.web_push_endpoints SET endpoint = ?, p256dh = ?, auth = ? WHERE user_id = ?;");
-        getEndpoints = session.prepare("select * from chat.web_push_endpoints where user_id = ?");
-        getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 = ?and session_message_id > ? limit 10");
-        getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
-        deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ? and type =? and sender_id =? and group_id = ?;");
-        insertSingleMessage = session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, " +
-                "relationship, group_id, message_id, content, messagetype, send_time, refer_message_id," +
-                " refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+        logger.info("Initializing SingleMessageService and preparing CQL statements");
 
+        try {
+            block = session.prepare("insert into userinfo.black_list (user_id, black_user_id, black_user_name, black_user_avatar) values(?, ?, ?, ?)");
+            unBlock = session.prepare("delete from userInfo.black_list where user_id = ? and black_user_id = ?");
+            addEndpoint = session.prepare("INSERT INTO chat.web_push_endpoints (user_id, endpoint, expiration_time, p256dh, auth) VALUES (?, ?, ?, ?, ?);");
+            getEndpoints = session.prepare("select * from chat.web_push_endpoints where user_id = ?");
+            getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 = ? and session_message_id <= ? order by session_message_id desc limit 15");
+            getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
+            deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ? and type =? and sender_id =? and group_id = ?;");
+            insertSingleMessage = session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, " +
+                    "relationship, group_id, message_id, content, messagetype, send_time, refer_message_id," +
+                    " refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+
+            logger.info("Successfully initialized all prepared statements");
+        } catch (Exception e) {
+            logger.error("Failed to initialize prepared statements", e);
+            throw new RuntimeException("Failed to initialize SingleMessageService", e);
+        }
     }
 
     public boolean blockUser(String userId, String blockUser) {
-        ResultSet execute = session.execute(block.bind(userId, blockUser));
-        return execute.getExecutionInfo().getErrors().isEmpty();
+        logger.info("Attempting to block user - userId: {}, blockUser: {}", userId, blockUser);
+
+        try {
+            ResultSet execute = session.execute(block.bind(userId, blockUser));
+            boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+
+            if (success) {
+                logger.info("Successfully blocked user - userId: {}, blockUser: {}", userId, blockUser);
+            } else {
+                logger.warn("Failed to block user - userId: {}, blockUser: {}, errors: {}",
+                        userId, blockUser, execute.getExecutionInfo().getErrors());
+            }
+
+            return success;
+        } catch (Exception e) {
+            logger.error("Exception occurred while blocking user - userId: {}, blockUser: {}", userId, blockUser, e);
+            return false;
+        }
     }
 
     public boolean unblockUser(String userId, String unBlockUser) {
-        ResultSet execute = session.execute(unBlock.bind(userId, unBlockUser));
-        return execute.getExecutionInfo().getErrors().isEmpty();
+        logger.info("Attempting to unblock user - userId: {}, unBlockUser: {}", userId, unBlockUser);
+
+        try {
+            ResultSet execute = session.execute(unBlock.bind(userId, unBlockUser));
+            boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+
+            if (success) {
+                logger.info("Successfully unblocked user - userId: {}, unBlockUser: {}", userId, unBlockUser);
+            } else {
+                logger.warn("Failed to unblock user - userId: {}, unBlockUser: {}, errors: {}",
+                        userId, unBlockUser, execute.getExecutionInfo().getErrors());
+            }
+
+            return success;
+        } catch (Exception e) {
+            logger.error("Exception occurred while unblocking user - userId: {}, unBlockUser: {}", userId, unBlockUser, e);
+            return false;
+        }
     }
 
-
-//    public List<NotificationMessage> getMessageByUserId(String userId, String receiverId, String type, Long groupid, Long timestamp) {
-//        if (type.equals("single")) {
-//            ResultSet execute = session.execute(getRecord.bind(userId, receiverId,Instant.ofEpochMilli(timestamp)));
-//            return MessageParser.parseToNotificationMessage(execute);
-//
-//        } else {
-//            return chatGroupService.getGroupMessageByGroupIDAndTimestamp(groupid, timestamp);
-//        }
-//    }
-
-
-
     public SendingReceipt sendMessage(String userId, String receiverId, String content, String messageType) throws Exception {
+        logger.info("Attempting to send message - userId: {}, receiverId: {}, messageType: {}", userId, receiverId, messageType);
+
         SendingReceipt receipt = new SendingReceipt();
 
-        if (friendsService.getRelationship(userId, receiverId) != 11) {
-            System.out.println("they are not friends");
-            receipt.setMessageId(-1);
-            receipt.setResult(false);
+        try {
+            if (friendsService.getRelationship(userId, receiverId) != 11) {
+                logger.warn("Users are not friends - cannot send message. userId: {}, receiverId: {}", userId, receiverId);
+                receipt.setMessageId(-1);
+                receipt.setResult(false);
+                return receipt;
+            }
+
+            Instant now = Instant.now();
+            String[] users = sortUsers(userId, receiverId);
+            Boolean direction = false;
+            if (users[0].equals(userId)) {
+                direction = true;
+            }
+            userId = users[0];
+            receiverId = users[1];
+
+            receipt.setMessageId(keyService.getLongKey("chat_global"));
+            receipt.setSessionMessageId(keyService.getLongKey("chat_" + users[0] + "_" + users[1]));
+            receipt.setDelete(false);
+
+            logger.debug("Generated message IDs - messageId: {}, sessionMessageId: {}",
+                    receipt.getMessageId(), receipt.getSessionMessageId());
+
+            SingleMessage singleMessage = new SingleMessage("", userId, receiverId, "", "",
+                    "single", content, now, receipt.getMessageId(), -1, messageType,
+                    direction, false, receipt.getSessionMessageId());
+
+            BoundStatement bound = insertSingleMessage.bind(
+                    singleMessage.getUserId1(),
+                    singleMessage.getUserId2(),
+                    direction,
+                    false,
+                    0L,
+                    singleMessage.getMessageId(),
+                    singleMessage.getContent(),
+                    singleMessage.getMessageType(),
+                    singleMessage.getTimestamp(),
+                    -1L,
+                    Collections.emptyList(),
+                    singleMessage.isDeleted(),
+                    singleMessage.getSessionMessageId()
+            );
+
+            cqlSession.execute(bound);
+            logger.debug("Successfully inserted message into database");
+
+            producer.sendNotification(singleMessage);
+            logger.debug("Successfully sent notification");
+
+            receipt.setResult(true);
+            receipt.setTimestamp(now.toEpochMilli());
+
+            logger.info("Successfully sent message - messageId: {}, sessionMessageId: {}",
+                    receipt.getMessageId(), receipt.getSessionMessageId());
 
             return receipt;
+        } catch (Exception e) {
+            logger.error("Failed to send message - userId: {}, receiverId: {}, messageType: {}",
+                    userId, receiverId, messageType, e);
+            receipt.setResult(false);
+            throw e;
         }
-        Instant now = Instant.now();
-        String[] users = sortUsers(userId, receiverId);
-        Boolean direction = false;
-        if (users[0].equals(userId)) {
-            direction = true;
-        }
-        userId = users[0];
-        receiverId = users[1];
-        receipt.setMessageId(keyService.getLongKey("chat_global"));
-        receipt.setSessionMessageId(keyService.getLongKey("chat_" + users[0] + "_" + users[1]));
-        receipt.setDelete(false);
-        SingleMessage singleMessage =  new SingleMessage("", userId, receiverId,"", "",
-                "single", content, now, receipt.getMessageId(), -1,messageType,
-                direction,false, receipt.getSessionMessageId());
-        //session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, " +
-        //                "relationship, group_id, message_id, content, messagetype, send_time, refer_message_id," +
-        //                " refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
-
-        //create table chat.chat_records(user_id1 text, user_id2 text, direction boolean,relationship boolean,
-        // group_id bigint, message_id bigint, content text,messagetype text, send_time timestamp,
-        // refer_message_id bigint, refer_user_id list<text>,  del boolean,session_message_id bigint,
-        // PRIMARY KEY ((user_id1, user_id2), session_message_id));
-        BoundStatement bound = insertSingleMessage.bind(
-                singleMessage.getUserId1(),              // user_id1
-                singleMessage.getUserId2(),              // user_id2
-                direction,             // direction
-                false,                                   // relationship（如果没有，先设 false 或根据逻辑设定）
-                0L,                                      // group_id（私聊为 0）
-                singleMessage.getMessageId(),            // message_id
-                singleMessage.getContent(),              // content
-                singleMessage.getMessageType(),          // messagetype
-                singleMessage.getTime(),                 // send_time (java.time.Instant)
-                -1L,       // refer_message_id
-                Collections.emptyList(),                 // refer_user_id（无@人可设为空列表）
-                singleMessage.isDeleted(),               // del
-                singleMessage.getSessionMessageId()      // session_message_id
-        );
-        cqlSession.execute(bound);
-        producer.sendNotification(singleMessage);
-        receipt.setResult(true);
-        receipt.setTimestamp(now.toEpochMilli());
-
-        return receipt;
     }
 
     public static String[] sortUsers(String userId1, String userId2) {
@@ -181,125 +211,144 @@ public class SingleMessageService {
         return result;
     }
 
+    public List<SingleMessage> getSingleMessageRecords(String userId, String anotherUserId, Long sessionMessageId) {
+        logger.info("Retrieving single message records - userId: {}, anotherUserId: {}, sessionMessageId: {}",
+                userId, anotherUserId, sessionMessageId);
 
+        try {
+            String[] strings = sortUsers(userId, anotherUserId);
+            userId = strings[0];
+            anotherUserId = strings[1];
 
+            ResultSet execute = session.execute(getSingleRecords.bind(userId, anotherUserId, sessionMessageId));
+            List<SingleMessage> singleMessages = MessageParser.parseToNotificationMessage(execute);
 
-    public List<SingleMessage> getNewestMessages(String userId, String anotherUserId, Long sessionMessageId) {
-        String[] strings = sortUsers(userId, anotherUserId);
-        userId = strings[0];
-        anotherUserId = strings[1];
+            logger.info("Successfully retrieved {} message records for users: {} and {}",
+                    singleMessages.size(), userId, anotherUserId);
 
-
-        ResultSet execute = session.execute(getSingleRecords.bind(userId, anotherUserId, sessionMessageId));
-        //System.out.println(execute.all().size());
-        List<SingleMessage> singleMessages = MessageParser.parseToNotificationMessage(execute);
-        System.out.println(singleMessages.size());
-        return singleMessages;
+            return singleMessages;
+        } catch (Exception e) {
+            logger.error("Failed to retrieve message records - userId: {}, anotherUserId: {}, sessionMessageId: {}",
+                    userId, anotherUserId, sessionMessageId, e);
+            return new ArrayList<>();
+        }
     }
-
-
-    //点进去的时候再全拉
 
     public List<SingleMessage> getUnreadCount(String userId) {
-        Jedis jedis = pool.getResource();
+        logger.info("Retrieving unread messages from Redis for userId: {}", userId);
 
-        // 获取 Redis 中的 Hash
-        Map<String, String> redisHash = jedis.hgetAll(userId);
+        Jedis jedis = null;
+        try {
+            jedis = pool.getResource();
+            Map<String, String> redisHash = jedis.hgetAll(userId);
 
-        // 检查是否获取到数据
-        if (redisHash.isEmpty()) {
-            System.out.println("Hash is empty or does not exist!");
-            return null;
+            if (redisHash.isEmpty()) {
+                logger.info("No unread messages found in Redis for userId: {}", userId);
+                return new ArrayList<>();
+            }
+
+            List<SingleMessage> deserializedList = redisHash.values().stream()
+                    .map(value -> {
+                        try {
+                            return JSON.parseObject(value, SingleMessage.class);
+                        } catch (Exception e) {
+                            logger.error("Error deserializing message value: {}", value, e);
+                            throw new RuntimeException("Error deserializing value: " + value, e);
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            logger.info("Successfully retrieved {} unread messages for userId: {}", deserializedList.size(), userId);
+            return deserializedList;
+        } catch (Exception e) {
+            logger.error("Failed to retrieve unread messages from Redis for userId: {}", userId, e);
+            return new ArrayList<>();
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
         }
-
-
-        // 假设值是 JSON 序列化对象
-        List<SingleMessage> deserializedList = redisHash.values().stream()
-                .map(value -> {
-                    try {
-                        return JSON.parseObject(value, SingleMessage.class);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Error deserializing value: " + value, e);
-                    }
-                })
-                .collect(Collectors.toList());
-    return deserializedList;
-        // 对对象列表进行排序（按某字段排序，如 age）
-        //deserializedList.sort(Comparator.comparingInt(MyObject::getAge));
-
-        // 打印排序后的结果
-
-
-        // 如果需要，可以将排序后的结果存回 Redis
-//        Map<String, String> sortedRedisHash = new LinkedHashMap<>();
-//        for (MyObject obj : deserializedList) {
-//            String serializedValue = objectMapper.writeValueAsString(obj);
-//            sortedRedisHash.put(obj.getId(), serializedValue);
-//        }
-//        jedis.hmset(hashKey, sortedRedisHash);
-//
-//        System.out.println("Sorted hash saved back to Redis!");
     }
 
+    public boolean addOrUpdateEndpoint(String userId, String endpoint, String p256dh, String auth) {
+        logger.info("Adding/updating web push endpoint for userId: {}", userId);
 
-//    public List<NotificationMessage> getNewRecords( long receiverId, Long timestamp, String pagingState) {
-//        System.out.println(receiverId);
-//        ResultSet execute;
-//        if (null == timestamp) {
-//            //get the things the user send
-//            execute = session.execute(getNewestRecord.bind(receiverId, receiverId).setPagingState(PagingState.fromString(pagingState)).setPageSize(10));
-//        }
-//        else {
-//            execute = session.execute(getNewestRecord.bind(receiverId, receiverId + "_" + timestamp));
-//        }
-//
-//        return MessageParser.parseToNotificationMessage(execute);
-//    }
+        try {
+            ResultSet execute = session.execute(addEndpoint.bind(userId, endpoint, Instant.now(), p256dh, auth));
 
-    //目前只支持单用户
-    public boolean addOrUpdateEndpoint(String userId, String endpoint, String p256dh, String auth ) {
-//        ResultSet resultSet = session.execute(getEndpoints.bind(userId));
-        ResultSet execute = null;
-        execute = session.execute(addEndpoint.bind(userId, endpoint, Instant.now(), p256dh, auth));
+            if (!execute.getExecutionInfo().getErrors().isEmpty()) {
+                logger.error("Errors occurred while adding endpoint for userId: {}, errors: {}",
+                        userId, execute.getExecutionInfo().getErrors());
+                execute.getExecutionInfo().getErrors().forEach(error -> logger.error("CQL Error: {}", error));
+                return false;
+            }
 
-//        if (!resultSet.iterator().hasNext()) {
-//            // 如果不存在，插入新行
-//            System.out.println("插入");
-//            execute = session.execute(addEndpoint.bind(userId, endpoint, Instant.now(), p256dh, auth));
-//        } else {
-//            // 如果已经存在，更新数据
-//            System.out.println("更新");
-////            execute = session.execute(updateEndpoint.bind(endpoint, p256dh, auth, userId));
-//        }
-        execute.getExecutionInfo().getErrors().forEach(System.out::println);
-
-        return execute != null && execute.getExecutionInfo().getErrors().isEmpty();
-    }
-
-    public List<String> getEndpoints(String userId){
-        LinkedList<String> strings = new LinkedList<>();
-
-        ResultSet execute = session.execute(getEndpoints.bind(userId));
-        for (Row row : execute.all()) {
-            strings.addAll(Objects.requireNonNull(row.getList("endpoints", String.class)));
+            logger.info("Successfully added/updated endpoint for userId: {}", userId);
+            return true;
+        } catch (Exception e) {
+            logger.error("Exception occurred while adding/updating endpoint for userId: {}", userId, e);
+            return false;
         }
-        return strings;
     }
 
+    public List<String> getEndpoints(String userId) {
+        logger.info("Retrieving endpoints for userId: {}", userId);
+
+        try {
+            LinkedList<String> strings = new LinkedList<>();
+            ResultSet execute = session.execute(getEndpoints.bind(userId));
+
+            for (Row row : execute.all()) {
+                List<String> endpoints = row.getList("endpoints", String.class);
+                if (endpoints != null) {
+                    strings.addAll(endpoints);
+                }
+            }
+
+            logger.info("Retrieved {} endpoints for userId: {}", strings.size(), userId);
+            return strings;
+        } catch (Exception e) {
+            logger.error("Failed to retrieve endpoints for userId: {}", userId, e);
+            return new ArrayList<>();
+        }
+    }
 
     public List<UnreadMessage> getNewestMessagesFromAllUsers(String userId) {
-        ResultSet execute = session.execute(getNewestMessageFromAllUsers.bind(userId));
-        List<UnreadMessage> notificationMessages = UnreadMessageParser.parseToUnreadMessage(execute);
-        return notificationMessages;
+        logger.info("Retrieving newest messages from all users for userId: {}", userId);
+
+        try {
+            ResultSet execute = session.execute(getNewestMessageFromAllUsers.bind(userId));
+            List<UnreadMessage> notificationMessages = UnreadMessageParser.parseToUnreadMessage(execute);
+
+            logger.info("Successfully retrieved {} unread messages for userId: {}", notificationMessages.size(), userId);
+            return notificationMessages;
+        } catch (Exception e) {
+            logger.error("Failed to retrieve newest messages for userId: {}", userId, e);
+            return new ArrayList<>();
+        }
     }
 
-    public boolean markUnread(String userId,String senderId, String type, Long groupId) {
-        System.out.println(userId);
-        System.out.println(senderId);
-        System.out.println(type);
-        System.out.println(groupId);
-        ResultSet execute = session.execute(deleteUnread.bind(userId, type, senderId, groupId));
-        return execute.getExecutionInfo().getErrors().isEmpty();
+    public boolean markUnread(String userId, String senderId, String type, Long groupId) {
+        logger.info("Marking message as read - userId: {}, senderId: {}, type: {}, groupId: {}",
+                userId, senderId, type, groupId);
 
+        try {
+            ResultSet execute = session.execute(deleteUnread.bind(userId, type, senderId, groupId));
+            boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+
+            if (success) {
+                logger.info("Successfully marked message as read - userId: {}, senderId: {}, type: {}, groupId: {}",
+                        userId, senderId, type, groupId);
+            } else {
+                logger.warn("Failed to mark message as read - userId: {}, senderId: {}, type: {}, groupId: {}, errors: {}",
+                        userId, senderId, type, groupId, execute.getExecutionInfo().getErrors());
+            }
+
+            return success;
+        } catch (Exception e) {
+            logger.error("Exception occurred while marking message as read - userId: {}, senderId: {}, type: {}, groupId: {}",
+                    userId, senderId, type, groupId, e);
+            return false;
+        }
     }
 }
