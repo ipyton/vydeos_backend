@@ -31,8 +31,6 @@ public class ChatGroupService {
     @Autowired
     NotificationProducer notificationProducer;
 
-    //PreparedStatement insertChatRecordById;
-
     PreparedStatement getGroups;
     PreparedStatement getMembers;
     PreparedStatement getMembersId;
@@ -41,16 +39,17 @@ public class ChatGroupService {
     PreparedStatement removeMember;
     PreparedStatement delAllChatGroupById;
 
-    //PreparedStatement getRecord;
     PreparedStatement getGroupDetails;
+    PreparedStatement updateGroupDetails;
     PreparedStatement getRecordByGroupId;
-//    PreparedStatement getRecordByMemberId;
-    //PreparedStatement setChatRecordCache;
+
+
     PreparedStatement createChatGroup;
     PreparedStatement insertGroupMemberByUser;
     PreparedStatement insertGroupMemberByGroup;
 
     PreparedStatement getGroupMember;
+    PreparedStatement getGroupOwner;
 
     //generate here.
     InvitationDao invitationDao;
@@ -74,6 +73,9 @@ public class ChatGroupService {
         insertGroupMemberByUser = session.prepare("insert into group_chat.chat_group_members_by_user (group_id, user_id, group_name) values (?, ?, ?)");
         insertGroupMemberByGroup = session.prepare("insert into group_chat.chat_group_members_by_group (group_id, user_id, user_name) values (?, ?, ?)");
         getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
+        getGroupOwner = session.prepare("select ownerId from group_chat.chat_group_details where group_id = ?;");
+        updateGroupDetails = session.prepare("UPDATE group_chat.chat_group_details SET introduction = ?, name = ?, allow_invite_by_token = ? WHERE group_id = ?;");
+
     }
     public boolean joinGroup(String userId, Long groupId) {
         return joinGroup(userId, groupId, "");
@@ -245,6 +247,22 @@ public class ChatGroupService {
 
     public List<GroupMessage> getGroupMessageRecords(Long groupId, Long lastSessionMessageId) {
         return null;
+    }
+
+    public boolean updateGroup(String userEmail,long groupId, String name, String description, Boolean allowInviteByToken) {
+        ResultSet execute = session.execute(getGroups.bind(groupId));
+        Row one = execute.one();
+        if (one == null) {
+            return false;
+        }
+        else {
+            String ownerId = one.getString("ownerId");
+            if (!ownerId.equals(userEmail)) {
+                return false;
+            }
+        }
+        session.execute(updateGroupDetails.bind( description,name, allowInviteByToken,groupId));
+        return true;
     }
 
 

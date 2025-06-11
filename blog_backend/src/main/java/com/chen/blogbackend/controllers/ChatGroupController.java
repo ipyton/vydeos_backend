@@ -59,7 +59,12 @@ public class ChatGroupController {
         return new Message(0, JSON.toJSONString(service.getGroupDetail(groupId)));
     }
 
-
+    @GetMapping("updateDetails")
+    public Message updateDetail(HttpServletRequest request,long groupId, String name, String description, Boolean allowInviteByToken) {
+        String userEmail = (String) request.getAttribute("userEmail");
+        boolean result = service.updateGroup(userEmail, groupId, name, description, allowInviteByToken);
+        return new Message(0, JSON.toJSONString(result));
+    }
 
 
     @RequestMapping("quit")
