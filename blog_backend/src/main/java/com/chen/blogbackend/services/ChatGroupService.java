@@ -47,7 +47,9 @@ public class ChatGroupService {
 //    PreparedStatement getRecordByMemberId;
     //PreparedStatement setChatRecordCache;
     PreparedStatement createChatGroup;
-    PreparedStatement insertGroupMember;
+    PreparedStatement insertGroupMemberByUser;
+    PreparedStatement insertGroupMemberByGroup;
+
     PreparedStatement getGroupMember;
 
     //generate here.
@@ -63,20 +65,24 @@ public class ChatGroupService {
         getGroupDetails = session.prepare("select * from group_chat.chat_group_details where group_id = ?");
         removeMember = session.prepare("delete from group_chat.chat_group_members where group_id = ? and user_id = ?");
         createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, introduction, name, owner_id,create_time,allow_invite_by_token) values(?, ?, ?, ?, ?, ?, ?, ?)");
-        getGroups = session.prepare("select * from group_chat.chat_group_details where user_id = ?");
-        getMembers = session.prepare("select * from group_chat.chat_group_members where group_id = ? ");
+        getGroups = session.prepare("select * from group_chat.chat_group_members_by_user where user_id = ?");
+        getMembers = session.prepare("select * from group_chat.chat_group_members_by_group where group_id = ? ");
         //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         //recall = session.prepare("delete from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
         getRecordByGroupId = session.prepare("select * from chat.group_chat_records where group_id= ? and session_message_id > ? limit 10");
         //getRecordByMemberId = session.prepare("select * from chat.chat_messages_mailbox where user_id= ? ");
-        insertGroupMember = session.prepare("insert into group_chat.chat_group_members (group_id, user_id, user_name, group_name) values (?, ?, ?, ?)");
+        insertGroupMemberByUser = session.prepare("insert into group_chat.chat_group_members_by_user (group_id, user_id, group_name) values (?, ?, ?)");
+        insertGroupMemberByGroup = session.prepare("insert into group_chat.chat_group_members_by_group (group_id, user_id, user_name) values (?, ?, ?)");
         getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
     }
+    public boolean joinGroup(String userId, Long groupId) {
+        return joinGroup(userId, groupId, "");
+    }
 
-
-    public boolean joinGroup(String userId, String groupId) {
+    public boolean joinGroup(String userId, Long groupId,String groupName) {
         BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-        builder.addStatements(insertGroupMember.bind(groupId, userId, "", ""));
+        builder.addStatements(insertGroupMemberByGroup.bind(groupId, userId, ""));
+        builder.addStatements(insertGroupMemberByUser.bind(groupId, userId, groupName ));
         ResultSet execute = session.execute(builder.build());
         return execute.getExecutionInfo().getErrors().isEmpty();
     }
@@ -110,11 +116,11 @@ public class ChatGroupService {
     public boolean joinByInvitation(String userId, String username, String groupId, String invitationID) {
         Invitation select = invitationDao.select(invitationID);
         BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-        builder.addStatements(insertGroupMember.bind(groupId, userId, username,""));
+        builder.addStatements(insertGroupMemberByUser.bind(groupId, userId, username));
         return select.getReceiverId().equals(groupId) && System.currentTimeMillis() < select.getExpire_time().getTime();
     }
 
-    public List<GroupUser> getMembers(String userId, long groupId, String pagingState) {
+    public List<GroupUser> getMembers(long groupId) {
         ResultSet execute = session.execute(getMembers.bind(groupId));
         return GroupParser.groupListParser(execute);
     }
@@ -150,7 +156,7 @@ public class ChatGroupService {
         return execute.getExecutionInfo().getErrors().size() == 0;
     }
 
-    public List<GroupUser> getGroups(String userId, String pagingState) {
+    public List<GroupUser> getGroups(String userId) {
         System.out.println(userId);
         ResultSet execute = session.execute(getGroups.bind(userId));
         return GroupParser.groupListParser(execute);
@@ -166,9 +172,8 @@ public class ChatGroupService {
         boolean result = true;
         members.add(ownerId);
         for (String memberId : members) {
-            ResultSet execute = session.execute(insertGroupMember.bind(groupId, memberId, "", groupName));
-            int size = execute.getExecutionInfo().getErrors().size();
-            if (size != 0) {
+            result = joinGroup(memberId, groupId, groupName);
+            if (!result) {
                 return false;
             }
         }
@@ -176,7 +181,7 @@ public class ChatGroupService {
         if (!execute.getExecutionInfo().getErrors().isEmpty()) {
             return false;
         }
-        return result; // 如果没有异常发生，返回 true
+        return true; // 如果没有异常发生，返回 true
     }
 
     public boolean isInGroup(String userId, long groupId) {

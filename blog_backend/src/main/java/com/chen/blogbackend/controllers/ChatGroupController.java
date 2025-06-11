@@ -43,7 +43,7 @@ public class ChatGroupController {
     }
 
     @PostMapping("join")
-    public LoginMessage joinGroup(HttpServletRequest req, String groupId) {
+    public LoginMessage joinGroup(HttpServletRequest req, Long groupId) {
         String email = (String) req.getAttribute("userEmail");
         boolean result = service.joinGroup(email, groupId);
         if (result) {
@@ -59,11 +59,6 @@ public class ChatGroupController {
         return new Message(0, JSON.toJSONString(service.getGroupDetail(groupId)));
     }
 
-    @GetMapping("get")
-    public Message getGroupByUserId(HttpServletRequest req) {
-        String userEmail = (String) req.getAttribute("userEmail");
-        return new Message(0, JSON.toJSONString(service.getGroups(userEmail, null)));
-    }
 
 
 
@@ -115,13 +110,13 @@ public class ChatGroupController {
         if (userId == null || userId.isBlank()) {
             return new LoginMessage(-1, "no sufficient data provided");
         }
-        List<GroupUser> groups = service.getGroups(userId, null);
+        List<GroupUser> groups = service.getGroups(userId);
         return new LoginMessage(0, JSON.toJSONString(groups));
     }
 
     @GetMapping("get_members")
-    public LoginMessage getMembers(String userId, long groupId, String pagingState) {
-        List<GroupUser> result = service.getMembers(userId, groupId, pagingState);
+    public LoginMessage getMembers( long groupId ) {
+        List<GroupUser> result = service.getMembers(groupId);
         return new LoginMessage(0, JSON.toJSONString(result));
     }
 
