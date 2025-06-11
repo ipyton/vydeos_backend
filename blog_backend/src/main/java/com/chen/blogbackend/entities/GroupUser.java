@@ -4,13 +4,14 @@ package com.chen.blogbackend.entities;
 
 public class GroupUser {
     private String userId;
-    private long groupId;
+    private Long groupId;
     private String groupName;
-
-    public GroupUser(String userId, long groupId, String groupName) {
+    private String userName;
+    public GroupUser(String userId, Long groupId, String groupName, String userName) {
         this.userId = userId;
         this.groupId = groupId;
         this.groupName = groupName;
+        this.userName = userName;
     }
 
     // Getters and Setters
@@ -22,11 +23,11 @@ public class GroupUser {
         this.userId = userId;
     }
 
-    public long getGroupId() {
+    public Long getGroupId() {
         return groupId;
     }
 
-    public void setGroupId(long groupId) {
+    public void setGroupId(Long groupId) {
         this.groupId = groupId;
     }
 
@@ -36,6 +37,14 @@ public class GroupUser {
 
     public void setGroupName(String groupName) {
         this.groupName = groupName;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     @Override
