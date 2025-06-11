@@ -224,23 +224,7 @@ public class ChatGroupService {
         SimpleStatement build = select.build();
 
         // 执行查询并获取结果
-        Row row = session.execute(build).one();
-
-        if (row != null) {
-            // 映射查询结果到 ChatGroupDetails 对象
-            long groupIdLong = row.getLong("group_id");
-            String groupName = row.getString("group_name");
-            String groupDescription = row.getString("group_description");
-            String owner = row.getString("owner");
-            Map<String, String> config = row.getMap("config", String.class, String.class);
-            String avatar = row.getString("avatar");
-            //Instant createDatetime = row.getInstant("createDatetime");
-
-            return new ChatGroup(groupIdLong , groupName, groupDescription, null,owner, config, avatar);
-        } else {
-            // 如果没有找到对应的群组，返回 null 或抛出异常
-            return null;
-        }
+        return GroupParser.parseDetails(session.execute(build));
     }
 
     public List<SingleMessage> getNewestMessages(String userId, long timestamp) {

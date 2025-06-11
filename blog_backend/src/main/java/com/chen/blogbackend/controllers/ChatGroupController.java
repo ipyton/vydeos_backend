@@ -54,7 +54,7 @@ public class ChatGroupController {
 
 
 
-    @GetMapping("getDetail")
+    @GetMapping("getDetails")
     public Message getDetail(long groupId) {
         return new Message(0, JSON.toJSONString(service.getGroupDetail(groupId)));
     }
