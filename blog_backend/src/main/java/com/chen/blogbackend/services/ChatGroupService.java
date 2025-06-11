@@ -161,7 +161,7 @@ public class ChatGroupService {
         return true;
     }
 
-    public boolean createGroup(String ownerId, String groupName, List<String> members, Boolean allowInvitesById) {
+    public boolean createGroup(String ownerId, String groupName, List<String> members, Boolean allowInvitesByToken) {
         long groupId = keyService.getIntKey("chatGroup"); // 你需要实现如何生成群组 ID
 
         boolean result = true;
@@ -173,7 +173,7 @@ public class ChatGroupService {
                 return false;
             }
         }
-        ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, ownerId, Instant.now(),allowInvitesById));
+        ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, ownerId, Instant.now(),allowInvitesByToken));
         if (!execute.getExecutionInfo().getErrors().isEmpty()) {
             return false;
         }

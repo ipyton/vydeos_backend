@@ -27,14 +27,14 @@ public class ChatGroupController {
     //{name, introduction,userIds,allowInvitesById}
     @PostMapping("create")
     public LoginMessage createGroup(HttpServletRequest req, @RequestParam String name, @RequestParam String introduction,
-    @RequestParam List<String> memberIds, @RequestParam Boolean allowInvitesById) {
+    @RequestParam List<String> memberIds, @RequestParam Boolean allowInvitesByToken) {
         String email = (String) req.getAttribute("userEmail");
 
         if (email == null || email.equals("") || name == null || name.equals("")
-                || introduction == null || memberIds.size() == 0 || allowInvitesById == null) {
+                || introduction == null || memberIds.size() == 0 || allowInvitesByToken == null) {
             return new LoginMessage(-1, "no sufficient data provided");
         }
-        boolean result = service.createGroup(email,name, memberIds,allowInvitesById);
+        boolean result = service.createGroup(email,name, memberIds,allowInvitesByToken);
         if (result) {
             return new LoginMessage(0, "Success");
         }
