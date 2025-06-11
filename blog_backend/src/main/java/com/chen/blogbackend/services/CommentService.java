@@ -59,12 +59,12 @@ public class CommentService {
 
             getCommentsByResourceId = session.prepare("select * from comment.comments where resource_id=? and type=?;");
             sendComment = session.prepare("insert into comment.comments (resource_id,type,time,user_id,content,likes) values (?, ?, ?, ?, ?, ?);");
-            getCommentsByUserId = session.prepare("select * from comment.comment_by_user_id where user_id=?");
-//            addComment = session.prepare("insert into comment.comment_by_content values(?,?,?,?,?,?,?,?)");
-            addCommentForApp = session.prepare("insert into comment.app_comment values(?, ?, ?, ?, ?, ?, ?, ?)");
-            like = session.prepare("update comment.comments_by_content set likes = likes + 1 where object_id=?");
-            deleteSubComment = session.prepare("delete from comment.comment_by_comment where comment_refer=?");
-            deleteComment = session.prepare("delete from comment.comments where object_id=? and type = ? and comment_id=?");
+            //getCommentsByUserId = session.prepare("select * from comment.comments_by_user_id where user_id=?");
+//            addComment = session.prepare("insert into comment.comments_by_content values(?,?,?,?,?,?,?,?)");
+            //addCommentForApp = session.prepare("insert into comment.app_comment values(?, ?, ?, ?, ?, ?, ?, ?)");
+            //like = session.prepare("update comment.comments_by_content set likes = likes + 1 where object_id=?");
+            //deleteSubComment = session.prepare("delete from comment.comment_by_comment where comment_refer=?");
+            //deleteComment = session.prepare("delete from comment.comments where object_id=? and type = ? and comment_id=?");
 
             logger.info("CommentService initialization completed successfully");
         }
