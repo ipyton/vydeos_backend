@@ -32,13 +32,11 @@ public class AccountService {
     @Autowired
     CqlSession session;
 
-
     @Autowired
     SearchService searchService;
 
     @Autowired
     FriendsService friendsService;
-
 
     PreparedStatement insertAccount;
     PreparedStatement getAccount;
@@ -46,10 +44,8 @@ public class AccountService {
     PreparedStatement getToken;
     PreparedStatement getPassword;
 
-
     PreparedStatement insertUserDetails;
     PreparedStatement getUserDetails;
-
 
     PreparedStatement updateEmail;
     PreparedStatement updatePassword;
@@ -69,307 +65,551 @@ public class AccountService {
     PreparedStatement deleteToken;
     PreparedStatement invalidateVerificationCode;
 
-
     @Autowired
     private CqlSession cqlSession;
 
     @PostConstruct
     public void init(){
+        logger.info("Initializing AccountService and preparing database statements");
 
-        insertAccount = session.prepare("insert into userinfo.user_auth (userid, email, password, telephone) values(?,?,?,?)");
-        getAccount = session.prepare("select * from userinfo.user_auth where userid=?");
-        setToken = session.prepare("insert into userinfo.user_tokens (user_token, userId, invalid_date) values (?,?,?)");
-        getToken = session.prepare("select * from userinfo.user_tokens where user_token=?");
-        deleteToken = session.prepare("delete from userinfo.user_tokens where user_token = ?");
-        searchResult = session.prepare("select user_id, user_name, intro, avatar from userinfo.user_information where user_id=?");
+        try {
+            insertAccount = session.prepare("insert into userinfo.user_auth (userid, email, password, telephone) values(?,?,?,?)");
+            getAccount = session.prepare("select * from userinfo.user_auth where userid=?");
+            setToken = session.prepare("insert into userinfo.user_tokens (user_token, userId, invalid_date) values (?,?,?)");
+            getToken = session.prepare("select * from userinfo.user_tokens where user_token=?");
+            deleteToken = session.prepare("delete from userinfo.user_tokens where user_token = ?");
+            searchResult = session.prepare("select user_id, user_name, intro, avatar from userinfo.user_information where user_id=?");
 
-        getPassword = session.prepare("select password from userinfo.user_auth where userid=?");
-        getAuth = session.prepare("select userid, roleid from userinfo.user_auth where userid=?");
+            getPassword = session.prepare("select password from userinfo.user_auth where userid=?");
+            getAuth = session.prepare("select userid, roleid from userinfo.user_auth where userid=?");
 
-        insertUserDetails = session.prepare("insert into userinfo.user_information (user_id, apps, avatar, " +
-                "birthdate, gender, intro, user_name,location,language,country) values(?,?,?,?,?,?,?,?,?,?);");
-        getUserDetails = session.prepare("select * from userinfo.user_information where user_id = ?");
+            insertUserDetails = session.prepare("insert into userinfo.user_information (user_id, apps, avatar, " +
+                    "birthdate, gender, intro, user_name,location,language,country) values(?,?,?,?,?,?,?,?,?,?);");
+            getUserDetails = session.prepare("select * from userinfo.user_information where user_id = ?");
 
-        updateEmail = session.prepare("update userinfo.user_auth set email = ? where userId = ?");
-        updatePassword = session.prepare("update userinfo.user_auth set password = ? where userId = ?");
-        updatePhoneNumber = session.prepare("update userinfo.user_auth set telephone = ? where userId = ?");
-        insertUserName = session.prepare("insert into userinfo.user_auth (userid, email, temp) values(?,?, true)");
+            updateEmail = session.prepare("update userinfo.user_auth set email = ? where userId = ?");
+            updatePassword = session.prepare("update userinfo.user_auth set password = ? where userId = ?");
+            updatePhoneNumber = session.prepare("update userinfo.user_auth set telephone = ? where userId = ?");
+            insertUserName = session.prepare("insert into userinfo.user_auth (userid, email, temp) values(?,?, true)");
 
-        insertPasswordAndRoleId = session.prepare("update userinfo.user_auth set password=?, temp=false, roleid = ? where userid=?");
-        getIsTemp = session.prepare("select temp from userinfo.user_auth where userid=?");
+            insertPasswordAndRoleId = session.prepare("update userinfo.user_auth set password=?, temp=false, roleid = ? where userid=?");
+            getIsTemp = session.prepare("select temp from userinfo.user_auth where userid=?");
 
-        getVerificationCode = session.prepare("select * from userinfo.user_registration_code where kind = ? and userid = ?;");
-        setVerificationCode = session.prepare("insert into userinfo.user_registration_code (kind, userid, code, expire_time) values(?, ?, ?, ?);");
-        invalidateVerificationCode = session.prepare("delete from userinfo.user_registration_code where kind = ? and userid = ?;");
+            getVerificationCode = session.prepare("select * from userinfo.user_registration_code where kind = ? and userid = ?;");
+            setVerificationCode = session.prepare("insert into userinfo.user_registration_code (kind, userid, code, expire_time) values(?, ?, ?, ?);");
+            invalidateVerificationCode = session.prepare("delete from userinfo.user_registration_code where kind = ? and userid = ?;");
+
+            logger.info("Successfully initialized all prepared statements for AccountService");
+        } catch (Exception e) {
+            logger.error("Failed to initialize AccountService prepared statements", e);
+            throw new RuntimeException("AccountService initialization failed", e);
+        }
     }
 
-
     public List<Account> searchUserById(String userId) {
-        ResultSet execute = session.execute(searchResult.bind(userId));
-        return AccountParser.userDetailParser(execute);
+        logger.debug("Searching for user by ID: {}", userId);
+        try {
+            ResultSet execute = session.execute(searchResult.bind(userId));
+            List<Account> accounts = AccountParser.userDetailParser(execute);
+            logger.debug("Found {} accounts for user ID: {}", accounts.size(), userId);
+            return accounts;
+        } catch (Exception e) {
+            logger.error("Error searching for user by ID: {}", userId, e);
+            return new ArrayList<>();
+        }
     }
 
     public Account getProfileById(String userId) {
-        ResultSet execute = session.execute(searchResult.bind(userId));
-
-        List<Account> accounts = AccountParser.userDetailParser(execute);
-        if (accounts.isEmpty()) {
+        logger.debug("Getting profile for user ID: {}", userId);
+        try {
+            ResultSet execute = session.execute(searchResult.bind(userId));
+            List<Account> accounts = AccountParser.userDetailParser(execute);
+            if (accounts.isEmpty()) {
+                logger.warn("No profile found for user ID: {}", userId);
+                return null;
+            }
+            logger.debug("Successfully retrieved profile for user ID: {}", userId);
+            return accounts.get(0);
+        } catch (Exception e) {
+            logger.error("Error getting profile for user ID: {}", userId, e);
             return null;
         }
-        return accounts.get(0);
     }
 
     public boolean invalidateTokenByToken(String token) {
-        session.execute(deleteToken.bind(token));
-        return true;
+        logger.debug("Invalidating token");
+        try {
+            session.execute(deleteToken.bind(token));
+            logger.info("Successfully invalidated token");
+            return true;
+        } catch (Exception e) {
+            logger.error("Error invalidating token", e);
+            return false;
+        }
     }
 
     public boolean insertUserDetails(Account userDetail) {
-        ResultSet execute = session.execute(insertUserDetails.bind(userDetail.getUserId(), userDetail.getApps(),
-                userDetail.getAvatar(), userDetail.getDateOfBirth(), userDetail.getGender(),
-                userDetail.getIntroduction(), userDetail.getUserName(), userDetail.getLocation(),
-                userDetail.getLanguage(), userDetail.getCountry()));
-        return execute.getExecutionInfo().getErrors().isEmpty();
+        logger.debug("Inserting user details for user ID: {}", userDetail.getUserId());
+        try {
+            ResultSet execute = session.execute(insertUserDetails.bind(userDetail.getUserId(), userDetail.getApps(),
+                    userDetail.getAvatar(), userDetail.getDateOfBirth(), userDetail.getGender(),
+                    userDetail.getIntroduction(), userDetail.getUserName(), userDetail.getLocation(),
+                    userDetail.getLanguage(), userDetail.getCountry()));
+            boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("Successfully inserted user details for user ID: {}", userDetail.getUserId());
+            } else {
+                logger.error("Failed to insert user details for user ID: {}, errors: {}",
+                        userDetail.getUserId(), execute.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error inserting user details for user ID: {}", userDetail.getUserId(), e);
+            return false;
+        }
     }
 
     public Account getAccountDetailsById(String userId) {
         if (userId == null || userId.isEmpty()) {
+            logger.warn("Attempted to get account details with null or empty user ID");
             return null;
         }
-        ResultSet execute = session.execute(getUserDetails.bind(userId));
-        List<Account> account = AccountParser.userDetailParser(execute);
-        if (account.isEmpty()) {
+
+        logger.debug("Getting account details for user ID: {}", userId);
+        try {
+            ResultSet execute = session.execute(getUserDetails.bind(userId));
+            List<Account> account = AccountParser.userDetailParser(execute);
+            if (account.isEmpty()) {
+                logger.warn("No account details found for user ID: {}", userId);
+                return null;
+            }
+            logger.debug("Successfully retrieved account details for user ID: {}", userId);
+            return account.get(0);
+        } catch (Exception e) {
+            logger.error("Error getting account details for user ID: {}", userId, e);
             return null;
         }
-        return account.get(0);
     }
 
-    //get user details
     public Account getFriendDetailsById(String userId, String userIdToFollow) throws Exception {
-        System.out.println("friend details " + userIdToFollow) ;
-        ResultSet execute = session.execute(getUserDetails.bind(userIdToFollow));
+        logger.debug("Getting friend details - user: {}, friend: {}", userId, userIdToFollow);
+        try {
+            ResultSet execute = session.execute(getUserDetails.bind(userIdToFollow));
+            List<Account> friendSet = AccountParser.userDetailParser(execute);
 
-        List<Account> friendSet = AccountParser.userDetailParser(execute);
-        if (friendSet.isEmpty()) {
-            return null;
+            if (friendSet.isEmpty()) {
+                logger.warn("No friend details found for user ID: {}", userIdToFollow);
+                return null;
+            }
+
+            Account friend = friendSet.get(0);
+            logger.debug("Found friend details for user ID: {}", userIdToFollow);
+
+            if (friend != null) {
+                friend.setRelationship(friendsService.getRelationship(userId, userIdToFollow));
+                logger.debug("Set relationship for users {} and {}", userId, userIdToFollow);
+            }
+            return friend;
+        } catch (Exception e) {
+            logger.error("Error getting friend details - user: {}, friend: {}", userId, userIdToFollow, e);
+            throw e;
         }
-        Account friend = friendSet.get(0);
-        System.out.println("find friend" + friend);
-        if (friend != null)  friend.setRelationship(friendsService.getRelationship(userId, userIdToFollow));
-        return friend;
     }
 
     public boolean insert(Auth account) {
-        ResultSet execute = session.execute(insertAccount.bind(account.getEmail(), account.getEmail(),
-                account.getPassword(), account.getTelephone()));
-        return execute.getExecutionInfo().getErrors().isEmpty();
+        logger.debug("Inserting new auth account for email: {}", account.getEmail());
+        try {
+            ResultSet execute = session.execute(insertAccount.bind(account.getEmail(), account.getEmail(),
+                    account.getPassword(), account.getTelephone()));
+            boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("Successfully inserted auth account for email: {}", account.getEmail());
+            } else {
+                logger.error("Failed to insert auth account for email: {}, errors: {}",
+                        account.getEmail(), execute.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error inserting auth account for email: {}", account.getEmail(), e);
+            return false;
+        }
     }
 
     public Account selectAccount(String accountID) {
-        ResultSet execute = session.execute(getAccount.bind(accountID));
-        List<Account> tokens = AccountParser.userDetailParser(execute);
-        if (!execute.getExecutionInfo().getErrors().isEmpty() || tokens.size() != 1) {
-            System.out.println("error!!!!");
+        logger.debug("Selecting account for ID: {}", accountID);
+        try {
+            ResultSet execute = session.execute(getAccount.bind(accountID));
+            List<Account> tokens = AccountParser.userDetailParser(execute);
+
+            if (!execute.getExecutionInfo().getErrors().isEmpty() || tokens.size() != 1) {
+                logger.error("Error selecting account or invalid result count for ID: {}, errors: {}, count: {}",
+                        accountID, execute.getExecutionInfo().getErrors(), tokens.size());
+                return null;
+            }
+            logger.debug("Successfully selected account for ID: {}", accountID);
+            return tokens.get(0);
+        } catch (Exception e) {
+            logger.error("Error selecting account for ID: {}", accountID, e);
             return null;
         }
-        return tokens.get(0);
     }
 
-
     public boolean sendVerificationEmail(String email) {
+        logger.info("Sending verification email to: {}", email);
         try {
             email = email.toLowerCase();
             ResultSet execute = session.execute(getVerificationCode.bind("step2", email));
             Verification verification = CodeMapper.codeMapper(execute);
+
             if (verification != null) {
                 if (Instant.now().isBefore(verification.getExpiration().minusSeconds(540))) {
+                    logger.warn("Verification code still valid for email: {}, not sending new code", email);
                     return false;
                 }
             }
+
             String code = RandomUtil.generateRandomInt(6);
             session.execute(setVerificationCode.bind("step2", email, code, Instant.now().plusSeconds(600)));
             EmailSender.send("noah@vydeo.xyz", email, code);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+            logger.info("Successfully sent verification email to: {}", email);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error sending verification email to: {}", email, e);
             return false;
         }
-        return true;
     }
 
-    public String verifyCode(String email,String code) {
+    public String verifyCode(String email, String code) {
+        logger.debug("Verifying code for email: {}", email);
+        try {
+            ResultSet execute = session.execute(getVerificationCode.bind("step2", email));
+            Verification verification = CodeMapper.codeMapper(execute);
 
-        ResultSet execute = session.execute(getVerificationCode.bind("step2",email));
-        Verification verification = CodeMapper.codeMapper(execute);
-        System.out.println(verification.getCode());
-        if (verification == null) return null;
-        if (Instant.now().isAfter(verification.getExpiration())) return null;
-        if (verification.getCode().equals(code)) {
-            String step3Code = RandomUtil.generateRandomString(10);
-            ResultSet execute1 = session.execute(invalidateVerificationCode.bind("step2", email));
-            ResultSet execute2 = session.execute(setVerificationCode.bind("step3", email, step3Code, Instant.now().plusSeconds(600)));
-            if (!execute1.getExecutionInfo().getErrors().isEmpty() || !execute2.getExecutionInfo().getErrors().isEmpty()) {
+            if (verification == null) {
+                logger.warn("No verification code found for email: {}", email);
                 return null;
             }
-            return step3Code;
+
+            if (Instant.now().isAfter(verification.getExpiration())) {
+                logger.warn("Verification code expired for email: {}", email);
+                return null;
+            }
+
+            if (verification.getCode().equals(code)) {
+                String step3Code = RandomUtil.generateRandomString(10);
+                ResultSet execute1 = session.execute(invalidateVerificationCode.bind("step2", email));
+                ResultSet execute2 = session.execute(setVerificationCode.bind("step3", email, step3Code, Instant.now().plusSeconds(600)));
+
+                if (!execute1.getExecutionInfo().getErrors().isEmpty() || !execute2.getExecutionInfo().getErrors().isEmpty()) {
+                    logger.error("Error updating verification codes for email: {}", email);
+                    return null;
+                }
+                logger.info("Successfully verified code and generated step3 code for email: {}", email);
+                return step3Code;
+            } else {
+                logger.warn("Invalid verification code provided for email: {}", email);
+            }
+            return null;
+        } catch (Exception e) {
+            logger.error("Error verifying code for email: {}", email, e);
+            return null;
         }
-        return null;
     }
 
     public boolean haveValidLogin(String token) {
-        if (null == token || token.isEmpty()) return false;
-        Token token1 = TokenUtil.resolveToken(token);
-        System.out.println(token1);
-        //token1.getUserId().equals(userId)
-        assert token1 != null;
-        if( null == token1.getUserId()){
+        logger.debug("Validating login token");
+        try {
+            if (null == token || token.isEmpty()) {
+                logger.warn("Empty or null token provided for validation");
+                return false;
+            }
+
+            Token token1 = TokenUtil.resolveToken(token);
+            if (token1 == null) {
+                logger.warn("Failed to resolve token");
+                return false;
+            }
+
+            if (null == token1.getUserId()) {
+                logger.warn("Token has null user ID");
+                return false;
+            }
+
+            boolean isValid = token1.getExpireDatetime().isAfter(Instant.now());
+            logger.debug("Token validation result: {}", isValid);
+            return isValid;
+        } catch (Exception e) {
+            logger.error("Error validating login token", e);
             return false;
         }
-        System.out.println(token1.getExpireDatetime().isAfter(Instant.now()));
-        return token1.getExpireDatetime().isAfter(Instant.now());
     }
 
-    public Auth validatePassword(String userId,String password){
-        password = RandomUtil.getMD5(password);
-        ResultSet account = session.execute(getAccount.bind(userId));
-        List<Auth> accounts = AccountParser.accountParser(account);
-        if (accounts.size() != 1) return null;
-        System.out.println(accounts.get(0).getPassword());
-        System.out.println(password);
-        return  accounts.get(0);
+    public Auth validatePassword(String userId, String password) {
+        logger.debug("Validating password for user ID: {}", userId);
+        try {
+            password = RandomUtil.getMD5(password);
+            ResultSet account = session.execute(getAccount.bind(userId));
+            List<Auth> accounts = AccountParser.accountParser(account);
+
+            if (accounts.size() != 1) {
+                logger.warn("Invalid account count for user ID: {} - expected 1, got {}", userId, accounts.size());
+                return null;
+            }
+            logger.debug("Successfully validated password for user ID: {}", userId);
+            return accounts.get(0);
+        } catch (Exception e) {
+            logger.error("Error validating password for user ID: {}", userId, e);
+            return null;
+        }
     }
 
     public boolean setToken(Token token) {
-        ResultSet set = session.execute(setToken.bind(token.getTokenString(), token.getUserId(),
-                token.getExpireDatetime()));
-        return set.getExecutionInfo().getErrors().isEmpty();
+        logger.debug("Setting token for user ID: {}", token.getUserId());
+        try {
+            ResultSet set = session.execute(setToken.bind(token.getTokenString(), token.getUserId(),
+                    token.getExpireDatetime()));
+            boolean success = set.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("Successfully set token for user ID: {}", token.getUserId());
+            } else {
+                logger.error("Failed to set token for user ID: {}, errors: {}",
+                        token.getUserId(), set.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error setting token for user ID: {}", token.getUserId(), e);
+            return false;
+        }
     }
 
     public boolean updateEmail(String userId, String email) {
-        ResultSet set = session.execute(setToken.bind(email,userId));
-        return set.getExecutionInfo().getErrors().isEmpty();
+        logger.debug("Updating email for user ID: {}", userId);
+        try {
+            ResultSet set = session.execute(updateEmail.bind(email, userId));
+            boolean success = set.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("Successfully updated email for user ID: {}", userId);
+            } else {
+                logger.error("Failed to update email for user ID: {}, errors: {}",
+                        userId, set.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error updating email for user ID: {}", userId, e);
+            return false;
+        }
     }
 
     public boolean updatePhone(String userId, String phone) {
-        ResultSet set = session.execute(setToken.bind(phone, userId));
-        return set.getExecutionInfo().getErrors().isEmpty();
+        logger.debug("Updating phone for user ID: {}", userId);
+        try {
+            ResultSet set = session.execute(updatePhoneNumber.bind(phone, userId));
+            boolean success = set.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("Successfully updated phone for user ID: {}", userId);
+            } else {
+                logger.error("Failed to update phone for user ID: {}, errors: {}",
+                        userId, set.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error updating phone for user ID: {}", userId, e);
+            return false;
+        }
     }
 
     public boolean updatePassword(String userId, String password) {
-        ResultSet set = session.execute(setToken.bind(password, userId));
-        return set.getExecutionInfo().getErrors().isEmpty();
+        logger.debug("Updating password for user ID: {}", userId);
+        try {
+            ResultSet set = session.execute(updatePassword.bind(password, userId));
+            boolean success = set.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("Successfully updated password for user ID: {}", userId);
+            } else {
+                logger.error("Failed to update password for user ID: {}, errors: {}",
+                        userId, set.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error updating password for user ID: {}", userId, e);
+            return false;
+        }
     }
 
     public boolean updateIndex(Friend friend) throws IOException, InterruptedException {
-        searchService.setUserIndex(friend);
-        return true;
+        logger.debug("Updating search index for friend: {}", friend.getUserId());
+        try {
+            searchService.setUserIndex(friend);
+            logger.info("Successfully updated search index for friend: {}", friend.getUserId());
+            return true;
+        } catch (Exception e) {
+            logger.error("Error updating search index for friend: {}", friend.getUserId(), e);
+            throw e;
+        }
     }
 
     public boolean addApplication() {
+        logger.debug("Adding application - placeholder method");
         return true;
     }
 
     public boolean insertStep1(String userId) {
-        ResultSet judge = session.execute(getIsTemp.bind(userId));
-        System.out.println(judge.all().size());
+        logger.debug("Executing registration step 1 for user ID: {}", userId);
+        try {
+            ResultSet judge = session.execute(getIsTemp.bind(userId));
+            List<Row> rows = judge.all();
 
-        if (!judge.all().isEmpty()) {
-            return judge.all().get(0).getBoolean("temp");
+            if (!rows.isEmpty()) {
+                boolean isTemp = rows.get(0).getBoolean("temp");
+                logger.debug("User {} already exists with temp status: {}", userId, isTemp);
+                return isTemp;
+            }
+
+            ResultSet execute = session.execute(insertUserName.bind(userId, userId));
+            boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("Successfully completed registration step 1 for user ID: {}", userId);
+            } else {
+                logger.error("Failed registration step 1 for user ID: {}, errors: {}",
+                        userId, execute.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error in registration step 1 for user ID: {}", userId, e);
+            return false;
         }
-        ResultSet execute = session.execute(insertUserName.bind(userId, userId));
-        return execute.getExecutionInfo().getErrors().isEmpty();
     }
 
     public boolean insertStep2(String userId) {
-
+        logger.debug("Executing registration step 2 for user ID: {} - placeholder method", userId);
         return false;
     }
 
-    public boolean insertStep3(String code, String password,String userId) {
-        String encrypted = RandomUtil.getMD5(password);
-        ResultSet execute1 = session.execute(getVerificationCode.bind("step3", userId));
-        if (!execute1.getExecutionInfo().getErrors().isEmpty()) {
+    public boolean insertStep3(String code, String password, String userId) {
+        logger.debug("Executing registration step 3 for user ID: {}", userId);
+        try {
+            String encrypted = RandomUtil.getMD5(password);
+            ResultSet execute1 = session.execute(getVerificationCode.bind("step3", userId));
+
+            if (!execute1.getExecutionInfo().getErrors().isEmpty()) {
+                logger.error("Error retrieving verification code for step 3, user ID: {}", userId);
+                return false;
+            }
+
+            Verification verification = CodeMapper.codeMapper(execute1);
+            if (verification != null && Instant.now().isBefore(verification.getExpiration()) && verification.getCode().equals(code)) {
+                ResultSet execute = session.execute(insertPasswordAndRoleId.bind(encrypted, 1, userId));
+                boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+                if (success) {
+                    logger.info("Successfully completed registration step 3 for user ID: {}", userId);
+                } else {
+                    logger.error("Failed to complete registration step 3 for user ID: {}, errors: {}",
+                            userId, execute.getExecutionInfo().getErrors());
+                }
+                return success;
+            } else {
+                logger.warn("Invalid verification code or expired for user ID: {} in step 3", userId);
+            }
+            return false;
+        } catch (Exception e) {
+            logger.error("Error in registration step 3 for user ID: {}", userId, e);
             return false;
         }
-        Verification verification = CodeMapper.codeMapper(execute1);
-        if (verification != null && Instant.now().isBefore(verification.getExpiration()) && verification.getCode().equals(code)) {
-            System.out.println("insert");
-            ResultSet execute = session.execute(insertPasswordAndRoleId.bind(encrypted, 1, userId));
-            return execute.getExecutionInfo().getErrors().isEmpty();
-        }
-        return false;
     }
 
     public boolean resetPassword(Object email, String oldPassword, String newPassword) {
-        ResultSet password = session.execute(getPassword.bind(email));
-        if (password.getExecutionInfo().getErrors().isEmpty()) {
-            List<Row> all = password.all();
-            if (all.isEmpty()) {
-                return false;
-            }
-            Row row = all.get(0);
-            String storedPassword = row.getString("password"); // 假设密码字段是 "password"
-            String encrypted = RandomUtil.getMD5(oldPassword);
-            // 假设你有一个方法来比较密码
-            assert storedPassword != null;
-            if (storedPassword.equals(encrypted)) {
-                // 密码匹配，开始更新密码
-                ResultSet execute = session.execute(updatePassword.bind(email, RandomUtil.getMD5(newPassword))); // 假设 newPassword 是新的密码
-                if (execute.getExecutionInfo().getErrors().isEmpty()) {
-                    return true; // 密码更新成功
+        logger.debug("Resetting password for email: {}", email);
+        try {
+            ResultSet password = session.execute(getPassword.bind(email));
+            if (password.getExecutionInfo().getErrors().isEmpty()) {
+                List<Row> all = password.all();
+                if (all.isEmpty()) {
+                    logger.warn("No user found for email: {}", email);
+                    return false;
+                }
+
+                Row row = all.get(0);
+                String storedPassword = row.getString("password");
+                String encrypted = RandomUtil.getMD5(oldPassword);
+
+                if (storedPassword != null && storedPassword.equals(encrypted)) {
+                    ResultSet execute = session.execute(updatePassword.bind(RandomUtil.getMD5(newPassword), email));
+                    if (execute.getExecutionInfo().getErrors().isEmpty()) {
+                        logger.info("Successfully reset password for email: {}", email);
+                        return true;
+                    } else {
+                        logger.error("Failed to update password for email: {}, errors: {}",
+                                email, execute.getExecutionInfo().getErrors());
+                        return false;
+                    }
                 } else {
-                    // 更新密码失败，处理错误
+                    logger.warn("Invalid old password provided for email: {}", email);
                     return false;
                 }
             } else {
-                // 密码不匹配
+                logger.error("Error querying password for email: {}, errors: {}",
+                        email, password.getExecutionInfo().getErrors());
                 return false;
             }
-        } else {
-            // 查询密码时出错
+        } catch (Exception e) {
+            logger.error("Error resetting password for email: {}", email, e);
             return false;
         }
     }
 
-
     public Auth getAccountRoleById(String userEmail) {
-        ResultSet execute = session.execute(getAuth.bind(userEmail));
-        List<Auth> auths = AccountParser.accountParser(execute);
-        if (auths.isEmpty()) {
+        logger.debug("Getting account role for email: {}", userEmail);
+        try {
+            ResultSet execute = session.execute(getAuth.bind(userEmail));
+            List<Auth> auths = AccountParser.accountParser(execute);
+            if (auths.isEmpty()) {
+                logger.warn("No auth record found for email: {}", userEmail);
+                return null;
+            }
+            logger.debug("Successfully retrieved account role for email: {}", userEmail);
+            return auths.get(0);
+        } catch (Exception e) {
+            logger.error("Error getting account role for email: {}", userEmail, e);
             return null;
         }
-        return auths.get(0);
-
     }
 
     public boolean deleteUser(String userId) {
-
+        logger.info("Deleting user: {}", userId);
         try {
-            // Create a DELETE statement
             String query = "DELETE FROM userinfo.user_auth WHERE userid = ?";
-
-            // Prepare the statement
             PreparedStatement preparedStatement = session.prepare(query);
-
-            // Bind the userId value to the statement
             session.execute(preparedStatement.bind(userId));
-
-            // Return true if the operation succeeded
+            logger.info("Successfully deleted user: {}", userId);
             return true;
         } catch (Exception e) {
-            // Log the error (this can be improved with proper logging)
-            logger.error("Error deleting user: " + e.getMessage());
+            logger.error("Error deleting user: {}", userId, e);
             return false;
         }
     }
 
     public boolean resetStep1(String userId) {
-        ResultSet judge = session.execute(getIsTemp.bind(userId));
+        logger.debug("Resetting step 1 for user ID: {}", userId);
+        try {
+            ResultSet judge = session.execute(getIsTemp.bind(userId));
+            List<Row> rows = judge.all();
 
-        if (judge.all().isEmpty()) {
+            if (rows.isEmpty()) {
+                logger.warn("No user found for reset step 1, user ID: {}", userId);
+                return false;
+            }
+
+            boolean success = judge.getExecutionInfo().getErrors().isEmpty();
+            if (success) {
+                logger.info("Successfully reset step 1 for user ID: {}", userId);
+            } else {
+                logger.error("Failed to reset step 1 for user ID: {}, errors: {}",
+                        userId, judge.getExecutionInfo().getErrors());
+            }
+            return success;
+        } catch (Exception e) {
+            logger.error("Error resetting step 1 for user ID: {}", userId, e);
             return false;
         }
-        return judge.getExecutionInfo().getErrors().isEmpty();
     }
-
 }
