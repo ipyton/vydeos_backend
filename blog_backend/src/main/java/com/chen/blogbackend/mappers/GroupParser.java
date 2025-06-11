@@ -39,14 +39,14 @@ public class GroupParser {
             long groupIdLong = row.getColumnDefinitions().contains("group_id") && !row.isNull("group_id")
                     ? row.getLong("group_id") : 0L;
 
-            String groupName = row.getColumnDefinitions().contains("group_name") && !row.isNull("group_name")
-                    ? row.getString("group_name") : null;
+            String groupName = row.getColumnDefinitions().contains("name") && !row.isNull("name")
+                    ? row.getString("name") : null;
 
-            String groupDescription = row.getColumnDefinitions().contains("group_description") && !row.isNull("group_description")
-                    ? row.getString("group_description") : null;
+            String groupDescription = row.getColumnDefinitions().contains("introduction") && !row.isNull("introduction")
+                    ? row.getString("introduction") : null;
 
-            String owner = row.getColumnDefinitions().contains("owner") && !row.isNull("owner")
-                    ? row.getString("owner") : null;
+            String owner = row.getColumnDefinitions().contains("owner_id") && !row.isNull("owner_id")
+                    ? row.getString("owner_id") : null;
 
             Map<String, String> config = row.getColumnDefinitions().contains("config") && !row.isNull("config")
                     ? row.getMap("config", String.class, String.class) : Collections.emptyMap();
