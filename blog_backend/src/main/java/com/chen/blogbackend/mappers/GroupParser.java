@@ -20,7 +20,7 @@ public class GroupParser {
             Long groupId = columnDefinitions.contains("group_id") ? row.getLong("group_id") : null;
             String userId = columnDefinitions.contains("user_id") ? row.getString("user_id") : null;
             String userName = columnDefinitions.contains("user_name") ? row.getString("user_name") : null ;
-            String groupName = columnDefinitions.contains("group_id") ? row.getString("group_id") : null;
+            String groupName = columnDefinitions.contains("group_name") ? row.getString("group_name") : null;
 
             // Create a new GroupUser object and add it to the list
             GroupUser groupUser = new GroupUser(userId, groupId, groupName, userName);
