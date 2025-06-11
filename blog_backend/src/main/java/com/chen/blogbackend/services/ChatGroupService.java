@@ -62,7 +62,7 @@ public class ChatGroupService {
         //insertChatRecordById = session.prepare("insert into group_chat.group_chat_record_by_id (group_id , message_id ,type ,  user_id  ,content , referUserID , referMessageId , send_time, media, recall) values(?,?,?,?,?,?,?,?,?,?)");
         getGroupDetails = session.prepare("select * from group_chat.chat_group_details where group_id = ?");
         removeMember = session.prepare("delete from group_chat.chat_group_members where group_id = ? and user_id = ?");
-        createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, group_description, group_name, owner,create_time,allow_invite_by_token) values(?, ?, ?, ?, ?, ?, ?)");
+        createChatGroup = session.prepare("insert into group_chat.chat_group_details (group_id, avatar, config, introduction, name, owner_id,create_time,allow_invite_by_token) values(?, ?, ?, ?, ?, ?, ?, ?)");
         getGroups = session.prepare("select * from group_chat.chat_group_members where user_id = ?");
         getMembers = session.prepare("select * from group_chat.chat_group_members where group_id = ? ");
         //getRecord = session.prepare("select * from group_chat.group_chat_record_by_id where group_id = ? and message_id = ?");
@@ -173,7 +173,7 @@ public class ChatGroupService {
                 return false;
             }
         }
-        ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, ownerId, Instant.now()));
+        ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, ownerId, Instant.now(),allowInvitesById));
         if (!execute.getExecutionInfo().getErrors().isEmpty()) {
             return false;
         }
