@@ -1,0 +1,19 @@
+docker run -d --name fluent-bit --network logging-net\
+  -v /home/opc/fluentbit/conf:/fluent-bit/etc:ro \
+  -v /home/opc/blog_backend:/home/opc/blog_backend:ro \
+  -v /home/opc/notification:/home/opc/notification:ro \
+  -v /var/log:/var/log \
+  -v /var/run/docker.sock:/var/run/docker.sock:ro \
+  fluent/fluent-bit:latest
+
+
+docker run -d \
+  --name kibana \
+  --network logging-net \
+  -p 5601:5601 \
+  -v /home/opc/kibana/kibana.yml:/usr/share/kibana/kibana.yml:ro \
+  docker.elastic.co/kibana/kibana:7.17.16
+
+
+
+docker run -d --name elasticsearch --network logging-net -p 9200:9200 -p 9300:9300 -v /home/opc/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/elasticsearch.yml:ro -e ES_JAVA_OPTS="-Xms4g -Xmx4g" -e ELASTIC_PASSWORD='!Czh3840941' --ulimit memlock=-1:-1  docker.elastic.co/elasticsearch/elasticsearch:7.17.16

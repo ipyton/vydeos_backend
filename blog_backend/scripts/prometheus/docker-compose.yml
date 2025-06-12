@@ -1,0 +1,110 @@
+version: '3.8'
+
+# you need to create the monitoring network outside of this file execution
+networks:
+  monitoring:
+    external: true
+
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9010:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  redis_exporter:
+    image: oliver006/redis_exporter
+    container_name: redis_exporter
+    command: --redis.addr=redis://opc-redis-1:6379
+    ports:
+      - "9121:9121"
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+          cpus: '0.1'
+    restart: unless-stopped
+
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_exporter
+    command: -nginx.scrape-uri http://host.docker.internal:80/nginx_status
+    ports:
+      - "9113:9113"
+    networks:
+      - monitoring
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+          cpus: '0.1'
+    restart: unless-stopped
+
+  kafka_exporter:
+    image: danielqsj/kafka-exporter
+    container_name: kafka_exporter
+    command:
+      - --kafka.server=opc-kafka-1:9092
+    ports:
+      - "9308:9308"
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+          cpus: '0.3'
+    restart: unless-stopped
+
+  elasticsearch_exporter:
+    image: quay.io/prometheuscommunity/elasticsearch-exporter:latest
+    container_name: elasticsearch_exporter
+    environment:
+      - ES_URI=http://elasticsearch:9200
+    ports:
+      - "9114:9114"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+    restart: unless-stopped

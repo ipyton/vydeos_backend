@@ -1,0 +1,9 @@
+server.name: kibana
+server.host: "0.0.0.0"
+server.publicBaseUrl: "https://kibana.vydeo.xyz"
+
+elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "!Czh3840941"
+
+xpack.security.enabled: true

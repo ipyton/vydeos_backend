@@ -1,0 +1,7 @@
+cluster.name: "logging-cluster"
+node.name: "es-node-1"
+network.host: 0.0.0.0
+http.port: 9200
+discovery.type: single-node
+xpack.security.enabled: true
+xpack.security.authc.accept_default_password: false
