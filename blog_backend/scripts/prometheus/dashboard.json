@@ -1,0 +1,239 @@
+{
+    "id": null,
+    "title": "服务监控总览",
+    "tags": ["monitoring", "infrastructure"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Elasticsearch 集群健康",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "elasticsearch_cluster_health_status",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 1},
+                {"color": "red", "value": 2}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Elasticsearch 索引速率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(elasticsearch_indices_indexing_index_total[5m])",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "Redis 内存使用率",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 90}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Redis 连接数",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "redis_connected_clients",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Kafka 消息生产速率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(kafka_server_brokertopicmetrics_messagesinpersec[5m])",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 6,
+        "title": "Kafka 消费者滞后",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "kafka_consumer_lag_sum",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 7,
+        "title": "ScyllaDB 读写延迟",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "scylla_storage_proxy_coordinator_read_latency",
+            "refId": "A",
+            "legendFormat": "读延迟"
+          },
+          {
+            "expr": "scylla_storage_proxy_coordinator_write_latency",
+            "refId": "B",
+            "legendFormat": "写延迟"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 8,
+        "title": "ScyllaDB CPU 使用率",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "scylla_reactor_utilization",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 70},
+                {"color": "red", "value": 90}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 9,
+        "title": "MinIO 存储使用率",
+        "type": "gauge",
+        "targets": [
+          {
+            "expr": "minio_cluster_disk_used_bytes / minio_cluster_disk_total_bytes * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 80},
+                {"color": "red", "value": 95}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 24}
+      },
+      {
+        "id": 10,
+        "title": "MinIO API 请求速率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(minio_http_requests_duration_seconds_count[5m])",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 24}
+      },
+      {
+        "id": 11,
+        "title": "Fluent Bit 日志处理速率",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(fluentbit_input_records_total[5m])",
+            "refId": "A",
+            "legendFormat": "输入"
+          },
+          {
+            "expr": "rate(fluentbit_output_records_total[5m])",
+            "refId": "B",
+            "legendFormat": "输出"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 24}
+      },
+      {
+        "id": 12,
+        "title": "Fluent Bit 错误率",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(fluentbit_output_errors_total[5m])",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": 0},
+                {"color": "yellow", "value": 0.1},
+                {"color": "red", "value": 1}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 24}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  }
