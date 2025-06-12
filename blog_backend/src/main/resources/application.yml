@@ -16,3 +16,16 @@ server:
   tomcat:
     max-http-form-post-size: 100MB
     max-swallow-size: 100MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info
+  endpoint:
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
