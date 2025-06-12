@@ -1,0 +1,147 @@
+version: '3.8'
+
+networks:
+  monitoring:
+    driver: bridge
+
+services:
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+
+  redis_exporter:
+    image: oliver006/redis_exporter
+    container_name: redis_exporter
+    command: --redis.addr=redis://opc-redis-1:6379
+    ports:
+      - "9121:9121"
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+          cpus: '0.1'
+
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx_exporter
+    command: -nginx.scrape-uri http://nginx/nginx_status
+    ports:
+      - "9113:9113"
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+          cpus: '0.1'
+
+  kafka_exporter:
+    image: danielqsj/kafka-exporter
+    container_name: kafka_exporter
+    command:
+      - --kafka.server=opc-kafka-1:9092
+    ports:
+      - "9308:9308"
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+          cpus: '0.3'
+
+  scylla_exporter:
+    image: scylladb/scylla-metrics-collector:latest
+    container_name: scylla_exporter
+    command:
+      - --web.listen-address=0.0.0.0:9180
+      - --scylla-api-address=http://scylla:10000
+    ports:
+      - "9180:9180"
+    networks:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+          cpus: '0.3'
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9180/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  fluentbit:
+    image: fluent/fluent-bit:latest
+    container_name: fluentbit
+    volumes:
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+    ports:
+      - "2020:2020"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+
+  elasticsearch_exporter:
+    image: justwatch/elasticsearch_exporter:latest
+    container_name: elasticsearch_exporter
+    environment:
+      - ES_URI=http://elasticsearch:9200
+    ports:
+      - "9114:9114"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  zookeeper_exporter:
+    image: danielqsj/zookeeper-exporter:latest
+    container_name: zookeeper_exporter
+    environment:
+      - ZOOKEEPER_SERVER=opc-zookeeper-1:2181
+    ports:
+      - "9141:9141"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+  minio_exporter:
+    image: minio/prometheus-exporter:latest
+    container_name: minio_exporter
+    environment:
+      - MINIO_ENDPOINT=opc-minio-1
+      - MINIO_ACCESS_KEY=your_access_key
+      - MINIO_SECRET_KEY=your_secret_key
+    ports:
+      - "9000:9000"
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+
+
+
+
+
+
+  # 可选：MinIO 如果启用了 metrics 端口暴露（非 exporter）
+  # Prometheus 直接访问 http://minio:9000/minio/v2/metrics 即可
+
