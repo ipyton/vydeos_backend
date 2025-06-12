@@ -1,15 +1,16 @@
 version: '3.8'
 
+# you need to create the monitoring network outside of this file execution
 networks:
   monitoring:
-    driver: bridge
+    external: true
 
 services:
   prometheus:
     image: prom/prometheus
     container_name: prometheus
     ports:
-      - "9090:9090"
+      - "9010:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
@@ -44,10 +45,7 @@ services:
     image: nginx/nginx-prometheus-exporter:latest
     container_name: nginx_exporter
     command: -nginx.scrape-uri http://127.0.0.1/nginx_status
-    ports:
-      - "9113:9113"
-    networks:
-      - monitoring
+    network_mode: host
     deploy:
       resources:
         limits:
@@ -72,7 +70,7 @@ services:
     restart: unless-stopped
 
   elasticsearch_exporter:
-    image: justwatch/elasticsearch_exporter:latest
+    image: quay.io/prometheuscommunity/elasticsearch-exporter:latest
     container_name: elasticsearch_exporter
     environment:
       - ES_URI=http://elasticsearch:9200
