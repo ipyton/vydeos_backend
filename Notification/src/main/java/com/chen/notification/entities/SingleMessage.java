@@ -84,7 +84,7 @@ public class SingleMessage {
         this.referMessageId = referMessageId;
     }
 
-    public long getMessageId() {
+    public String getMessageId() {
         return messageId;
     }
 

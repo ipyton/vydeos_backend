@@ -53,7 +53,7 @@ public class GroupMessage {
         this.userId = userId;
     }
 
-    public long getGroupId() {
+    public Long getGroupId() {
         return groupId;
     }
 
@@ -61,7 +61,7 @@ public class GroupMessage {
         this.groupId = groupId;
     }
 
-    public long getMessageId() {
+    public Long getMessageId() {
         return messageId;
     }
 
