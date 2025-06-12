@@ -320,7 +320,7 @@ public class DispatcherAutoRunner {
 
             if ("single".equals(messageType)) {
                 SingleMessage singleMessage = jsonObject.toJavaObject(SingleMessage.class);
-                MDC.put("messageId", singleMessage.getMessageId());
+                MDC.put("messageId", singleMessage.getMessageId().toString());
                 MDC.put("senderId", singleMessage.getDirection() ? singleMessage.getUserId1() : singleMessage.getUserId2());
 
                 logger.debug("Processing single message: messageId={}, users={}_{}",
