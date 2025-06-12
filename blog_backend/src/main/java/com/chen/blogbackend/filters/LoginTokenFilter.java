@@ -100,7 +100,8 @@ public class LoginTokenFilter implements Filter {
                 "/account/sendVerificationCode",
                 "/authorization/hasPermission",
                 "/hello",
-                "/metrics"
+                "/metrics",
+                "/actuator/prometheus"
         };
 
         for (String path : publicPaths) {
