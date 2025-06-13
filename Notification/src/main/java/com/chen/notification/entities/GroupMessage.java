@@ -132,4 +132,22 @@ public class GroupMessage {
     public void setSessionMessageId(long sessionMessageId) {
         this.sessionMessageId = sessionMessageId;
     }
+
+    @Override
+    public String toString() {
+        return "GroupMessage{" +
+                "userId='" + userId + '\'' +
+                ", receiverId='" + receiverId + '\'' +
+                ", groupId=" + groupId +
+                ", messageId=" + messageId +
+                ", content='" + content + '\'' +
+                ", messageType='" + messageType + '\'' +
+                ", sendTime=" + sendTime +
+                ", type='" + type + '\'' +
+                ", referMessageId=" + referMessageId +
+                ", referUserId=" + referUserId +
+                ", del=" + del +
+                ", sessionMessageId=" + sessionMessageId +
+                '}';
+    }
 }

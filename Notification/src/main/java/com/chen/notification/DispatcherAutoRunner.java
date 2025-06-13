@@ -729,8 +729,8 @@ public class DispatcherAutoRunner {
             String messageJson = JSON.toJSONString(message);
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, messageJson);
 
-            kafkaLogger.debug("Sending group message to Kafka: topic={}, key={}, messageId={}, groupId={}",
-                    topic, key, message.getMessageId(), message.getGroupId());
+            kafkaLogger.info("Sending group message to Kafka: topic={}, key={}, messageId={}, groupId={}, messageId={}",
+                    topic, key, message.getMessageId(), message.getGroupId(),message.toString());
 
             producer.send(record, (metadata, exception) -> {
                 long sendTime = System.currentTimeMillis() - startTime;
