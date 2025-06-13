@@ -123,7 +123,7 @@ public class DispatcherAutoRunner {
 
         try {
             getMembers = cqlSession.prepare(
-                    "SELECT * FROM group_chat.chat_group_members WHERE group_id = ?"
+                    "SELECT * FROM group_chat.chat_group_members_by_group WHERE group_id = ?"
             );
             logger.debug("Prepared statement 'getMembers' initialized");
 

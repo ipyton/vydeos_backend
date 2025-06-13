@@ -340,6 +340,8 @@ public class ChatGroupService {
             //            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1l, new ArrayList<>(), false, receipt.getSessionMessageId());
             notificationProducer.sendNotification(new GroupMessage(ownerId, groupId, messageId,
                     ownerId + " invited you to group " + groupName,"status", creationTime,  "group",-1l, null, false, sessionMessageId));
+
+
             return true;
         } catch (Exception e) {
             logger.error("Error occurred while creating group '{}' by owner {}", groupName, ownerId, e);
