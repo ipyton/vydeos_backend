@@ -199,10 +199,10 @@ public class FriendsService {
 
         try {
             ResultSet execute = session.execute(deleteFollowRelationship.bind(fanId, idolId));
-            ResultSet execute1 = session.execute(deleteFollowRelationship.bind(idolId, fanId));
+            //ResultSet execute1 = session.execute(deleteFollowRelationship.bind(idolId, fanId));
 
-            boolean success = execute.getExecutionInfo().getErrors().size() == 0 &&
-                    execute1.getExecutionInfo().getErrors().size() == 0;
+            boolean success = execute.getExecutionInfo().getErrors().size() == 0;
+//                    &&execute1.getExecutionInfo().getErrors().size() == 0;
 
             if (success) {
                 logger.info("User {} successfully unfollowed user {}", fanId, idolId);
