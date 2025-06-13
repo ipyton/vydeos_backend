@@ -102,7 +102,7 @@ public class LoginTokenFilter implements Filter {
                 "/hello",
                 "/metrics",
                 "/actuator/prometheus",
-                "/google"
+                "/account/google"
         };
 
         for (String path : publicPaths) {
