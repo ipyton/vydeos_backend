@@ -460,7 +460,7 @@ public class DispatcherAutoRunner {
                         memberMessage.setSessionMessageId(message.getSessionMessageId());
                         memberMessage.setUserId(message.getUserId()); // Keep original sender
                         memberMessage.setReceiverId(userId); // Set recipient
-
+                        memberMessage.setType("group");
                         addUnreadMessage(memberMessage);
                         sendToKafka("single", userId, memberMessage);
 

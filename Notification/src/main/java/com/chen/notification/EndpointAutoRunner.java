@@ -135,7 +135,6 @@ public class EndpointAutoRunner {
                 } else {
                     GroupMessage groupMessage = JSON.parseObject(value, GroupMessage.class);
                     service.sendGroupMessages(List.of(groupMessage));
-
                 }
                 //topicKeyMap.get(key).add(notificationMessage);
                 //ResultSet execute = session.execute(getEndpoints.bind(notificationMessage.getReceiverId()));
