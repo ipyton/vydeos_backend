@@ -254,8 +254,8 @@ public class AccountController {
                 return new Message(-1, "No token provided");
             }
 
-            Account account = accountService.signInWithGoogle(tokenString);
-            return new Message(0, JSON.toJSONString(account));
+            Token token = accountService.signInWithGoogle(tokenString);
+            return new Message(0, JSON.toJSONString(token));
 
         } catch (Exception e) {
             e.printStackTrace();

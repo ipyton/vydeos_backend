@@ -625,7 +625,7 @@ public class AccountService {
     }
 
 
-    public Account signInWithGoogle(String tokenString) throws GeneralSecurityException, IOException {
+    public Token signInWithGoogle(String tokenString) throws GeneralSecurityException, IOException {
         NetHttpTransport transport = new NetHttpTransport();
         JsonFactory jsonFactory = Utils.getDefaultJsonFactory();
 
@@ -651,12 +651,7 @@ public class AccountService {
             // Check if user exists in database
             ResultSet execute = session.execute(getAccount.bind(email));
             Token token = TokenUtil.createToken(new Token(email, 1,Instant.now().plus((long) (30 * 3600 * 24), ChronoUnit.SECONDS), email));
-            Account account = new Account();
-            account.setUserId(email);
-            account.setUserEmail(email);
-            account.setUserName(name);
-            account.setAvatar(pictureUrl);
-            account.createAt(Instant.now());
+
             List<Row> all = execute.all();
             if (all.size() == 0) {
 //                // Register new user
@@ -669,7 +664,7 @@ public class AccountService {
                 session.execute(setToken.bind(token.getTokenString(),email, token.getExpireDatetime()));
             }
 
-            return account;
+            return token;
     } else {
             throw new GeneralSecurityException("Invalid token verified");
         }
