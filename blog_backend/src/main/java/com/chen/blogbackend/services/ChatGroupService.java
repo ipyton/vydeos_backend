@@ -85,8 +85,8 @@ public class ChatGroupService {
             getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
             getGroupOwner = session.prepare("select owner_id from group_chat.chat_group_details where group_id = ?;");
             updateGroupDetails = session.prepare("UPDATE group_chat.chat_group_details SET introduction = ?, name = ?, allow_invite_by_token = ? WHERE group_id = ?;");
-            insertInvitation = session.prepare("insert into invitation (groupId, expire_time, code, userId, create_time) values (?, ?, ?, ?, ?)");
-            getInvitation = session.prepare("select * from invitation where code = ?;");
+            insertInvitation = session.prepare("insert into group_chat.invitation (groupId, expire_time, code, userId, create_time) values (?, ?, ?, ?, ?)");
+            getInvitation = session.prepare("select * from group_chat.invitation where code = ?;");
             logger.info("ChatGroupService prepared statements initialized successfully");
         } catch (Exception e) {
             logger.error("Failed to initialize ChatGroupService prepared statements", e);
