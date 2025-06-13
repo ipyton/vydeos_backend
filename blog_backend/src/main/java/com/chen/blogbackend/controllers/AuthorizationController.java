@@ -10,10 +10,9 @@ import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.AuthorizationService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +23,7 @@ public class AuthorizationController {
 
     @Autowired
     AuthorizationService service;
+
 
     @RequestMapping("getNavPaths")
     public Message getUIPaths(HttpServletRequest request) {

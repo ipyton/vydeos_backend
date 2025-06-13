@@ -86,8 +86,9 @@ public class ChatGroupController {
     }
 
     @RequestMapping("invite")
-    public LoginMessage makeInvitation(String operator, String userId, String groupId) {
-        Invitation result = service.generateInvitation(operator, userId, groupId);
+    public LoginMessage makeInvitation(HttpServletRequest request, String groupId) {
+        String userEmail = (String) request.getAttribute("userEmail");
+        Invitation result = service.generateInvitation( userEmail, groupId);
         return new LoginMessage(-1, "");
     }
 
@@ -131,5 +132,7 @@ public class ChatGroupController {
         boolean result = service.recall(operatorId, groupID, messageId);
         return new LoginMessage(-1, "");
     }
+
+
 
 }

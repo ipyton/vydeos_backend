@@ -12,17 +12,28 @@ import com.datastax.oss.driver.api.core.cql.*;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.insert.Insert;
 import com.datastax.oss.driver.api.querybuilder.select.Select;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.util.Utils;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AccountService {
@@ -73,7 +84,7 @@ public class AccountService {
         logger.info("Initializing AccountService and preparing database statements");
 
         try {
-            insertAccount = session.prepare("insert into userinfo.user_auth (userid, email, password, telephone) values(?,?,?,?)");
+            insertAccount = session.prepare("insert into userinfo.user_auth (userid, email, password, telephone, roleId) values(?,?,?,?,?)");
             getAccount = session.prepare("select * from userinfo.user_auth where userid=?");
             setToken = session.prepare("insert into userinfo.user_tokens (user_token, userId, invalid_date) values (?,?,?)");
             getToken = session.prepare("select * from userinfo.user_tokens where user_token=?");
@@ -220,7 +231,7 @@ public class AccountService {
         logger.debug("Inserting new auth account for email: {}", account.getEmail());
         try {
             ResultSet execute = session.execute(insertAccount.bind(account.getEmail(), account.getEmail(),
-                    account.getPassword(), account.getTelephone()));
+                    account.getPassword(), account.getTelephone(),1));
             boolean success = execute.getExecutionInfo().getErrors().isEmpty();
             if (success) {
                 logger.info("Successfully inserted auth account for email: {}", account.getEmail());
@@ -612,4 +623,58 @@ public class AccountService {
             return false;
         }
     }
+
+
+    public String signInWithGoogle(String tokenString) throws GeneralSecurityException, IOException {
+        NetHttpTransport transport = new NetHttpTransport();
+        JsonFactory jsonFactory = Utils.getDefaultJsonFactory();
+
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, jsonFactory)
+                .setAudience(Collections.singletonList("282080402821-e07eo98flrekqkh8p4rja2kr5f387psi.apps.googleusercontent.com"))
+                .build();
+
+        GoogleIdToken idToken = verifier.verify(tokenString);
+        if (idToken != null) {
+            GoogleIdToken.Payload payload = idToken.getPayload();
+
+            String googleUserId = payload.getSubject();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String pictureUrl = (String) payload.get("picture");
+            Boolean emailVerified = payload.getEmailVerified();
+
+            // Validate email is verified
+            if (!emailVerified) {
+                throw new GeneralSecurityException("Invalid email verified");
+            }
+
+            // Check if user exists in database
+            ResultSet execute = session.execute(getAccount.bind(email));
+            Token token = TokenUtil.createToken(new Token(email, 1,Instant.now().plus((long) (30 * 3600 * 24), ChronoUnit.SECONDS), email));
+
+            List<Row> all = execute.all();
+            if (all.size() == 0) {
+//                // Register new user
+                Account account = new Account();
+                account.setUserId(email);
+                account.setUserEmail(email);
+                account.setUserName(name);
+                account.setAvatar(pictureUrl);
+                account.createAt(Instant.now());
+
+                session.execute(insertAccount.bind(email,email, "","",1));
+                session.execute(setToken.bind(token.getTokenString(), email, token.getExpireDatetime()));
+                logger.info("New user registered via Google: {}", email);
+            } else {
+
+                logger.info("Existing user logged in via Google: {}", email);
+                session.execute(setToken.bind(token,email, token.getExpireDatetime()));
+            }
+
+            return token.getTokenString();
+    } else {
+            throw new GeneralSecurityException("Invalid token verified");
+        }
+
+}
 }

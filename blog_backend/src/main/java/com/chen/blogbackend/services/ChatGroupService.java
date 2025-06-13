@@ -3,6 +3,7 @@ package com.chen.blogbackend.services;
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.mappers.GroupParser;
+import com.chen.blogbackend.mappers.InvitationMapper;
 import com.chen.blogbackend.mappers.MessageParser;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.*;
 
 @Service
@@ -53,8 +56,14 @@ public class ChatGroupService {
     PreparedStatement getGroupMember;
     PreparedStatement getGroupOwner;
 
+
+    PreparedStatement insertInvitation;
+    PreparedStatement getInvitation;
+
     //generate here.
     InvitationDao invitationDao;
+    @Autowired
+    private CqlSession cqlSession;
 
     @PostConstruct
     public void init() {
@@ -76,7 +85,8 @@ public class ChatGroupService {
             getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
             getGroupOwner = session.prepare("select owner_id from group_chat.chat_group_details where group_id = ?;");
             updateGroupDetails = session.prepare("UPDATE group_chat.chat_group_details SET introduction = ?, name = ?, allow_invite_by_token = ? WHERE group_id = ?;");
-
+            insertInvitation = session.prepare("insert into invitation (groupId, expire_time, code, userId, create_time) values (?, ?, ?, ?, ?)");
+            getInvitation = session.prepare("select * from invitation where code = ?;");
             logger.info("ChatGroupService prepared statements initialized successfully");
         } catch (Exception e) {
             logger.error("Failed to initialize ChatGroupService prepared statements", e);
@@ -131,19 +141,21 @@ public class ChatGroupService {
         }
     }
 
-    public Invitation generateInvitation(String operator, String userId, String groupId) {
-        logger.debug("Operator {} generating invitation for user {} to group {}", operator, userId, groupId);
+    public Invitation generateInvitation( String userId, String groupId) {
+        logger.debug("generating invitation for user {} to group {}", userId, groupId);
 
         try {
-            String invitationId = userId + System.currentTimeMillis() + RandomUtil.generateRandomString(10);
-            Invitation invitation = new Invitation(groupId, (new Date(System.currentTimeMillis() + 360000)), userId, 10);
-            invitationDao.insert(invitation);
-
-            logger.info("Invitation {} generated successfully for user {} to group {} by operator {}",
-                    invitationId, userId, groupId, operator);
+            String code = userId + System.currentTimeMillis() + RandomUtil.generateRandomString(10);
+            Instant now = Instant.now();
+            Instant expire = now.plus(3600 * 24 * 7, ChronoUnit.SECONDS);
+            Invitation invitation = new Invitation();
+            //groupId, expire_time, code, userId, create_time
+            session.execute(insertInvitation.bind(groupId, expire, code, userId, now));
+            logger.info("Invitation {} generated successfully for user {} to group {} ",
+                    code, userId, groupId);
             return invitation;
         } catch (Exception e) {
-            logger.error("Failed to generate invitation for user {} to group {} by operator {}", userId, groupId, operator, e);
+            logger.error("Failed to generate invitation for user {} to group {} ", userId, groupId, e);
             throw e;
         }
     }
@@ -180,35 +192,36 @@ public class ChatGroupService {
         }
     }
 
-    public boolean joinByInvitation(String userId, String username, String groupId, String invitationID) {
+    public boolean joinByInvitation(String userId, String username, Long groupId, String invitationID) {
         logger.debug("User {} attempting to join group {} using invitation {}", userId, groupId, invitationID);
 
         try {
-            Invitation select = invitationDao.select(invitationID);
-            if (select == null) {
+            ResultSet execute = cqlSession.execute(getInvitation.bind(invitationID));
+            List<Row> all = execute.all();
+
+            List<Invitation> invitations = InvitationMapper.parseInvitation(execute);
+            if ( invitations.size() == 0) {
                 logger.warn("Invitation {} not found for user {} joining group {}", invitationID, userId, groupId);
                 return false;
             }
+            Invitation invitation = invitations.get(0);
 
-            boolean isValidReceiver = select.getReceiverId().equals(groupId);
-            boolean isNotExpired = System.currentTimeMillis() < select.getExpire_time().getTime();
 
-            if (!isValidReceiver) {
-                logger.warn("Invalid invitation receiver for user {} joining group {}. Expected: {}, Actual: {}",
-                        userId, groupId, groupId, select.getReceiverId());
-                return false;
-            }
+            boolean isNotExpired = Instant.now().isBefore(invitation.getExpireTime());
 
             if (!isNotExpired) {
                 logger.warn("Expired invitation {} for user {} joining group {}", invitationID, userId, groupId);
                 return false;
             }
-
-            BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-            builder.addStatements(insertGroupMemberByUser.bind(groupId, userId, username));
-
-            logger.info("User {} successfully joined group {} using invitation {}", userId, groupId, invitationID);
-            return isValidReceiver && isNotExpired;
+            if (invitation.getTargetType().equals("group") && Objects.equals(invitation.getGroupId(), groupId)) {
+                BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
+                builder.addStatements(insertGroupMemberByUser.bind(groupId, userId, username));
+                logger.info("User {} successfully joined group {} using invitation {}", userId, groupId, invitationID);
+            } else {
+                logger.warn("Expired invitation {} for user {} joining group {}", invitationID, userId, groupId);
+                return false;
+            }
+            return true;
         } catch (Exception e) {
             logger.error("Error occurred while user {} was joining group {} with invitation {}",
                     userId, groupId, invitationID, e);

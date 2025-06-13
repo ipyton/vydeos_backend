@@ -10,6 +10,11 @@ import com.chen.blogbackend.util.TokenUtil;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.PictureService;
 import com.chen.blogbackend.util.ValidationResult;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.util.Utils;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
 import com.sun.tools.jconsole.JConsoleContext;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -30,6 +35,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -237,6 +243,23 @@ public class AccountController {
             response = new ResponseEntity<>("Error occurred", HttpStatus.INTERNAL_SERVER_ERROR); // You can customize this error response
         }
         return response; // Return the response after the try-catch-finally block
+    }
+
+
+    @PostMapping("/google")
+    public Message verifyGoogleToken(@RequestBody Map<String, String> request) {
+        try {
+            String tokenString = request.get("idToken");
+            if (tokenString == null || tokenString.isEmpty()) {
+                return new Message(-1, "No token provided");
+            }
+
+            accountService.signInWithGoogle(tokenString);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Message(-1, "Error occurred");
+        }
     }
 
 

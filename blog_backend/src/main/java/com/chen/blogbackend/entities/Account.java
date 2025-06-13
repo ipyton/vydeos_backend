@@ -1,5 +1,6 @@
 package com.chen.blogbackend.entities;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +22,11 @@ public class Account {
     private String location = "";
     private String language = "";
     private String country = "";
-
+    private Instant createAt = null;
 
     public Account(String userId, String userEmail, String userName, String introduction, String avatar,
                    LocalDate dateOfBirth, String telephone, boolean gender, int relationship, String group,
-                   String location, String language, String country, List<String> apps) {
+                   String location, String language, String country, List<String> apps, Instant createAt) {
         this.userId = userId;
         this.userEmail = userEmail;
         this.userName = userName;
@@ -40,6 +41,15 @@ public class Account {
         this.language = language;
         this.country = country;
         this.apps = apps;
+        this.createAt = createAt;
+    }
+
+    public Instant getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Instant createAt) {
+        this.createAt = createAt;
     }
 
     List<String> apps = new ArrayList<>();
@@ -197,5 +207,8 @@ public class Account {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public void createAt(Instant now) {
     }
 }

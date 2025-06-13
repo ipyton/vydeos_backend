@@ -101,7 +101,8 @@ public class LoginTokenFilter implements Filter {
                 "/authorization/hasPermission",
                 "/hello",
                 "/metrics",
-                "/actuator/prometheus"
+                "/actuator/prometheus",
+                "/google"
         };
 
         for (String path : publicPaths) {
