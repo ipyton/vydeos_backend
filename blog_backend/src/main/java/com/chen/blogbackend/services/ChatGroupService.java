@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 
 @Service
@@ -320,8 +319,9 @@ public class ChatGroupService {
                     return false;
                 }
             }
-
-            ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, ownerId, Instant.now(), allowInvitesByToken));
+            Instant creationTime = Instant.now();
+            ResultSet execute = session.execute(createChatGroup.bind(
+                    groupId, "", new HashMap<>(), "", groupName, ownerId, creationTime, allowInvitesByToken));
             if (!execute.getExecutionInfo().getErrors().isEmpty()) {
                 logger.error("Failed to create group details for group {} '{}': {}",
                         groupId, groupName, execute.getExecutionInfo().getErrors());
@@ -330,6 +330,16 @@ public class ChatGroupService {
 
             logger.info("Group {} '{}' successfully created by owner {} with {} members",
                     groupId, groupName, ownerId, members.size());
+
+            Long messageId = keyService.getLongKey("chat_global");
+            Long sessionMessageId = keyService.getLongKey("group_chat_"+ groupId);
+            //send message to message queue;
+            //String userId, long groupId, long messageId, String content, String messageType,
+            //                        Instant sendTime, String type, long referMessageId, List<String> referUserId,
+            //                        boolean del, long sessionMessageId)
+            //            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1l, new ArrayList<>(), false, receipt.getSessionMessageId());
+            notificationProducer.sendNotification(new GroupMessage(ownerId, groupId, messageId,
+                    ownerId + " invited you to group " + groupName,"status", creationTime,  "group",-1l, null, false, sessionMessageId));
             return true;
         } catch (Exception e) {
             logger.error("Error occurred while creating group '{}' by owner {}", groupName, ownerId, e);
@@ -365,7 +375,7 @@ public class ChatGroupService {
             receipt.setMessageId(keyService.getLongKey("chat_global"));
             receipt.setSessionMessageId(keyService.getLongKey("group_chat_" + groupId));
 
-            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1, new ArrayList<>(), false, receipt.getSessionMessageId());
+            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1l, new ArrayList<>(), false, receipt.getSessionMessageId());
 
             if (isInGroup(userId, groupId)) {
                 receipt.setMessageId(keyService.getIntKey("groupMessage"));
