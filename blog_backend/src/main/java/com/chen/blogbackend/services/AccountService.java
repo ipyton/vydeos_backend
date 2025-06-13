@@ -666,7 +666,7 @@ public class AccountService {
             } else {
 
                 logger.info("Existing user logged in via Google: {}", email);
-                session.execute(setToken.bind(token,email, token.getExpireDatetime()));
+                session.execute(setToken.bind(token.getTokenString(),email, token.getExpireDatetime()));
             }
 
             return account;
