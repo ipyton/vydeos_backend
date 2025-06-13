@@ -102,7 +102,7 @@ public class ChatGroupController {
     }
 
     @RequestMapping("join_by_invitation")
-    public LoginMessage joinGroupByInvitation(String userId,String username, String groupId, String invitationID) {
+    public LoginMessage joinGroupByInvitation(String userId,String username, Long groupId, String invitationID) {
         boolean result = service.joinByInvitation(userId,username, groupId, invitationID);
         if (result) {
             return new LoginMessage(0, "Success");
