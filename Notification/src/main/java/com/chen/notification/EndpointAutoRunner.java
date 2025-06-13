@@ -126,7 +126,8 @@ public class EndpointAutoRunner {
 
                 JSONObject jsonObject = JSON.parseObject(value);
                 if (!jsonObject.containsKey("type")) {
-                    throw new RuntimeException("lost attribute type");
+                    logger.error("type is null, skipping...");
+                    continue;
                 }
                 if (jsonObject.get("type").equals("single")) {
                     SingleMessage singleMessage = jsonObject.toJavaObject(SingleMessage.class);
@@ -176,8 +177,8 @@ public class EndpointAutoRunner {
             consumer.commitSync();
         }
         } catch (Exception e) {
-            System.err.println("Error while consuming messages: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error while consuming messages: " + e.getMessage());
+            logger.error(e.getStackTrace().toString());
         }
     }
 
