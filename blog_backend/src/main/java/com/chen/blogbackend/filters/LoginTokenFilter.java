@@ -99,7 +99,10 @@ public class LoginTokenFilter implements Filter {
                 "/account/verifyToken",
                 "/account/sendVerificationCode",
                 "/authorization/hasPermission",
-                "/hello"
+                "/hello",
+                "/metrics",
+                "/actuator/prometheus",
+                "/account/google"
         };
 
         for (String path : publicPaths) {

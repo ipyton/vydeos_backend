@@ -6,18 +6,20 @@ import java.util.List;
 public class GroupMessage {
     private String userId;                     // 对应 user_id (text)
     private String receiverId;
-    private long groupId;                      // 对应 group_id (bigint)
-    private long messageId;                    // 对应 message_id (bigint)
+    private Long groupId;                      // 对应 group_id (bigint)
+    private Long messageId;                    // 对应 message_id (bigint)
     private String content;                    // 对应 content (text)
     private String messageType;                // 对应 messagetype (text)
     private Instant sendTime;                  // 对应 send_time (timestamp)
     private String type;                       // 对应 type (text)
-    private long referMessageId;               // 对应 refer_message_id (bigint)
+    private Long referMessageId;               // 对应 refer_message_id (bigint)
     private List<String> referUserId;          // 对应 refer_user_id (list<text>)
-    private boolean del;                       // 对应 del (boolean)
-    private long sessionMessageId;             // 对应 session_message_id (bigint)
+    private Boolean del;                       // 对应 del (boolean)
+    private Long sessionMessageId;             // 对应 session_message_id (bigint)
 
     public GroupMessage() {}
+
+
 
     public String getReceiverId() {
         return receiverId;
@@ -27,9 +29,9 @@ public class GroupMessage {
         this.receiverId = receiverId;
     }
 
-    public GroupMessage(String userId, long groupId, long messageId, String content, String messageType,
-                        Instant sendTime, String type, long referMessageId, List<String> referUserId,
-                        boolean del, long sessionMessageId) {
+    public GroupMessage(String userId, Long groupId, Long messageId, String content, String messageType,
+                        Instant sendTime, String type, Long referMessageId, List<String> referUserId,
+                        Boolean del, Long sessionMessageId) {
         this.userId = userId;
         this.groupId = groupId;
         this.messageId = messageId;
@@ -53,19 +55,19 @@ public class GroupMessage {
         this.userId = userId;
     }
 
-    public long getGroupId() {
+    public Long getGroupId() {
         return groupId;
     }
 
-    public void setGroupId(long groupId) {
+    public void setGroupId(Long groupId) {
         this.groupId = groupId;
     }
 
-    public long getMessageId() {
+    public Long getMessageId() {
         return messageId;
     }
 
-    public void setMessageId(long messageId) {
+    public void setMessageId(Long messageId) {
         this.messageId = messageId;
     }
 
@@ -101,11 +103,11 @@ public class GroupMessage {
         this.type = type;
     }
 
-    public long getReferMessageId() {
+    public Long getReferMessageId() {
         return referMessageId;
     }
 
-    public void setReferMessageId(long referMessageId) {
+    public void setReferMessageId(Long referMessageId) {
         this.referMessageId = referMessageId;
     }
 
@@ -117,19 +119,19 @@ public class GroupMessage {
         this.referUserId = referUserId;
     }
 
-    public boolean isDel() {
+    public Boolean isDel() {
         return del;
     }
 
-    public void setDel(boolean del) {
+    public void setDel(Boolean del) {
         this.del = del;
     }
 
-    public long getSessionMessageId() {
+    public Long getSessionMessageId() {
         return sessionMessageId;
     }
 
-    public void setSessionMessageId(long sessionMessageId) {
+    public void setSessionMessageId(Long sessionMessageId) {
         this.sessionMessageId = sessionMessageId;
     }
 }

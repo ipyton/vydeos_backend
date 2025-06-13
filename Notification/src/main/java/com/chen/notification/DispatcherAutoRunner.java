@@ -123,12 +123,12 @@ public class DispatcherAutoRunner {
 
         try {
             getMembers = cqlSession.prepare(
-                    "SELECT * FROM group_chat.chat_group_members WHERE group_id = ?"
+                    "SELECT * FROM group_chat.chat_group_members_by_group WHERE group_id = ?"
             );
             logger.debug("Prepared statement 'getMembers' initialized");
 
             getCount = cqlSession.prepare(
-                    "SELECT count FROM chat.unread_messages WHERE user_id = ? AND type = ? AND sender_id = ?"
+                    "SELECT count FROM chat.unread_messages WHERE user_id = ? AND type = ? and group_id = ? AND sender_id = ?"
             );
             logger.debug("Prepared statement 'getCount' initialized");
 
@@ -317,7 +317,7 @@ public class DispatcherAutoRunner {
 
             messageType = jsonObject.getString("type");
             MDC.put("messageType", messageType);
-
+            logger.info(messageType);
             if ("single".equals(messageType)) {
                 SingleMessage singleMessage = jsonObject.toJavaObject(SingleMessage.class);
                 MDC.put("messageId", singleMessage.getMessageId().toString());
@@ -460,7 +460,7 @@ public class DispatcherAutoRunner {
                         memberMessage.setSessionMessageId(message.getSessionMessageId());
                         memberMessage.setUserId(message.getUserId()); // Keep original sender
                         memberMessage.setReceiverId(userId); // Set recipient
-
+                        memberMessage.setType("group");
                         addUnreadMessage(memberMessage);
                         sendToKafka("single", userId, memberMessage);
 
@@ -514,6 +514,7 @@ public class DispatcherAutoRunner {
         DistributedLockService.LockToken lockToken = null;
         String receiverId = message.getReceiverId();
         String senderId = message.getUserId();
+        Long groupId = message.getGroupId();
 
         lockLogger.debug("Attempting to acquire lock for user: {}", receiverId);
 
@@ -525,7 +526,7 @@ public class DispatcherAutoRunner {
             lockLogger.debug("Lock acquired for user: {} in {}ms", receiverId, lockAcquisitionTime);
 
             long queryStartTime = System.currentTimeMillis();
-            ResultSet result = cqlSession.execute(getCount.bind(receiverId, "group", senderId));
+            ResultSet result = cqlSession.execute(getCount.bind(receiverId, "group", groupId,senderId ));
             List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
             long queryTime = System.currentTimeMillis() - queryStartTime;
 
@@ -594,7 +595,7 @@ public class DispatcherAutoRunner {
             lockLogger.debug("Lock acquired for user: {} in {}ms", receiver, lockAcquisitionTime);
 
             long queryStartTime = System.currentTimeMillis();
-            ResultSet result = cqlSession.execute(getCount.bind(receiver, "single", sender));
+            ResultSet result = cqlSession.execute(getCount.bind(receiver, "single", 0, sender));
             List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
             long queryTime = System.currentTimeMillis() - queryStartTime;
 
@@ -729,8 +730,8 @@ public class DispatcherAutoRunner {
             String messageJson = JSON.toJSONString(message);
             ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, messageJson);
 
-            kafkaLogger.debug("Sending group message to Kafka: topic={}, key={}, messageId={}, groupId={}",
-                    topic, key, message.getMessageId(), message.getGroupId());
+            kafkaLogger.info("Sending group message to Kafka: topic={}, key={}, messageId={}, groupId={}, messageId={}",
+                    topic, key, message.getMessageId(), message.getGroupId(),message.toString());
 
             producer.send(record, (metadata, exception) -> {
                 long sendTime = System.currentTimeMillis() - startTime;

@@ -332,7 +332,7 @@ public class NotificationServerEndpoint {
             try {
                 String jsonMessage = jsonString;
                 session.getBasicRemote().sendText(jsonMessage);
-                logger.fine("Message sent to user: " + receiverId);
+                logger.info("Message sent to user: " + receiverId);
             } catch (IOException e) {
                 logger.warning("Failed to send message to " + receiverId + ": " + e.getMessage());
                 cleanupSession(session);

@@ -54,7 +54,8 @@ public class AccountParser {
                     !columnDefinitions.contains("location")?"":row.getString("location"),
                     !columnDefinitions.contains("language")?"":row.getString("language"),
                     !columnDefinitions.contains("country")?"":row.getString("country"),
-                    !columnDefinitions.contains("apps")?null:row.getList("apps", String.class)));
+                    !columnDefinitions.contains("apps")?null:row.getList("apps", String.class),
+                    !columnDefinitions.contains("create_at") ? null : row.getInstant("createAt")));
         }
         return accounts;
     }

@@ -24,6 +24,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.jose4j.lang.JoseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
@@ -50,6 +52,7 @@ this class is used for changing the
 @Profile("dispatcher")
 public class EndpointAutoRunner {
 
+    private static final Logger logger = LoggerFactory.getLogger(EndpointAutoRunner.class);
 
     @Autowired
     NotificationServerEndpoint service;
@@ -93,8 +96,7 @@ public class EndpointAutoRunner {
         executorService = Executors.newFixedThreadPool(4); // 根据需要调整线程池大小
         getEndpoints = session.prepare("select endpoint,auth,p256dh from chat.web_push_endpoints where user_id = ?");
         // 使用新线程异步启动 Kafka 消费
-        System.out.println(getEndpoints.toString());
-        System.out.println("endpoint runner is doing job");
+        logger.info(getEndpoints.toString());
         Properties props = new Properties();
         props.put("bootstrap.servers", "127.0.0.1" + ":9092");
         props.setProperty("group.id", "endpoint");
@@ -108,7 +110,6 @@ public class EndpointAutoRunner {
     private void consumeMessages()  {
         try {
         consumer.subscribe(Arrays.asList("single"));
-            RestTemplate restTemplate = new RestTemplate();
 
             while (true) {
                 System.out.println(Thread.currentThread().getName()+ "is doing job");
@@ -119,12 +120,14 @@ public class EndpointAutoRunner {
                 String key = record.key();
                 String value = record.value();
                 System.out.println("step2");
-                System.out.println(value);
+                logger.info(key + ":" + value);
+                logger.info(value);
                 //topicKeyMap.putIfAbsent(key, new ArrayList<>());
 
                 JSONObject jsonObject = JSON.parseObject(value);
                 if (!jsonObject.containsKey("type")) {
-                    throw new RuntimeException("lost attribute type");
+                    logger.error("type is null, skipping...");
+                    continue;
                 }
                 if (jsonObject.get("type").equals("single")) {
                     SingleMessage singleMessage = jsonObject.toJavaObject(SingleMessage.class);
@@ -133,7 +136,6 @@ public class EndpointAutoRunner {
                 } else {
                     GroupMessage groupMessage = JSON.parseObject(value, GroupMessage.class);
                     service.sendGroupMessages(List.of(groupMessage));
-
                 }
                 //topicKeyMap.get(key).add(notificationMessage);
                 //ResultSet execute = session.execute(getEndpoints.bind(notificationMessage.getReceiverId()));
@@ -175,8 +177,8 @@ public class EndpointAutoRunner {
             consumer.commitSync();
         }
         } catch (Exception e) {
-            System.err.println("Error while consuming messages: " + e.getMessage());
-            e.printStackTrace();
+            logger.error("Error while consuming messages: " + e.getMessage());
+            logger.error(e.getStackTrace().toString());
         }
     }
 

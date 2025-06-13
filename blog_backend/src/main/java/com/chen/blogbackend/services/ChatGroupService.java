@@ -3,6 +3,7 @@ package com.chen.blogbackend.services;
 import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.mappers.GroupParser;
+import com.chen.blogbackend.mappers.InvitationMapper;
 import com.chen.blogbackend.mappers.MessageParser;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 @Service
@@ -50,11 +52,20 @@ public class ChatGroupService {
     PreparedStatement insertGroupMemberByUser;
     PreparedStatement insertGroupMemberByGroup;
 
+    PreparedStatement removeGroupMemberByUser;
+    PreparedStatement removeGroupMemberByGroup;
+
     PreparedStatement getGroupMember;
     PreparedStatement getGroupOwner;
 
+
+    PreparedStatement insertInvitation;
+    PreparedStatement getInvitation;
+
     //generate here.
     InvitationDao invitationDao;
+    @Autowired
+    private CqlSession cqlSession;
 
     @PostConstruct
     public void init() {
@@ -76,7 +87,10 @@ public class ChatGroupService {
             getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
             getGroupOwner = session.prepare("select owner_id from group_chat.chat_group_details where group_id = ?;");
             updateGroupDetails = session.prepare("UPDATE group_chat.chat_group_details SET introduction = ?, name = ?, allow_invite_by_token = ? WHERE group_id = ?;");
-
+            insertInvitation = session.prepare("insert into group_chat.invitations (groupId, expire_time, code, userId, create_time) values (?, ?, ?, ?, ?)");
+            getInvitation = session.prepare("select * from group_chat.invitations where code = ?;");
+            removeGroupMemberByGroup = session.prepare("delete from group_chat.chat_group_members_by_group where user_id = ? and group_id = ?;");
+            removeGroupMemberByUser =session.prepare("delete from group_chat.chat_group_members_by_user where user_id = ? and group_id = ?;");
             logger.info("ChatGroupService prepared statements initialized successfully");
         } catch (Exception e) {
             logger.error("Failed to initialize ChatGroupService prepared statements", e);
@@ -115,7 +129,8 @@ public class ChatGroupService {
 
         try {
             BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-            builder.addStatements(removeMember.bind(groupId, userId));
+            builder.addStatements(removeGroupMemberByUser.bind(groupId, userId));
+            builder.addStatement(removeGroupMemberByGroup.bind(groupId, userId));
             ResultSet execute = session.execute(builder.build());
 
             boolean success = execute.getExecutionInfo().getErrors().isEmpty();
@@ -131,19 +146,21 @@ public class ChatGroupService {
         }
     }
 
-    public Invitation generateInvitation(String operator, String userId, String groupId) {
-        logger.debug("Operator {} generating invitation for user {} to group {}", operator, userId, groupId);
+    public Invitation generateInvitation( String userId, String groupId) {
+        logger.debug("generating invitation for user {} to group {}", userId, groupId);
 
         try {
-            String invitationId = userId + System.currentTimeMillis() + RandomUtil.generateRandomString(10);
-            Invitation invitation = new Invitation(groupId, (new Date(System.currentTimeMillis() + 360000)), userId, 10);
-            invitationDao.insert(invitation);
-
-            logger.info("Invitation {} generated successfully for user {} to group {} by operator {}",
-                    invitationId, userId, groupId, operator);
+            String code = userId + System.currentTimeMillis() + RandomUtil.generateRandomString(10);
+            Instant now = Instant.now();
+            Instant expire = now.plus(3600 * 24 * 7, ChronoUnit.SECONDS);
+            Invitation invitation = new Invitation();
+            //groupId, expire_time, code, userId, create_time
+            session.execute(insertInvitation.bind(groupId, expire, code, userId, now));
+            logger.info("Invitation {} generated successfully for user {} to group {} ",
+                    code, userId, groupId);
             return invitation;
         } catch (Exception e) {
-            logger.error("Failed to generate invitation for user {} to group {} by operator {}", userId, groupId, operator, e);
+            logger.error("Failed to generate invitation for user {} to group {} ", userId, groupId, e);
             throw e;
         }
     }
@@ -180,35 +197,36 @@ public class ChatGroupService {
         }
     }
 
-    public boolean joinByInvitation(String userId, String username, String groupId, String invitationID) {
+    public boolean joinByInvitation(String userId, String username, Long groupId, String invitationID) {
         logger.debug("User {} attempting to join group {} using invitation {}", userId, groupId, invitationID);
 
         try {
-            Invitation select = invitationDao.select(invitationID);
-            if (select == null) {
+            ResultSet execute = cqlSession.execute(getInvitation.bind(invitationID));
+            List<Row> all = execute.all();
+
+            List<Invitation> invitations = InvitationMapper.parseInvitation(execute);
+            if ( invitations.size() == 0) {
                 logger.warn("Invitation {} not found for user {} joining group {}", invitationID, userId, groupId);
                 return false;
             }
+            Invitation invitation = invitations.get(0);
 
-            boolean isValidReceiver = select.getReceiverId().equals(groupId);
-            boolean isNotExpired = System.currentTimeMillis() < select.getExpire_time().getTime();
 
-            if (!isValidReceiver) {
-                logger.warn("Invalid invitation receiver for user {} joining group {}. Expected: {}, Actual: {}",
-                        userId, groupId, groupId, select.getReceiverId());
-                return false;
-            }
+            boolean isNotExpired = Instant.now().isBefore(invitation.getExpireTime());
 
             if (!isNotExpired) {
                 logger.warn("Expired invitation {} for user {} joining group {}", invitationID, userId, groupId);
                 return false;
             }
-
-            BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
-            builder.addStatements(insertGroupMemberByUser.bind(groupId, userId, username));
-
-            logger.info("User {} successfully joined group {} using invitation {}", userId, groupId, invitationID);
-            return isValidReceiver && isNotExpired;
+            if (invitation.getTargetType().equals("group") && Objects.equals(invitation.getGroupId(), groupId)) {
+                BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
+                builder.addStatements(insertGroupMemberByUser.bind(groupId, userId, username));
+                logger.info("User {} successfully joined group {} using invitation {}", userId, groupId, invitationID);
+            } else {
+                logger.warn("Expired invitation {} for user {} joining group {}", invitationID, userId, groupId);
+                return false;
+            }
+            return true;
         } catch (Exception e) {
             logger.error("Error occurred while user {} was joining group {} with invitation {}",
                     userId, groupId, invitationID, e);
@@ -307,8 +325,9 @@ public class ChatGroupService {
                     return false;
                 }
             }
-
-            ResultSet execute = session.execute(createChatGroup.bind(groupId, "", new HashMap<>(), "", groupName, ownerId, Instant.now(), allowInvitesByToken));
+            Instant creationTime = Instant.now();
+            ResultSet execute = session.execute(createChatGroup.bind(
+                    groupId, "", new HashMap<>(), "", groupName, ownerId, creationTime, allowInvitesByToken));
             if (!execute.getExecutionInfo().getErrors().isEmpty()) {
                 logger.error("Failed to create group details for group {} '{}': {}",
                         groupId, groupName, execute.getExecutionInfo().getErrors());
@@ -317,6 +336,18 @@ public class ChatGroupService {
 
             logger.info("Group {} '{}' successfully created by owner {} with {} members",
                     groupId, groupName, ownerId, members.size());
+
+            Long messageId = keyService.getLongKey("chat_global");
+            Long sessionMessageId = keyService.getLongKey("group_chat_"+ groupId);
+            //send message to message queue;
+            //String userId, long groupId, long messageId, String content, String messageType,
+            //                        Instant sendTime, String type, long referMessageId, List<String> referUserId,
+            //                        boolean del, long sessionMessageId)
+            //            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1l, new ArrayList<>(), false, receipt.getSessionMessageId());
+            notificationProducer.sendNotification(new GroupMessage(ownerId, groupId, messageId,
+                    ownerId + " invited you to group " + groupName,"status", creationTime,  "group",-1l, null, false, sessionMessageId));
+
+
             return true;
         } catch (Exception e) {
             logger.error("Error occurred while creating group '{}' by owner {}", groupName, ownerId, e);
@@ -352,7 +383,7 @@ public class ChatGroupService {
             receipt.setMessageId(keyService.getLongKey("chat_global"));
             receipt.setSessionMessageId(keyService.getLongKey("group_chat_" + groupId));
 
-            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1, new ArrayList<>(), false, receipt.getSessionMessageId());
+            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1l, new ArrayList<>(), false, receipt.getSessionMessageId());
 
             if (isInGroup(userId, groupId)) {
                 receipt.setMessageId(keyService.getIntKey("groupMessage"));

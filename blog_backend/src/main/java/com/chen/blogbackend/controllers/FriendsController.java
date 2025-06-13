@@ -37,13 +37,16 @@ public class FriendsController {
 
 
     @RequestMapping("follow")
-    public LoginMessage follow(String sender, String receiver, String name) throws Exception {
+    public LoginMessage follow(HttpServletRequest request, String receiver, String name) throws Exception {
+        String sender = (String) request.getAttribute("userEmail");
         boolean follow = friendsService.follow(sender, receiver, name);
         return new LoginMessage(follow?1:-1,"");
     }
 
     @RequestMapping("unfollow")
-    public LoginMessage unfollow(String sender, String receiver) {
+    public LoginMessage unfollow(HttpServletRequest request, String receiver) {
+        String sender = (String) request.getAttribute("userEmail");
+
         boolean result = friendsService.unfollow(sender, receiver);
         return new LoginMessage(result?1:-1, "" );
     }

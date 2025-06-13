@@ -8,21 +8,26 @@ public class SingleMessage {
     private String userId2;
     private String receiverName;
     private String senderName;
-    private String type;
+    private String type="single";
     private String content;
     private Instant time;
     private long messageId=-1l;
     private long referMessageId =-1l;
-    private String messageType = "single";
+    private String messageType = "text";
     private boolean direction = false;
     private boolean deleted = false;
     private Long sessionMessageId =-1l ;
+//    private Long groupId =-1l ;
 
     public boolean isDirection() {
         return direction;
     }
 
-    public SingleMessage(String avatar, String userId1, String userId2, String receiverName, String senderName, String type, String content, Instant time, long messageId, long referMessageId, String messageType, boolean direction, boolean deleted, Long sessionMessageId) {
+
+    public SingleMessage(String avatar, String userId1, String userId2,
+                         String receiverName, String senderName, String type, String content, Instant time,
+                         long messageId, long referMessageId, String messageType, boolean direction, boolean deleted,
+                         Long sessionMessageId) {
         this.avatar = avatar;
         this.userId1 = userId1;
         this.userId2 = userId2;
