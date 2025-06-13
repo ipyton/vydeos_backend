@@ -317,7 +317,7 @@ public class DispatcherAutoRunner {
 
             messageType = jsonObject.getString("type");
             MDC.put("messageType", messageType);
-
+            logger.info(messageType);
             if ("single".equals(messageType)) {
                 SingleMessage singleMessage = jsonObject.toJavaObject(SingleMessage.class);
                 MDC.put("messageId", singleMessage.getMessageId().toString());
