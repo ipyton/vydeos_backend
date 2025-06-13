@@ -128,7 +128,7 @@ public class DispatcherAutoRunner {
             logger.debug("Prepared statement 'getMembers' initialized");
 
             getCount = cqlSession.prepare(
-                    "SELECT count FROM chat.unread_messages WHERE user_id = ? AND type = ? AND sender_id = ?"
+                    "SELECT count FROM chat.unread_messages WHERE user_id = ? AND type = ? and group_id = ? AND sender_id = ?"
             );
             logger.debug("Prepared statement 'getCount' initialized");
 
@@ -514,6 +514,7 @@ public class DispatcherAutoRunner {
         DistributedLockService.LockToken lockToken = null;
         String receiverId = message.getReceiverId();
         String senderId = message.getUserId();
+        Long groupId = message.getGroupId();
 
         lockLogger.debug("Attempting to acquire lock for user: {}", receiverId);
 
@@ -525,7 +526,7 @@ public class DispatcherAutoRunner {
             lockLogger.debug("Lock acquired for user: {} in {}ms", receiverId, lockAcquisitionTime);
 
             long queryStartTime = System.currentTimeMillis();
-            ResultSet result = cqlSession.execute(getCount.bind(receiverId, "group", senderId));
+            ResultSet result = cqlSession.execute(getCount.bind(receiverId, "group", groupId,senderId ));
             List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
             long queryTime = System.currentTimeMillis() - queryStartTime;
 
@@ -594,7 +595,7 @@ public class DispatcherAutoRunner {
             lockLogger.debug("Lock acquired for user: {} in {}ms", receiver, lockAcquisitionTime);
 
             long queryStartTime = System.currentTimeMillis();
-            ResultSet result = cqlSession.execute(getCount.bind(receiver, "single", sender));
+            ResultSet result = cqlSession.execute(getCount.bind(receiver, "single", 0, sender));
             List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
             long queryTime = System.currentTimeMillis() - queryStartTime;
 
