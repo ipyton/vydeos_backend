@@ -53,6 +53,7 @@ public class SingleMessageService {
     PreparedStatement getNewestMessageFromAllUsers;
     PreparedStatement deleteUnread;
     PreparedStatement insertSingleMessage;
+    PreparedStatement deleteGroupUnread;
 
     @Autowired
     private ChatGroupService chatGroupService;
@@ -72,6 +73,7 @@ public class SingleMessageService {
             getSingleRecords = session.prepare("select * from chat.chat_records where user_id1 = ? and user_id2 = ? and session_message_id <= ? order by session_message_id desc limit 15");
             getNewestMessageFromAllUsers = session.prepare("select * from chat.unread_messages where user_id = ?;");
             deleteUnread = session.prepare("delete from chat.unread_messages where user_id = ? and type =? and sender_id =? and group_id = ?;");
+            deleteGroupUnread = session.prepare("delete from chat.unread_messages where user_id = ? and type = ? and group_id = ?");
             insertSingleMessage = session.prepare("INSERT INTO chat.chat_records (user_id1, user_id2, direction, " +
                     "relationship, group_id, message_id, content, messagetype, send_time, refer_message_id," +
                     " refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
@@ -333,8 +335,16 @@ public class SingleMessageService {
                 userId, senderId, type, groupId);
 
         try {
-            ResultSet execute = session.execute(deleteUnread.bind(userId, type, senderId, groupId));
-            boolean success = execute.getExecutionInfo().getErrors().isEmpty();
+
+            boolean success = false;
+            ResultSet execute;
+            if (type.equals("group")) {
+                execute = session.execute(deleteGroupUnread.bind(userId, type, groupId));
+
+            } else {
+                execute = session.execute(deleteUnread.bind(userId, type, senderId, groupId));
+            }
+            success = execute.getExecutionInfo().getErrors().isEmpty();
 
             if (success) {
                 logger.info("Successfully marked message as read - userId: {}, senderId: {}, type: {}, groupId: {}",
