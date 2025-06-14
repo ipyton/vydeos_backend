@@ -185,7 +185,6 @@ public class SingleMessageController {
         // groupId 可能是 Integer 类型或 Long 类型或 null
         if (body.get("groupId") != null) {
             groupId = (Long) body.get("groupId");
-
         }
         else {
             groupId = 0l;

@@ -465,7 +465,7 @@ public class ChatGroupService {
         // TODO: Implement actual message records retrieval
         logger.warn("getGroupMessageRecords method not implemented yet for group {} with lastSessionMessageId {}",
                 groupId, lastSessionMessageId);
-        return null;
+        return new ArrayList<>();
     }
 
     public boolean updateGroup(String userEmail, long groupId, String name, String description, Boolean allowInviteByToken) {
