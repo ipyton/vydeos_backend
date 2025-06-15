@@ -198,9 +198,14 @@ public class SingleMessageController {
         if (type == null || type.isEmpty()) {
             return new Message(-1, "Missing 'type' field");
         }
-        if (senderId == null || senderId.isEmpty()) {
+        if (type.equals("single") &&(senderId == null || senderId.isEmpty())) {
             return new Message(-1, "Missing 'senderId' field");
         }
+
+        if (type.equals("group") && (groupId == null || groupId <= 0)) {
+            return new Message(-1, "Invalid 'group' field");
+        }
+
 
         try {
             boolean result = service.markUnread(userId, senderId, type, groupId);
