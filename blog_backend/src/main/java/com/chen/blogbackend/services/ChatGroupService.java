@@ -91,7 +91,7 @@ public class ChatGroupService {
             getInvitation = session.prepare("select * from group_chat.invitations where code = ?;");
             removeGroupMemberByGroup = session.prepare("delete from group_chat.chat_group_members_by_group where user_id = ? and group_id = ?;");
             removeGroupMemberByUser =session.prepare("delete from group_chat.chat_group_members_by_user where user_id = ? and group_id = ?;");
-            getGroupMessages = session.prepare("select * from chat.group_chat_records where group_id = ? and session_message_id < ? limit 15;");
+            getGroupMessages = session.prepare("select * from chat.group_chat_records where group_id = ? and session_message_id <= ? limit 15;");
 
 
             logger.info("ChatGroupService prepared statements initialized successfully");
@@ -432,48 +432,48 @@ public class ChatGroupService {
         }
     }
 
-    public List<SingleMessage> getNewestMessages(String userId, long timestamp) {
-        logger.debug("Retrieving newest messages for user {} after timestamp {}", userId, timestamp);
-
-        try {
-            ResultSet execute = session.execute(getGroups.bind(userId));
-            List<SingleMessage> singleMessages = new ArrayList<>();
-
-            if (!execute.getExecutionInfo().getErrors().isEmpty()) {
-                logger.warn("Error retrieving groups for user {}: {}", userId, execute.getExecutionInfo().getErrors());
-                return singleMessages;
-            }
-
-            List<Row> all = execute.all();
-            int totalMessages = 0;
-
-            for (Row row : all) {
-                Long groupId = row.getLong("group_id");
-                List<SingleMessage> groupMessages = getGroupMessageByGroupIDAndTimestamp(groupId, timestamp);
-                singleMessages.addAll(groupMessages);
-                totalMessages += groupMessages.size();
-            }
-
-            logger.debug("Retrieved {} newest messages across {} groups for user {}",
-                    totalMessages, all.size(), userId);
-            return singleMessages;
-        } catch (Exception e) {
-            logger.error("Error occurred while retrieving newest messages for user {} after timestamp {}",
-                    userId, timestamp, e);
-            return new ArrayList<>();
-        }
-    }
+//    public List<SingleMessage> getNewestMessages(String userId, long timestamp) {
+//        logger.debug("Retrieving newest messages for user {} after timestamp {}", userId, timestamp);
+//
+//        try {
+//            ResultSet execute = session.execute(getGroups.bind(userId));
+//            List<SingleMessage> singleMessages = new ArrayList<>();
+//
+//            if (!execute.getExecutionInfo().getErrors().isEmpty()) {
+//                logger.warn("Error retrieving groups for user {}: {}", userId, execute.getExecutionInfo().getErrors());
+//                return singleMessages;
+//            }
+//
+//            List<Row> all = execute.all();
+//            int totalMessages = 0;
+//
+//            for (Row row : all) {
+//                Long groupId = row.getLong("group_id");
+//                List<SingleMessage> groupMessages = getGroupMessageByGroupIDAndTimestamp(groupId, timestamp);
+//                singleMessages.addAll(groupMessages);
+//                totalMessages += groupMessages.size();
+//            }
+//
+//            logger.debug("Retrieved {} newest messages across {} groups for user {}",
+//                    totalMessages, all.size(), userId);
+//            return singleMessages;
+//        } catch (Exception e) {
+//            logger.error("Error occurred while retrieving newest messages for user {} after timestamp {}",
+//                    userId, timestamp, e);
+//            return new ArrayList<>();
+//        }
+//    }
 
     public List<GroupMessage> getGroupMessageRecords(Long groupId, Long lastSessionMessageId) {
         logger.debug("Retrieving message records for group {} after session message ID {}", groupId, lastSessionMessageId);
         // TODO: Implement actual message records retrieval
         ResultSet execute = session.execute(getGroupMessages.bind(groupId, lastSessionMessageId));
-        MessageParser messageParser = new MessageParser();
+        List<GroupMessage> groupMessages = MessageParser.parseToGroupMessage(execute);
 
 
         logger.warn("getGroupMessageRecords method not implemented yet for group {} with lastSessionMessageId {}",
                 groupId, lastSessionMessageId);
-        return new ArrayList<>();
+        return groupMessages;
     }
 
     public boolean updateGroup(String userEmail, long groupId, String name, String description, Boolean allowInviteByToken) {
