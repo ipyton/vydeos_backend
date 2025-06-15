@@ -84,6 +84,7 @@ public class DispatcherAutoRunner {
     private PreparedStatement getMembers;
     private PreparedStatement groupMessage;
     private PreparedStatement insertMessage;
+    private PreparedStatement insertGroupMessage;
     private PreparedStatement getCount;
     private PreparedStatement setCount;
     private KafkaConsumer<String, String> consumer;
@@ -137,6 +138,9 @@ public class DispatcherAutoRunner {
                             "(user_id, sender_id, type, messageType, content, send_time, message_id, count, session_message_id,group_id) " +
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
+            insertGroupMessage = cqlSession.prepare("INSERT INTO chat.group_chat_records " +
+                    "(user_id, group_id, message_id, content, messagetype, send_time, type, refer_message_id, " +
+                    "refer_user_id, del, session_message_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
             logger.debug("Prepared statement 'setCount' initialized");
 
             long duration = System.currentTimeMillis() - startTime;
@@ -434,7 +438,14 @@ public class DispatcherAutoRunner {
 
             List<CompletableFuture<Void>> memberTasks = new ArrayList<>();
             List<String> recipients = new ArrayList<>();
-
+            ResultSet execute = cqlSession.execute(insertGroupMessage.bind(message.getUserId(),
+                    message.getGroupId(), message.getMessageId(), message.getContent(), message.getMessageType(),
+                    message.getSendTime(), message.getType(), message.getReferMessageId(), message.getReferUserId(),
+                    false, message.getSessionMessageId()));
+            if (execute.getExecutionInfo().getErrors().size() > 0) {
+                logger.error("Failed to insert group message: {}", execute.getExecutionInfo().getErrors());
+                return;
+            }
             for (Row member : members) {
                 String userId = member.getString("user_id");
                 if (userId == null || userId.equals(message.getUserId())) {
