@@ -91,7 +91,7 @@ public class ChatGroupService {
             getInvitation = session.prepare("select * from group_chat.invitations where code = ?;");
             removeGroupMemberByGroup = session.prepare("delete from group_chat.chat_group_members_by_group where user_id = ? and group_id = ?;");
             removeGroupMemberByUser =session.prepare("delete from group_chat.chat_group_members_by_user where user_id = ? and group_id = ?;");
-            getGroupMessages = session.prepare("select * from group_chat.chat_records where groupId = ? and sessionMessageId <? limit 15;");
+            getGroupMessages = session.prepare("select * from chat.group_chat_records where groupId = ? and sessionMessageId < ? limit 15;");
 
 
             logger.info("ChatGroupService prepared statements initialized successfully");
@@ -468,7 +468,7 @@ public class ChatGroupService {
         // TODO: Implement actual message records retrieval
         ResultSet execute = session.execute(getGroupMessages.bind(groupId, lastSessionMessageId));
         MessageParser messageParser = new MessageParser();
-        
+
 
         logger.warn("getGroupMessageRecords method not implemented yet for group {} with lastSessionMessageId {}",
                 groupId, lastSessionMessageId);

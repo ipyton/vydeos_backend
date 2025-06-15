@@ -516,6 +516,8 @@ public class DispatcherAutoRunner {
         String senderId = message.getUserId();
         Long groupId = message.getGroupId();
 
+        cqlSession.execute(getMembers.bind(groupId));
+
         lockLogger.debug("Attempting to acquire lock for user: {}", receiverId);
 
         try {
@@ -540,7 +542,7 @@ public class DispatcherAutoRunner {
             cqlSession.execute(setCount.bind(
                     receiverId,
                     senderId,
-                    "single", // Note: This seems to be intentionally "single" even for group messages
+                    "group",
                     message.getMessageType() != null ? message.getMessageType() : "text",
                     message.getContent(),
                     message.getSendTime(),
