@@ -336,7 +336,7 @@ public class SingleMessageService {
 
         try {
 
-            boolean success = false;
+            boolean success;
             ResultSet execute;
             if (type.equals("group")) {
                 execute = session.execute(deleteGroupUnread.bind(userId, type, groupId));

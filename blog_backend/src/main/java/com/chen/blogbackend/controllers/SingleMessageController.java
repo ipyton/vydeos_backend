@@ -10,6 +10,7 @@ import com.chen.blogbackend.services.SearchService;
 import com.chen.blogbackend.services.SingleMessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.logging.LoggersEndpoint;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,6 +33,8 @@ public class SingleMessageController {
 
     @Autowired
     SearchService searchService;
+    @Autowired
+    private LoggersEndpoint loggersEndpoint;
 
     //by single sender.
 //    @RequestMapping("get_messages")
@@ -47,22 +50,13 @@ public class SingleMessageController {
 //    }
 
     @RequestMapping("sendMessage")
-    public SendingReceipt sendMessage(HttpServletRequest request, String receiverId, Long groupId, String content, String type) throws Exception {
+    public SendingReceipt sendMessage(HttpServletRequest request, String receiverId, String content, String type) throws Exception {
         String senderId = (String) request.getAttribute("userEmail");
-        if (type.equals("single")) {
-            System.out.println(receiverId);
-            System.out.println(content);
-            System.out.println(type);
-            System.out.println(groupId);
+        try {
             return service.sendMessage(senderId, receiverId, content, type);
-        } else if (type.equals("group")) {
-            System.out.println(receiverId);
-            System.out.println(content);
-            System.out.println(type);
-            System.out.println(groupId);
-            return groupService.sendGroupMessage(senderId, groupId, content, type);
+        } catch (Exception e) {
+            return new SendingReceipt(false, -1, -1,-1,true);
         }
-        return new SendingReceipt(false, -1, -1,-1,true);
     }
 
     @RequestMapping("block")

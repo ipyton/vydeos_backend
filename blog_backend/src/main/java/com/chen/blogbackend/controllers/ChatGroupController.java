@@ -52,6 +52,22 @@ public class ChatGroupController {
         return new LoginMessage(-1, "Fail");
     }
 
+    @PostMapping("sendMessage")
+    public SendingReceipt sendMessage(HttpServletRequest request, Long groupId, String content, String messageType
+            ,Long previousId,Long previousSessionId) throws Exception {
+        String senderId = (String) request.getAttribute("userEmail");
+        if (senderId == null || senderId.equals("") || content == null ||content.equals("")
+                || messageType == null || messageType.equals("") ) {
+            return new SendingReceipt(false, -1, -1,-1,true);
+        }
+        try {
+            SendingReceipt sendingReceipt = service.sendGroupMessage(senderId, groupId, content, messageType,previousId,previousSessionId);
+            return sendingReceipt;
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 
 
     @GetMapping("getDetails")

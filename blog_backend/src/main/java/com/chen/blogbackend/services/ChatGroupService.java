@@ -84,7 +84,7 @@ public class ChatGroupService {
             //getRecordByMemberId = session.prepare("select * from chat.chat_messages_mailbox where user_id= ? ");
             insertGroupMemberByUser = session.prepare("insert into group_chat.chat_group_members_by_user (group_id, user_id, group_name) values (?, ?, ?)");
             insertGroupMemberByGroup = session.prepare("insert into group_chat.chat_group_members_by_group (group_id, user_id, user_name) values (?, ?, ?)");
-            getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
+            getGroupMember = session.prepare("select * from group_chat.chat_group_members_by_group where group_id = ? and user_id = ?");
             getGroupOwner = session.prepare("select owner_id from group_chat.chat_group_details where group_id = ?;");
             updateGroupDetails = session.prepare("UPDATE group_chat.chat_group_details SET introduction = ?, name = ?, allow_invite_by_token = ? WHERE group_id = ?;");
             insertInvitation = session.prepare("insert into group_chat.invitations (groupId, expire_time, code, userId, create_time) values (?, ?, ?, ?, ?)");
@@ -376,32 +376,33 @@ public class ChatGroupService {
         }
     }
 
-    public SendingReceipt sendGroupMessage(String userId, long groupId, String content, String messageType) throws Exception {
+    public SendingReceipt sendGroupMessage(String userId, Long groupId, String content, String messageType,
+                                           Long previousId,Long previousSessionId) throws Exception {
         logger.debug("User {} sending message to group {}, type: {}", userId, groupId, messageType);
 
         Instant now = Instant.now();
         SendingReceipt receipt = new SendingReceipt();
 
         try {
-            receipt.setMessageId(keyService.getLongKey("chat_global"));
-            receipt.setSessionMessageId(keyService.getLongKey("group_chat_" + groupId));
 
-            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1l, new ArrayList<>(), false, receipt.getSessionMessageId());
+            previousId = previousId == null ? keyService.getLongKey("chat_global") : previousId;
+            previousSessionId = previousSessionId == null ? keyService.getLongKey("group_chat_" + groupId) : previousSessionId;
+            receipt.setMessageId(previousId);
+            receipt.setSessionMessageId(previousSessionId);
 
             if (isInGroup(userId, groupId)) {
-                receipt.setMessageId(keyService.getIntKey("groupMessage"));
-                groupMessage.setMessageId(receipt.getMessageId());
+                GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content,
+                        messageType, Instant.now(), "group", -1l, new ArrayList<>(), false,
+                        receipt.getSessionMessageId());
                 receipt.setResult(true);
                 receipt.setTimestamp(now.toEpochMilli());
                 notificationProducer.sendNotification(groupMessage);
-
                 logger.info("User {} successfully sent message {} to group {}", userId, receipt.getMessageId(), groupId);
-                return receipt;
             } else {
                 logger.warn("User {} attempted to send message to group {} but is not a member", userId, groupId);
                 receipt.setResult(false);
-                return receipt;
             }
+            return receipt;
         } catch (Exception e) {
             logger.error("Error occurred while user {} was sending message to group {}", userId, groupId, e);
             receipt.setResult(false);
