@@ -73,12 +73,16 @@ public class SingleMessageController {
     @PostMapping("getMessageRecords")
     public Message getMessageRecords(HttpServletRequest request,String userId, String type, Long lastSessionMessageId, Long groupId) {
         String userEmail =(String) request.getAttribute("userEmail");
-        if (userId == null || userId.trim().isEmpty()) {
-            return new Message(-1, "userId is null");
-        }
         if (type == null || type.trim().isEmpty()) {
             return new Message(-1, "type is null");
         }
+        if (type.equals("single") && (userId == null || userId.trim().isEmpty())) {
+            return new Message(-1, "userId is null");
+        }
+        if (type.equals("group") && (userId == null || groupId ==0)) {
+            return new Message(-1, "groupId is invalid");
+        }
+
         if (lastSessionMessageId == null) {
             return new Message(-1, "lastSessionMessageId is null");
         }
