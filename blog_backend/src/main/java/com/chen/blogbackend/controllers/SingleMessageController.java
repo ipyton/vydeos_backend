@@ -10,7 +10,6 @@ import com.chen.blogbackend.services.SearchService;
 import com.chen.blogbackend.services.SingleMessageService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.logging.LoggersEndpoint;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,8 +32,7 @@ public class SingleMessageController {
 
     @Autowired
     SearchService searchService;
-    @Autowired
-    private LoggersEndpoint loggersEndpoint;
+
 
     //by single sender.
 //    @RequestMapping("get_messages")
