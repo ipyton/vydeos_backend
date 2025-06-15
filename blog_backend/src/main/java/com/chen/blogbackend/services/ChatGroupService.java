@@ -57,7 +57,7 @@ public class ChatGroupService {
 
     PreparedStatement getGroupMember;
     PreparedStatement getGroupOwner;
-
+    PreparedStatement getGroupMessages;
 
     PreparedStatement insertInvitation;
     PreparedStatement getInvitation;
@@ -84,13 +84,16 @@ public class ChatGroupService {
             //getRecordByMemberId = session.prepare("select * from chat.chat_messages_mailbox where user_id= ? ");
             insertGroupMemberByUser = session.prepare("insert into group_chat.chat_group_members_by_user (group_id, user_id, group_name) values (?, ?, ?)");
             insertGroupMemberByGroup = session.prepare("insert into group_chat.chat_group_members_by_group (group_id, user_id, user_name) values (?, ?, ?)");
-            getGroupMember = session.prepare("select * from group_chat.chat_group_members where group_id = ? and user_id = ?");
+            getGroupMember = session.prepare("select * from group_chat.chat_group_members_by_group where group_id = ? and user_id = ?");
             getGroupOwner = session.prepare("select owner_id from group_chat.chat_group_details where group_id = ?;");
             updateGroupDetails = session.prepare("UPDATE group_chat.chat_group_details SET introduction = ?, name = ?, allow_invite_by_token = ? WHERE group_id = ?;");
             insertInvitation = session.prepare("insert into group_chat.invitations (groupId, expire_time, code, userId, create_time) values (?, ?, ?, ?, ?)");
             getInvitation = session.prepare("select * from group_chat.invitations where code = ?;");
             removeGroupMemberByGroup = session.prepare("delete from group_chat.chat_group_members_by_group where user_id = ? and group_id = ?;");
             removeGroupMemberByUser =session.prepare("delete from group_chat.chat_group_members_by_user where user_id = ? and group_id = ?;");
+            getGroupMessages = session.prepare("select * from chat.group_chat_records where group_id = ? and session_message_id <= ? limit 15;");
+
+
             logger.info("ChatGroupService prepared statements initialized successfully");
         } catch (Exception e) {
             logger.error("Failed to initialize ChatGroupService prepared statements", e);
@@ -373,32 +376,33 @@ public class ChatGroupService {
         }
     }
 
-    public SendingReceipt sendGroupMessage(String userId, long groupId, String content, String messageType) throws Exception {
+    public SendingReceipt sendGroupMessage(String userId, Long groupId, String content, String messageType,
+                                           Long previousId,Long previousSessionId) throws Exception {
         logger.debug("User {} sending message to group {}, type: {}", userId, groupId, messageType);
 
         Instant now = Instant.now();
         SendingReceipt receipt = new SendingReceipt();
 
         try {
-            receipt.setMessageId(keyService.getLongKey("chat_global"));
-            receipt.setSessionMessageId(keyService.getLongKey("group_chat_" + groupId));
 
-            GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content, messageType, Instant.now(), "group", -1l, new ArrayList<>(), false, receipt.getSessionMessageId());
+            previousId = previousId == null ? keyService.getLongKey("chat_global") : previousId;
+            previousSessionId = previousSessionId == null ? keyService.getLongKey("group_chat_" + groupId) : previousSessionId;
+            receipt.setMessageId(previousId);
+            receipt.setSessionMessageId(previousSessionId);
 
             if (isInGroup(userId, groupId)) {
-                receipt.setMessageId(keyService.getIntKey("groupMessage"));
-                groupMessage.setMessageId(receipt.getMessageId());
+                GroupMessage groupMessage = new GroupMessage(userId, groupId, receipt.getMessageId(), content,
+                        messageType, Instant.now(), "group", -1l, new ArrayList<>(), false,
+                        receipt.getSessionMessageId());
                 receipt.setResult(true);
                 receipt.setTimestamp(now.toEpochMilli());
                 notificationProducer.sendNotification(groupMessage);
-
                 logger.info("User {} successfully sent message {} to group {}", userId, receipt.getMessageId(), groupId);
-                return receipt;
             } else {
                 logger.warn("User {} attempted to send message to group {} but is not a member", userId, groupId);
                 receipt.setResult(false);
-                return receipt;
             }
+            return receipt;
         } catch (Exception e) {
             logger.error("Error occurred while user {} was sending message to group {}", userId, groupId, e);
             receipt.setResult(false);
@@ -428,44 +432,48 @@ public class ChatGroupService {
         }
     }
 
-    public List<SingleMessage> getNewestMessages(String userId, long timestamp) {
-        logger.debug("Retrieving newest messages for user {} after timestamp {}", userId, timestamp);
-
-        try {
-            ResultSet execute = session.execute(getGroups.bind(userId));
-            List<SingleMessage> singleMessages = new ArrayList<>();
-
-            if (!execute.getExecutionInfo().getErrors().isEmpty()) {
-                logger.warn("Error retrieving groups for user {}: {}", userId, execute.getExecutionInfo().getErrors());
-                return singleMessages;
-            }
-
-            List<Row> all = execute.all();
-            int totalMessages = 0;
-
-            for (Row row : all) {
-                Long groupId = row.getLong("group_id");
-                List<SingleMessage> groupMessages = getGroupMessageByGroupIDAndTimestamp(groupId, timestamp);
-                singleMessages.addAll(groupMessages);
-                totalMessages += groupMessages.size();
-            }
-
-            logger.debug("Retrieved {} newest messages across {} groups for user {}",
-                    totalMessages, all.size(), userId);
-            return singleMessages;
-        } catch (Exception e) {
-            logger.error("Error occurred while retrieving newest messages for user {} after timestamp {}",
-                    userId, timestamp, e);
-            return new ArrayList<>();
-        }
-    }
+//    public List<SingleMessage> getNewestMessages(String userId, long timestamp) {
+//        logger.debug("Retrieving newest messages for user {} after timestamp {}", userId, timestamp);
+//
+//        try {
+//            ResultSet execute = session.execute(getGroups.bind(userId));
+//            List<SingleMessage> singleMessages = new ArrayList<>();
+//
+//            if (!execute.getExecutionInfo().getErrors().isEmpty()) {
+//                logger.warn("Error retrieving groups for user {}: {}", userId, execute.getExecutionInfo().getErrors());
+//                return singleMessages;
+//            }
+//
+//            List<Row> all = execute.all();
+//            int totalMessages = 0;
+//
+//            for (Row row : all) {
+//                Long groupId = row.getLong("group_id");
+//                List<SingleMessage> groupMessages = getGroupMessageByGroupIDAndTimestamp(groupId, timestamp);
+//                singleMessages.addAll(groupMessages);
+//                totalMessages += groupMessages.size();
+//            }
+//
+//            logger.debug("Retrieved {} newest messages across {} groups for user {}",
+//                    totalMessages, all.size(), userId);
+//            return singleMessages;
+//        } catch (Exception e) {
+//            logger.error("Error occurred while retrieving newest messages for user {} after timestamp {}",
+//                    userId, timestamp, e);
+//            return new ArrayList<>();
+//        }
+//    }
 
     public List<GroupMessage> getGroupMessageRecords(Long groupId, Long lastSessionMessageId) {
         logger.debug("Retrieving message records for group {} after session message ID {}", groupId, lastSessionMessageId);
         // TODO: Implement actual message records retrieval
+        ResultSet execute = session.execute(getGroupMessages.bind(groupId, lastSessionMessageId));
+        List<GroupMessage> groupMessages = MessageParser.parseToGroupMessage(execute);
+
+
         logger.warn("getGroupMessageRecords method not implemented yet for group {} with lastSessionMessageId {}",
                 groupId, lastSessionMessageId);
-        return null;
+        return groupMessages;
     }
 
     public boolean updateGroup(String userEmail, long groupId, String name, String description, Boolean allowInviteByToken) {

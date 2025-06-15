@@ -33,6 +33,7 @@ public class SingleMessageController {
     @Autowired
     SearchService searchService;
 
+
     //by single sender.
 //    @RequestMapping("get_messages")
 //    public List<NotificationMessage> getMessagesByUserId(HttpServletRequest httpServletRequest, @RequestParam(value = "receiverId", required = false) String receiverId,
@@ -47,22 +48,13 @@ public class SingleMessageController {
 //    }
 
     @RequestMapping("sendMessage")
-    public SendingReceipt sendMessage(HttpServletRequest request, String receiverId, Long groupId, String content, String type) throws Exception {
+    public SendingReceipt sendMessage(HttpServletRequest request, String receiverId, String content, String type) throws Exception {
         String senderId = (String) request.getAttribute("userEmail");
-        if (type.equals("single")) {
-            System.out.println(receiverId);
-            System.out.println(content);
-            System.out.println(type);
-            System.out.println(groupId);
+        try {
             return service.sendMessage(senderId, receiverId, content, type);
-        } else if (type.equals("group")) {
-            System.out.println(receiverId);
-            System.out.println(content);
-            System.out.println(type);
-            System.out.println(groupId);
-            return groupService.sendGroupMessage(senderId, groupId, content, type);
+        } catch (Exception e) {
+            return new SendingReceipt(false, -1, -1,-1,true);
         }
-        return new SendingReceipt(false, -1, -1,-1,true);
     }
 
     @RequestMapping("block")
@@ -81,12 +73,16 @@ public class SingleMessageController {
     @PostMapping("getMessageRecords")
     public Message getMessageRecords(HttpServletRequest request,String userId, String type, Long lastSessionMessageId, Long groupId) {
         String userEmail =(String) request.getAttribute("userEmail");
-        if (userId == null || userId.trim().isEmpty()) {
-            return new Message(-1, "userId is null");
-        }
         if (type == null || type.trim().isEmpty()) {
             return new Message(-1, "type is null");
         }
+        if (type.equals("single") && (userId == null || userId.trim().isEmpty())) {
+            return new Message(-1, "userId is null");
+        }
+        if (type.equals("group") && (userId == null || groupId ==0)) {
+            return new Message(-1, "groupId is invalid");
+        }
+
         if (lastSessionMessageId == null) {
             return new Message(-1, "lastSessionMessageId is null");
         }
@@ -180,24 +176,32 @@ public class SingleMessageController {
 
         String senderId = (String) body.get("senderId");
         String type = (String) body.get("type");
+        Object groupIdObj = body.get("groupId");
         Long groupId = null;
 
         // groupId 可能是 Integer 类型或 Long 类型或 null
-        if (body.get("groupId") != null) {
-            groupId = (Long) body.get("groupId");
-
-        }
-        else {
-            groupId = 0l;
+        if (groupIdObj != null) {
+            if (groupIdObj instanceof Number) {
+                groupId = ((Number) groupIdObj).longValue();
+            } else {
+                groupId = Long.parseLong(groupIdObj.toString()); // 支持字符串类型
+            }
+        } else {
+            groupId = 0L;
         }
 
         // 简单的参数校验
         if (type == null || type.isEmpty()) {
             return new Message(-1, "Missing 'type' field");
         }
-        if (senderId == null || senderId.isEmpty()) {
+        if (type.equals("single") &&(senderId == null || senderId.isEmpty())) {
             return new Message(-1, "Missing 'senderId' field");
         }
+
+        if (type.equals("group") && (groupId == null || groupId <= 0)) {
+            return new Message(-1, "Invalid 'group' field");
+        }
+
 
         try {
             boolean result = service.markUnread(userId, senderId, type, groupId);
