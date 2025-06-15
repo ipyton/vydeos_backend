@@ -180,14 +180,18 @@ public class SingleMessageController {
 
         String senderId = (String) body.get("senderId");
         String type = (String) body.get("type");
+        Object groupIdObj = body.get("groupId");
         Long groupId = null;
 
         // groupId 可能是 Integer 类型或 Long 类型或 null
-        if (body.get("groupId") != null) {
-            groupId = (Long) body.get("groupId");
-        }
-        else {
-            groupId = 0l;
+        if (groupIdObj != null) {
+            if (groupIdObj instanceof Number) {
+                groupId = ((Number) groupIdObj).longValue();
+            } else {
+                groupId = Long.parseLong(groupIdObj.toString()); // 支持字符串类型
+            }
+        } else {
+            groupId = 0L;
         }
 
         // 简单的参数校验
