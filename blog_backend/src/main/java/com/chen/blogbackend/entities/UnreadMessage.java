@@ -9,16 +9,16 @@ public class UnreadMessage {
     private String messageType;
     private String content;
     private Instant sendTime;
-    private long messageId;
-    private int count;
-    private long sessionMessageId;
-    private long groupId;
+    private Long messageId;
+    private Integer count;
+    private Long sessionMessageId;
+    private Long groupId;
 
-    public long getGroupId() {
+    public Long getGroupId() {
         return groupId;
     }
 
-    public void setGroupId(long groupId) {
+    public void setGroupId(Long groupId) {
         this.groupId = groupId;
     }
 
@@ -27,7 +27,7 @@ public class UnreadMessage {
 
     // Constructor with all fields
     public UnreadMessage(String userId, String senderId, String type, String messageType,
-                         String content, Instant sendTime, long messageId, int count, long sessionMessageId) {
+                         String content, Instant sendTime, Long messageId, Integer count, Long sessionMessageId,Long groupId) {
 
         this.userId = userId;
         this.senderId = senderId;
@@ -38,21 +38,22 @@ public class UnreadMessage {
         this.messageId = messageId;
         this.count = count;
         this.sessionMessageId = sessionMessageId;
+        this.groupId = groupId;
     }
 
-    public long getSessionMessageId() {
+    public Long getSessionMessageId() {
         return sessionMessageId;
     }
 
-    public void setSessionMessageId(long sessionMessageId) {
+    public void setSessionMessageId(Long sessionMessageId) {
         this.sessionMessageId = sessionMessageId;
     }
 
-    public int getCount() {
+    public Integer getCount() {
         return count;
     }
 
-    public void setCount(int count) {
+    public void setCount(Integer count) {
         this.count = count;
     }
 
@@ -105,11 +106,11 @@ public class UnreadMessage {
         this.sendTime = sendTime;
     }
 
-    public long getMessageId() {
+    public Long getMessageId() {
         return messageId;
     }
 
-    public void setMessageId(long messageId) {
+    public void setMessageId(Long messageId) {
         this.messageId = messageId;
     }
 
