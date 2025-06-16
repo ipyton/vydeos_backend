@@ -440,7 +440,7 @@ public class DispatcherAutoRunner {
             List<String> recipients = new ArrayList<>();
             ResultSet execute = cqlSession.execute(insertGroupMessage.bind(message.getUserId(),
                     message.getGroupId(), message.getMessageId(), message.getContent(), message.getMessageType(),
-                    message.getSendTime(), message.getType(), message.getReferMessageId(), message.getReferUserId(),
+                    message.getTimestamp(), message.getType(), message.getReferMessageId(), message.getReferUserId(),
                     false, message.getSessionMessageId()));
             if (execute.getExecutionInfo().getErrors().size() > 0) {
                 logger.error("Failed to insert group message: {}", execute.getExecutionInfo().getErrors());
@@ -466,7 +466,7 @@ public class DispatcherAutoRunner {
                         memberMessage.setMessageId(message.getMessageId());
                         memberMessage.setContent(message.getContent());
                         memberMessage.setMessageType(message.getMessageType());
-                        memberMessage.setSendTime(message.getSendTime());
+                        memberMessage.setTimestamp(message.getTimestamp());
                         memberMessage.setGroupId(message.getGroupId());
                         memberMessage.setSessionMessageId(message.getSessionMessageId());
                         memberMessage.setUserId(message.getUserId()); // Keep original sender
@@ -556,7 +556,7 @@ public class DispatcherAutoRunner {
                     "group",
                     message.getMessageType() != null ? message.getMessageType() : "text",
                     message.getContent(),
-                    message.getSendTime(),
+                    message.getTimestamp(),
                     message.getMessageId(),
                     newCount,
                     message.getSessionMessageId(),
@@ -625,7 +625,7 @@ public class DispatcherAutoRunner {
                     "single",
                     message.getMessageType() != null ? message.getMessageType() : "text",
                     message.getContent(),
-                    message.getTime(),
+                    message.getTimestamp(),
                     message.getMessageId(),
                     newCount,
                     message.getSessionMessageId(),

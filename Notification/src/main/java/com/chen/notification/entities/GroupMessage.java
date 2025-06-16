@@ -10,7 +10,7 @@ public class GroupMessage {
     private long messageId;                    // 对应 message_id (bigint)
     private String content;                    // 对应 content (text)
     private String messageType;                // 对应 messagetype (text)
-    private Instant sendTime;                  // 对应 send_time (timestamp)
+    private Instant timestamp;                  // 对应 send_time (timestamp)
     private String type;                       // 对应 type (text)
     private long referMessageId;               // 对应 refer_message_id (bigint)
     private List<String> referUserId;          // 对应 refer_user_id (list<text>)
@@ -28,14 +28,14 @@ public class GroupMessage {
     }
 
     public GroupMessage(String userId, long groupId, long messageId, String content, String messageType,
-                        Instant sendTime, String type, long referMessageId, List<String> referUserId,
+                        Instant timestamp, String type, long referMessageId, List<String> referUserId,
                         boolean del, long sessionMessageId) {
         this.userId = userId;
         this.groupId = groupId;
         this.messageId = messageId;
         this.content = content;
         this.messageType = messageType;
-        this.sendTime = sendTime;
+        this.timestamp = timestamp;
         this.type = type;
         this.referMessageId = referMessageId;
         this.referUserId = referUserId;
@@ -85,12 +85,12 @@ public class GroupMessage {
         this.messageType = messageType;
     }
 
-    public Instant getSendTime() {
-        return sendTime;
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
-    public void setSendTime(Instant sendTime) {
-        this.sendTime = sendTime;
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getType() {
@@ -142,7 +142,7 @@ public class GroupMessage {
                 ", messageId=" + messageId +
                 ", content='" + content + '\'' +
                 ", messageType='" + messageType + '\'' +
-                ", sendTime=" + sendTime +
+                ", sendTime=" + timestamp +
                 ", type='" + type + '\'' +
                 ", referMessageId=" + referMessageId +
                 ", referUserId=" + referUserId +
