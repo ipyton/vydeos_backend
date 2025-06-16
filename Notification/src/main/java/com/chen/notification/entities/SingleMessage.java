@@ -10,7 +10,7 @@ public class SingleMessage {
     private String senderName;
     private String type="single";
     private String content;
-    private Instant time;
+    private Instant timestamp;
     private long messageId=-1l;
     private long referMessageId =-1l;
     private String messageType = "text";
@@ -25,7 +25,7 @@ public class SingleMessage {
 
 
     public SingleMessage(String avatar, String userId1, String userId2,
-                         String receiverName, String senderName, String type, String content, Instant time,
+                         String receiverName, String senderName, String type, String content, Instant timestamp,
                          long messageId, long referMessageId, String messageType, boolean direction, boolean deleted,
                          Long sessionMessageId) {
         this.avatar = avatar;
@@ -35,7 +35,7 @@ public class SingleMessage {
         this.senderName = senderName;
         this.type = type;
         this.content = content;
-        this.time = time;
+        this.timestamp = timestamp;
         this.messageId = messageId;
         this.referMessageId = referMessageId;
         this.messageType = messageType;
@@ -151,20 +151,20 @@ public class SingleMessage {
         this.content = content;
     }
 
-    public Instant getTime() {
-        return time;
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
-    public void setTime(Instant time) {
-        this.time = time;
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
     }
 
-    public SingleMessage(String avatar, String name, String title, String content, Instant time) {
+    public SingleMessage(String avatar, String name, String title, String content, Instant timestamp) {
         this.avatar = avatar;
         this.senderName = name;
         this.type = title;
         this.content = content;
-        this.time = time;
+        this.timestamp = timestamp;
     }
 
     public SingleMessage() {

@@ -10,7 +10,7 @@ public class GroupMessage {
     private Long messageId;                    // 对应 message_id (bigint)
     private String content;                    // 对应 content (text)
     private String messageType;                // 对应 messagetype (text)
-    private Instant sendTime;                  // 对应 send_time (timestamp)
+    private Instant timestamp;                  // 对应 send_time (timestamp)
     private String type;                       // 对应 type (text)
     private Long referMessageId;               // 对应 refer_message_id (bigint)
     private List<String> referUserId;          // 对应 refer_user_id (list<text>)
@@ -30,14 +30,14 @@ public class GroupMessage {
     }
 
     public GroupMessage(String userId, Long groupId, Long messageId, String content, String messageType,
-                        Instant sendTime, String type, Long referMessageId, List<String> referUserId,
+                        Instant timestamp, String type, Long referMessageId, List<String> referUserId,
                         Boolean del, Long sessionMessageId) {
         this.userId = userId;
         this.groupId = groupId;
         this.messageId = messageId;
         this.content = content;
         this.messageType = messageType;
-        this.sendTime = sendTime;
+        this.timestamp = timestamp;
         this.type = type;
         this.referMessageId = referMessageId;
         this.referUserId = referUserId;
@@ -87,12 +87,12 @@ public class GroupMessage {
         this.messageType = messageType;
     }
 
-    public Instant getSendTime() {
-        return sendTime;
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
-    public void setSendTime(Instant sendTime) {
-        this.sendTime = sendTime;
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getType() {

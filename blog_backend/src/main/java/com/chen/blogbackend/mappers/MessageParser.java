@@ -82,7 +82,7 @@ public class MessageParser {
             message.setMessageId(row.getLong("message_id"));
             message.setContent(row.getString("content"));
             message.setMessageType(row.getString("messagetype"));
-            message.setSendTime(row.getInstant("send_time"));
+            message.setTimestamp(row.getInstant("send_time"));
             message.setType(row.getString("type"));
             message.setReferMessageId(row.getLong("refer_message_id"));
             message.setReferUserId(row.getList("refer_user_id", String.class));
