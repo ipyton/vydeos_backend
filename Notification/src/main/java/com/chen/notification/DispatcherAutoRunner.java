@@ -608,7 +608,7 @@ public class DispatcherAutoRunner {
             lockLogger.debug("Lock acquired for user: {} in {}ms", receiver, lockAcquisitionTime);
 
             long queryStartTime = System.currentTimeMillis();
-            ResultSet result = cqlSession.execute(getCount.bind(receiver, "single", 0, sender));
+            ResultSet result = cqlSession.execute(getCount.bind(receiver, "single", 0l, sender));
             List<UnreadMessage> unreadMessages = UnreadMessageParser.parseToUnreadMessage(result);
             long queryTime = System.currentTimeMillis() - queryStartTime;
 
