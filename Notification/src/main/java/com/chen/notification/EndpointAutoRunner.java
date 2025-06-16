@@ -130,7 +130,7 @@ public class EndpointAutoRunner {
                     continue;
                 }
                 if (jsonObject.get("type").equals("single")) {
-                    SingleMessage singleMessage = jsonObject.toJavaObject(SingleMessage.class);
+                    SingleMessage singleMessage = JSONObject.parseObject(value,SingleMessage.class);
                     service.sendMessages(List.of(singleMessage));
 
                 } else {
@@ -177,7 +177,7 @@ public class EndpointAutoRunner {
             consumer.commitSync();
         }
         } catch (Exception e) {
-            logger.error("Error while consuming messages: " + e.getMessage());
+            logger.error("Error while consuming messages: " + e.getMessage().toString());
             logger.error(e.getStackTrace().toString());
         }
     }
