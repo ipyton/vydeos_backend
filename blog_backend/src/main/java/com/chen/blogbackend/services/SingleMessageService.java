@@ -127,8 +127,8 @@ public class SingleMessageService {
         }
     }
 
-    public SendingReceipt sendMessage(String userId, String receiverId, String content, String messageType) throws Exception {
-        logger.info("Attempting to send message - userId: {}, receiverId: {}, messageType: {}", userId, receiverId, messageType);
+    public SendingReceipt sendMessage(String userId, String receiverId, String content, String type,String messageType) throws Exception {
+        logger.info("Attempting to send message - userId: {}, receiverId: {}, type: {}", userId, receiverId, type);
 
         SendingReceipt receipt = new SendingReceipt();
 

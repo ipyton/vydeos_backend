@@ -292,7 +292,7 @@ public class DispatcherAutoRunner {
 
     private void processRecord(ConsumerRecord<String, String> record) throws ExecutionException, InterruptedException, TimeoutException {
         long startTime = System.currentTimeMillis();
-        String messageType = "unknown";
+        String type = "unknown";
 
         try {
             logger.debug("Processing record: partition={}, offset={}, key={}",
@@ -319,10 +319,10 @@ public class DispatcherAutoRunner {
                 throw new RuntimeException("Invalid message structure: missing type field");
             }
 
-            messageType = jsonObject.getString("type");
-            MDC.put("messageType", messageType);
-            logger.info(messageType);
-            if ("single".equals(messageType)) {
+            type = jsonObject.getString("type");
+            MDC.put("messageType", type);
+            logger.info(type);
+            if ("single".equals(type)) {
                 SingleMessage singleMessage = jsonObject.toJavaObject(SingleMessage.class);
                 MDC.put("messageId", singleMessage.getMessageId().toString());
                 MDC.put("senderId", singleMessage.getDirection() ? singleMessage.getUserId1() : singleMessage.getUserId2());
@@ -333,7 +333,7 @@ public class DispatcherAutoRunner {
                 processSingleMessage(singleMessage);
                 totalSingleMessages.incrementAndGet();
 
-            } else if ("group".equals(messageType)) {
+            } else if ("group".equals(type)) {
                 GroupMessage groupMessage = jsonObject.toJavaObject(GroupMessage.class);
                 MDC.put("messageId", String.valueOf(groupMessage.getMessageId()));
                 MDC.put("senderId", groupMessage.getUserId());
@@ -347,15 +347,15 @@ public class DispatcherAutoRunner {
 
             } else {
                 logger.error("Unknown message type '{}' at partition={}, offset={}",
-                        messageType, record.partition(), record.offset());
-                throw new RuntimeException("Unknown message type: " + messageType);
+                        type, record.partition(), record.offset());
+                throw new RuntimeException("Unknown message type: " + type);
             }
 
             long processingTime = System.currentTimeMillis() - startTime;
-            performanceLogger.debug("Record processed successfully: type={}, time={}ms", messageType, processingTime);
+            performanceLogger.debug("Record processed successfully: type={}, time={}ms", type, processingTime);
 
             if (processingTime > 1000) { // Log slow processing
-                logger.warn("SLOW PROCESSING: Record took {}ms to process (type={})", processingTime, messageType);
+                logger.warn("SLOW PROCESSING: Record took {}ms to process (type={})", processingTime, type);
             }
 
         } catch (Exception e) {
@@ -363,7 +363,7 @@ public class DispatcherAutoRunner {
             long processingTime = System.currentTimeMillis() - startTime;
 
             logger.error("FAILED to process record after {}ms: partition={}, offset={}, type={}, value={}",
-                    processingTime, record.partition(), record.offset(), messageType,
+                    processingTime, record.partition(), record.offset(), type,
                     record.value().length() > 200 ? record.value().substring(0, 200) + "..." : record.value(), e);
 
             // Could implement dead letter queue here
@@ -779,6 +779,7 @@ public class DispatcherAutoRunner {
             t.setDaemon(true);
             return t;
         });
+
 
         metricsExecutor.scheduleAtFixedRate(() -> {
             try {

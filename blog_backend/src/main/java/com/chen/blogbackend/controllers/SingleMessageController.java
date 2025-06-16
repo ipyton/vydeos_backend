@@ -48,10 +48,10 @@ public class SingleMessageController {
 //    }
 
     @RequestMapping("sendMessage")
-    public SendingReceipt sendMessage(HttpServletRequest request, String receiverId, String content, String type) throws Exception {
+    public SendingReceipt sendMessage(HttpServletRequest request, String receiverId, String content, String type, String messageType) throws Exception {
         String senderId = (String) request.getAttribute("userEmail");
         try {
-            return service.sendMessage(senderId, receiverId, content, type);
+            return service.sendMessage(senderId, receiverId, content, type,messageType);
         } catch (Exception e) {
             return new SendingReceipt(false, -1, -1,-1,true);
         }
