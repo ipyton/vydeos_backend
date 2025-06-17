@@ -25,9 +25,32 @@ public class PictureService {
     @Autowired
     MinioClient fileClient;
 
-    public boolean uploadAvatarPicture(String userEmail, MultipartFile file) {
-        // 使用userEmail生成哈希值来作为文件名
-        System.out.println(userEmail);
+    public boolean isPictureCapable(String mimeType) {
+        if (mimeType == null) {
+            return false;
+        }
+        mimeType = mimeType.toLowerCase();
+
+        return mimeType.startsWith("image/jpeg")
+                || mimeType.startsWith("image/png")
+                || mimeType.startsWith("image/gif")
+                || mimeType.startsWith("image/bmp")
+                || mimeType.startsWith("image/x-ms-bmp")
+                || mimeType.startsWith("image/webp")
+                || mimeType.startsWith("image/tiff")
+                || mimeType.startsWith("image/x-portable-pixmap")    // PNM family: PPM/PGM/PBM/PNM
+                || mimeType.startsWith("image/x-portable-anymap")
+                || mimeType.startsWith("image/x-portable-graymap")
+                || mimeType.startsWith("image/x-portable-bitmap");
+    }
+
+    public boolean uploadAvatarPicture(String userEmail, MultipartFile file) throws IOException {
+        String type = ImageUtil.getType(file.getInputStream());
+
+        boolean pictureCapable = isPictureCapable(type);
+        if (!pictureCapable) {
+            return false;
+        }
 
         String fileName = RandomUtil.getBase64(userEmail);
         System.out.println(fileName);

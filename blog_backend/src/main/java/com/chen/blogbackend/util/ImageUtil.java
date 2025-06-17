@@ -1,13 +1,14 @@
 package com.chen.blogbackend.util;
 
 import net.coobird.thumbnailator.Thumbnails;
+import org.apache.tika.Tika;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 public class ImageUtil {
+
+    private static final Tika tika = new Tika();
+
     public static ByteArrayInputStream processImage(InputStream inputStream, int targetMinimumByteSize, int targetMaximumByteSize, int widthAndHeight) throws IOException {
         double quality = 0.85;
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -34,5 +35,14 @@ public class ImageUtil {
         }
 
         return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+    }
+
+    public static String getType(InputStream inputStream) throws IOException {
+        // Wrap InputStream with BufferedInputStream to allow mark/reset
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+        bufferedInputStream.mark(10 * 1024); // mark position up to 10MB
+        String mimeType = tika.detect(bufferedInputStream);
+        bufferedInputStream.reset(); // reset to marked position for reuse
+        return mimeType;
     }
 }

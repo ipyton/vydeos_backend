@@ -10,33 +10,21 @@ import com.chen.blogbackend.util.TokenUtil;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.PictureService;
 import com.chen.blogbackend.util.ValidationResult;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.googleapis.util.Utils;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.sun.tools.jconsole.JConsoleContext;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -146,7 +134,7 @@ public class AccountController {
 
 
     @PostMapping(value = "/uploadAvatar")
-    public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile,HttpServletRequest request) {
+    public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile,HttpServletRequest request) throws IOException {
         System.out.println(multipartFile.getContentType());
         System.out.println(multipartFile.getOriginalFilename());
         boolean result = pictureService.uploadAvatarPicture((String) request.getAttribute("userEmail"), multipartFile);
@@ -165,7 +153,6 @@ public class AccountController {
         byte[] bytes = fileStream.readAllBytes();
         String encodedString = java.util.Base64.getEncoder().encodeToString(bytes);
 
-        // 返回 Base64 编码的图片数据 URI，用于前端渲染
         return "data:image/jpeg;base64," + encodedString;
     }
 
