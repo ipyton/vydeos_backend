@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -143,17 +144,26 @@ public class AccountController {
     }
 
     @GetMapping(value = "/getAvatar/{type_userEmail}")
-    public String getAvatar(@PathVariable String type_userEmail) throws IOException {
+    public ResponseEntity<byte[]> getAvatar(@PathVariable String type_userEmail) throws IOException {
         type_userEmail = type_userEmail.toLowerCase();
         InputStream fileStream = pictureService.getAvatar(type_userEmail);
-        if (fileStream == null) {
-            return "data:image/jpeg;base64," +
-                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/08FHiYAAAAASUVORK5CYII=";
-        }
-        byte[] bytes = fileStream.readAllBytes();
-        String encodedString = java.util.Base64.getEncoder().encodeToString(bytes);
 
-        return "data:image/jpeg;base64," + encodedString;
+        if (fileStream == null) {
+            // 返回默认的1x1透明图片
+            byte[] defaultImage = java.util.Base64.getDecoder().decode(
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/08FHiYAAAAASUVORK5CYII="
+            );
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .body(defaultImage);
+        }
+
+        byte[] bytes = fileStream.readAllBytes();
+        fileStream.close(); // 记得关闭流
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(bytes);
     }
 
 
