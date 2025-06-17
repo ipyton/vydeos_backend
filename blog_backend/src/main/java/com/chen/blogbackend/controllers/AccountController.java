@@ -153,13 +153,13 @@ public class AccountController {
         else return new LoginMessage(0, "success");
     }
 
-    @GetMapping(value = "/getAvatar")
-    public String getAvatar(HttpServletRequest request) throws IOException {
-        String userEmail = (String) request.getAttribute("userEmail");
-        userEmail = userEmail.toLowerCase();
-        InputStream fileStream = pictureService.getAvatar(userEmail);
+    @GetMapping(value = "/getAvatar/{type_userEmail}")
+    public String getAvatar(@PathVariable String type_userEmail) throws IOException {
+        type_userEmail = type_userEmail.toLowerCase();
+        InputStream fileStream = pictureService.getAvatar(type_userEmail);
         if (fileStream == null) {
-            return "data:image/jpeg;base64," + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/08FHiYAAAAASUVORK5CYII=";
+            return "data:image/jpeg;base64," +
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/08FHiYAAAAASUVORK5CYII=";
         }
         byte[] bytes = fileStream.readAllBytes();
         String encodedString = java.util.Base64.getEncoder().encodeToString(bytes);
@@ -167,6 +167,7 @@ public class AccountController {
         // 返回 Base64 编码的图片数据 URI，用于前端渲染
         return "data:image/jpeg;base64," + encodedString;
     }
+
 
     //get a user's info.
     @PostMapping("/getinfo")

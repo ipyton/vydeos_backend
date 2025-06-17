@@ -1,5 +1,6 @@
 package com.chen.blogbackend.services;
 
+import com.chen.blogbackend.util.ImageUtil;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
 import io.minio.*;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
@@ -30,7 +32,7 @@ public class PictureService {
         String fileName = RandomUtil.getBase64(userEmail);
         System.out.println(fileName);
         // 计算bucket名和文件路径
-        String bucketName = "blogavatar";
+        String bucketName = "avatars";
         String filePath =  fileName.substring(0, 2) + "/" + fileName;
 
         try {
@@ -40,13 +42,14 @@ public class PictureService {
                 // 如果bucket不存在，创建bucket
                 fileClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
             }
-
+            ByteArrayInputStream byteArrayInputStream = ImageUtil.processImage(file.getInputStream(),
+                    0, 500, 512);
             // 将文件上传到MinIO
             fileClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
                             .object(filePath)
-                            .stream(file.getInputStream(), file.getSize(), -1)
+                            .stream(byteArrayInputStream, file.getSize(), -1)
                             .build()
             );
 
@@ -115,14 +118,11 @@ public class PictureService {
 
     public InputStream getAvatar(String userEmail) {
         //StreamingResponseBody responseBody;
-        System.out.println(userEmail);
         InputStream stream;
         String fileName = RandomUtil.getBase64(userEmail);
-        System.out.println(fileName);
         String filePath = fileName.substring(0, 2) + "/" + fileName;
-        System.out.println(filePath);
         try {
-            stream = fileClient.getObject(GetObjectArgs.builder().bucket("blogavatar").object(filePath).build());
+            stream = fileClient.getObject(GetObjectArgs.builder().bucket("avatars").object(filePath).build());
             //responseBody = inputStreamConverter(stream);
         }
         catch (Exception e) {
