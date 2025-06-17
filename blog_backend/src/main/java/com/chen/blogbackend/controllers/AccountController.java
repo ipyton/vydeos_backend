@@ -137,7 +137,7 @@ public class AccountController {
     public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile,HttpServletRequest request) throws IOException {
         System.out.println(multipartFile.getContentType());
         System.out.println(multipartFile.getOriginalFilename());
-        boolean result = pictureService.uploadAvatarPicture((String) request.getAttribute("userEmail"), multipartFile);
+        boolean result = pictureService.uploadAvatarPicture( "single_" + (String) request.getAttribute("userEmail"), multipartFile);
         if (!result) return new LoginMessage(-1, "error");
         else return new LoginMessage(0, "success");
     }
