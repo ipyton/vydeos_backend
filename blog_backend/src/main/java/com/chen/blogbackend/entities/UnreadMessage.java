@@ -8,7 +8,7 @@ public class UnreadMessage {
     private String type;
     private String messageType;
     private String content;
-    private Instant sendTime;
+    private Instant timestamp;
     private Long messageId;
     private Integer count;
     private Long sessionMessageId;
@@ -22,19 +22,27 @@ public class UnreadMessage {
         this.groupId = groupId;
     }
 
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
+    }
+
     // Default constructor
     public UnreadMessage() {}
 
     // Constructor with all fields
     public UnreadMessage(String userId, String senderId, String type, String messageType,
-                         String content, Instant sendTime, Long messageId, Integer count, Long sessionMessageId,Long groupId) {
+                         String content, Instant timestamp, Long messageId, Integer count, Long sessionMessageId,Long groupId) {
 
         this.userId = userId;
         this.senderId = senderId;
         this.type = type;
         this.messageType = messageType;
         this.content = content;
-        this.sendTime = sendTime;
+        this.timestamp = timestamp;
         this.messageId = messageId;
         this.count = count;
         this.sessionMessageId = sessionMessageId;
@@ -98,13 +106,7 @@ public class UnreadMessage {
         this.content = content;
     }
 
-    public Instant getSendTime() {
-        return sendTime;
-    }
 
-    public void setSendTime(Instant sendTime) {
-        this.sendTime = sendTime;
-    }
 
     public Long getMessageId() {
         return messageId;
@@ -122,7 +124,7 @@ public class UnreadMessage {
                 ", type='" + type + '\'' +
                 ", messageType='" + messageType + '\'' +
                 ", content='" + content + '\'' +
-                ", sendTime=" + sendTime +
+                ", timestamp=" + timestamp +
                 ", messageId=" + messageId +
                 '}';
     }

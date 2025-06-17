@@ -10,12 +10,7 @@ import com.chen.blogbackend.util.TokenUtil;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.PictureService;
 import com.chen.blogbackend.util.ValidationResult;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.googleapis.util.Utils;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.JsonFactory;
-import com.sun.tools.jconsole.JConsoleContext;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +20,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -146,27 +135,39 @@ public class AccountController {
 
 
     @PostMapping(value = "/uploadAvatar")
-    public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile,HttpServletRequest request) {
-        System.out.println(request);
-        boolean result = pictureService.uploadAvatarPicture((String) request.getAttribute("userEmail"), multipartFile);
+    public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile,HttpServletRequest request) throws IOException {
+        System.out.println(multipartFile.getContentType());
+        System.out.println(multipartFile.getOriginalFilename());
+        boolean result = pictureService.uploadAvatarPicture( "single_" + (String) request.getAttribute("userEmail"), multipartFile);
         if (!result) return new LoginMessage(-1, "error");
         else return new LoginMessage(0, "success");
     }
 
-    @GetMapping(value = "/getAvatar")
-    public String getAvatar(HttpServletRequest request) throws IOException {
-        String userEmail = (String) request.getAttribute("userEmail");
-        userEmail = userEmail.toLowerCase();
-        InputStream fileStream = pictureService.getAvatar(userEmail);
-        if (fileStream == null) {
-            return "data:image/jpeg;base64," + "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/08FHiYAAAAASUVORK5CYII=";
-        }
-        byte[] bytes = fileStream.readAllBytes();
-        String encodedString = java.util.Base64.getEncoder().encodeToString(bytes);
+    @GetMapping(value = "/getAvatar/{type_userEmail}")
+    public ResponseEntity<byte[]> getAvatar(@PathVariable String type_userEmail) throws IOException {
+        type_userEmail = type_userEmail.toLowerCase();
+        InputStream fileStream = pictureService.getAvatar(type_userEmail);
 
-        // 返回 Base64 编码的图片数据 URI，用于前端渲染
-        return "data:image/jpeg;base64," + encodedString;
+        if (fileStream == null) {
+            // 返回默认的1x1透明图片
+            byte[] defaultImage = java.util.Base64.getDecoder().decode(
+                    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/08FHiYAAAAASUVORK5CYII="
+            );
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_JPEG)
+                    .header("Cache-Control", "public, max-age=86400") // 缓存一天
+                    .body(defaultImage);
+        }
+
+        byte[] bytes = fileStream.readAllBytes();
+        fileStream.close(); // 记得关闭流
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .header("Cache-Control", "public, max-age=86400") // 缓存一天
+                .body(bytes);
     }
+
 
     //get a user's info.
     @PostMapping("/getinfo")

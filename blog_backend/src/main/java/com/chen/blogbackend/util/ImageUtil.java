@@ -1,0 +1,56 @@
+package com.chen.blogbackend.util;
+
+import net.coobird.thumbnailator.Thumbnails;
+import org.apache.tika.Tika;
+
+import java.io.*;
+
+public class ImageUtil {
+
+    private static final Tika tika = new Tika();
+
+    public static ByteArrayInputStream processImage(InputStream inputStream, int targetMinimumByteSize, int targetMaximumByteSize, int widthAndHeight) throws IOException {
+        // 先将 InputStream 读取为字节数组，避免重复读取问题
+        byte[] imageBytes = inputStream.readAllBytes();
+
+        double quality = 0.85;
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        for (int i = 0; i < 3; i++) {
+            byteArrayOutputStream.reset();
+
+            // 每次循环都使用新的 ByteArrayInputStream
+            ByteArrayInputStream byteInput = new ByteArrayInputStream(imageBytes);
+
+            Thumbnails.of(byteInput)
+                    .size(widthAndHeight, widthAndHeight)
+                    .outputFormat("jpg")
+                    .outputQuality(quality)
+                    .toOutputStream(byteArrayOutputStream);
+
+            int currentSize = byteArrayOutputStream.size();
+            System.out.println("Current compressed size: " + currentSize / 1024 + " KB, quality: " + quality);
+
+            if (currentSize >= targetMinimumByteSize && currentSize <= targetMaximumByteSize) {
+                break;
+            } else if (currentSize > targetMaximumByteSize) {
+                quality -= 0.05;
+                if (quality < 0.5) quality = 0.5;
+            } else {
+                quality += 0.05;
+                if (quality > 0.95) quality = 0.95;
+            }
+        }
+
+        return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+    }
+
+    public static String getType(InputStream inputStream) throws IOException {
+        // Wrap InputStream with BufferedInputStream to allow mark/reset
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+        bufferedInputStream.mark(10 * 1024); // mark position up to 10MB
+        String mimeType = tika.detect(bufferedInputStream);
+        bufferedInputStream.reset(); // reset to marked position for reuse
+        return mimeType;
+    }
+}

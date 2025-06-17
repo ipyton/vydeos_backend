@@ -48,14 +48,13 @@ public class DevConfig {
 //                Resources.getResourceAsStream("mybatis-config.xml")
 //        );
 //    }
-    static String endpoint = System.getenv("S3_ENDPOINT");
-    static String publicKey = System.getenv("S3_ACCESS_KEY");
-    static String privateKey = System.getenv("S3_SECRET_KEY");
+    static String endpoint = "https://58023fb3cf1cd04e96a73669c57393f5.r2.cloudflarestorage.com";
+    static String publicKey = "da03dfb4e45638b8245b0ed6214ae371";
+    static String privateKey = "986828802dca6ee09423131401fea3c38270c38980e3269e6bc7fb3c67d0a39d";
 
     @Bean
     public static MinioClient setMinioClient(){
         return MinioClient.builder()
-
                 .endpoint(endpoint)
                 .credentials(publicKey, privateKey)
                 .build();
