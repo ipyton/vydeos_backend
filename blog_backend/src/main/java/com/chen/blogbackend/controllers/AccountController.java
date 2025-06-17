@@ -155,6 +155,7 @@ public class AccountController {
             );
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_JPEG)
+                    .header("Cache-Control", "public, max-age=86400") // 缓存一天
                     .body(defaultImage);
         }
 
@@ -163,6 +164,7 @@ public class AccountController {
 
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_JPEG)
+                .header("Cache-Control", "public, max-age=86400") // 缓存一天
                 .body(bytes);
     }
 
