@@ -147,7 +147,8 @@ public class AccountController {
 
     @PostMapping(value = "/uploadAvatar")
     public LoginMessage uploadAvatar(@RequestParam("avatar") MultipartFile multipartFile,HttpServletRequest request) {
-        System.out.println(request);
+        System.out.println(multipartFile.getContentType());
+        System.out.println(multipartFile.getOriginalFilename());
         boolean result = pictureService.uploadAvatarPicture((String) request.getAttribute("userEmail"), multipartFile);
         if (!result) return new LoginMessage(-1, "error");
         else return new LoginMessage(0, "success");
