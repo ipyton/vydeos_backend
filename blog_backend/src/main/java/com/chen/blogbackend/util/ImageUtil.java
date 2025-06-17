@@ -10,11 +10,19 @@ public class ImageUtil {
     private static final Tika tika = new Tika();
 
     public static ByteArrayInputStream processImage(InputStream inputStream, int targetMinimumByteSize, int targetMaximumByteSize, int widthAndHeight) throws IOException {
+        // 先将 InputStream 读取为字节数组，避免重复读取问题
+        byte[] imageBytes = inputStream.readAllBytes();
+
         double quality = 0.85;
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
         for (int i = 0; i < 3; i++) {
             byteArrayOutputStream.reset();
-            Thumbnails.of(inputStream)
+
+            // 每次循环都使用新的 ByteArrayInputStream
+            ByteArrayInputStream byteInput = new ByteArrayInputStream(imageBytes);
+
+            Thumbnails.of(byteInput)
                     .size(widthAndHeight, widthAndHeight)
                     .outputFormat("jpg")
                     .outputQuality(quality)
