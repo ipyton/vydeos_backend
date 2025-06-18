@@ -51,7 +51,6 @@ public class LoginTokenFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
         request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR, true);
-        System.out.println("Request URI: " + request.getRequestURI());
 
         // Skip authentication for public endpoints
         if (isPublicEndpoint(request.getRequestURI())) {
@@ -81,6 +80,7 @@ public class LoginTokenFilter implements Filter {
 
         // Check authorization (role -1 appears to be admin/bypass role)
         if (parsedToken.getRoleId() == -1 || authorizationService.hasAccess(parsedToken.getRoleId(), request.getRequestURI())) {
+            System.out.println(parsedToken);
             request.setAttribute("userEmail", parsedToken.getUserId().toLowerCase());
             chain.doFilter(request, response);
         } else {
