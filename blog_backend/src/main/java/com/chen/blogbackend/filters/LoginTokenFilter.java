@@ -98,12 +98,11 @@ public class LoginTokenFilter implements Filter {
                 "/account/changePassword",
                 "/account/verifyToken",
                 "/account/sendVerificationCode",
-                "/authorization/hasPermission",
+                "/auth/hasPermission",
                 "/metrics",
                 "/actuator/prometheus",
                 "/account/google",
-                "/account/getAvatar"
-        };
+                "/account/getAvatar"};
 
         for (String path : publicPaths) {
             if (requestURI.startsWith(path)) {
