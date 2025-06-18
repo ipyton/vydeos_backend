@@ -108,13 +108,13 @@ public class FriendsService {
             List<Relationship> relationships = RelationshipParser.parseToRelationship(execute);
             HashSet<String> hashSet = new HashSet<>();
             for (Relationship relationship : relationships) {
-                hashSet.add(relationship.getFriendId());
+                hashSet.add(relationship.getUserId());
             }
 
             ResultSet execute1 = session.execute(getIdolsById.bind(userId));
             List<Relationship> relationships1 = RelationshipParser.parseToRelationship(execute1);
             for (Relationship relationship : relationships1) {
-                if (hashSet.contains(relationship.getUserId())) {
+                if (hashSet.contains(relationship.getFriendId())) {
                     result.add(relationship);
                 }
             }
