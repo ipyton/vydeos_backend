@@ -131,7 +131,7 @@ public class AuthorizationController {
             if (b) {
                 return new Message(0, "Success");
             } else {
-                return new Message(-1, "has permission error");
+                return new Message(-1, "does not have permission");
             }
         } catch (Exception e) {
             e.printStackTrace();

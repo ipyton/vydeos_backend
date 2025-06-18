@@ -137,7 +137,7 @@ public class AuthorizationService {
     }
 
     public boolean hasPermissionForUser(String userId, String permission) {
-        logger.debug("Checking permission '{}' for user: {}", permission, userId);
+        logger.info("Checking permission '{}' for user: {}", permission, userId);
         try {
             Integer roleIdByEmail = getRoleIdByEmail(userId);
             if (roleIdByEmail == null) {
@@ -146,7 +146,7 @@ public class AuthorizationService {
             }
 
             boolean hasAccess = hasAccess(roleIdByEmail, permission);
-            logger.debug("User {} has access to '{}': {}", userId, permission, hasAccess);
+            logger.info("User {} has access to '{}': {}", userId, permission, hasAccess);
             return hasAccess;
         } catch (Exception e) {
             logger.error("Error checking permission for user: {}", userId, e);
