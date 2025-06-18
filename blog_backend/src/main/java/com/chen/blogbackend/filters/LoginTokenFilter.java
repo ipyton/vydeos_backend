@@ -16,6 +16,8 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.catalina.Globals;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -29,6 +31,7 @@ import java.util.List;
 @Component
 public class LoginTokenFilter implements Filter {
 
+    private static final Logger logger = LoggerFactory.getLogger(LoginTokenFilter.class);
 
     @Autowired
     AuthorizationService authorizationService;
@@ -39,9 +42,8 @@ public class LoginTokenFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         Filter.super.init(filterConfig);
+        logger.info("LoginTokenFilter initialized");
     }
-
-
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
@@ -52,8 +54,14 @@ public class LoginTokenFilter implements Filter {
 
         request.setAttribute(Globals.ASYNC_SUPPORTED_ATTR, true);
 
+        String requestURI = request.getRequestURI();
+        String method = request.getMethod();
+
+        logger.debug("Processing request: {} {}", method, requestURI);
+
         // Skip authentication for public endpoints
-        if (isPublicEndpoint(request.getRequestURI())) {
+        if (isPublicEndpoint(requestURI)) {
+            logger.debug("Public endpoint accessed: {}", requestURI);
             chain.doFilter(request, response);
             return;
         }
@@ -61,6 +69,7 @@ public class LoginTokenFilter implements Filter {
         // Extract and validate token
         String token = request.getHeader("Token");
         if (token == null) {
+            logger.warn("No token provided for protected endpoint: {} {}", method, requestURI);
             sendUnauthorizedResponse(response, "Please login");
             return;
         }
@@ -68,23 +77,38 @@ public class LoginTokenFilter implements Filter {
         Token parsedToken;
         try {
             parsedToken = TokenUtil.resolveToken(token);
+            logger.debug("Token parsed successfully for user: {}", parsedToken != null ? parsedToken.getUserId() : "null");
         } catch (Exception e) {
+            logger.error("Failed to parse token for request {} {}: {}", method, requestURI, e.getMessage(), e);
             sendUnauthorizedResponse(response, "Expired token");
             return;
         }
 
         if (parsedToken == null) {
+            logger.warn("Invalid token received for request {} {}", method, requestURI);
             sendUnauthorizedResponse(response, "Invalid token");
             return;
         }
 
         // Check authorization (role -1 appears to be admin/bypass role)
-        if (parsedToken.getRoleId() == -1 || authorizationService.hasAccess(parsedToken.getRoleId(), request.getRequestURI())) {
-            System.out.println(parsedToken);
-            request.setAttribute("userEmail", parsedToken.getUserId().toLowerCase());
-            chain.doFilter(request, response);
-        } else {
-            sendUnauthorizedResponse(response, "Insufficient permissions");
+        try {
+            boolean hasAccess = parsedToken.getRoleId() == -1 || authorizationService.hasAccess(parsedToken.getRoleId(), requestURI);
+
+            if (hasAccess) {
+                logger.debug("Access granted for user {} (role: {}) to {}",
+                        parsedToken.getUserId(), parsedToken.getRoleId(), requestURI);
+                System.out.println(parsedToken);
+                request.setAttribute("userEmail", parsedToken.getUserId().toLowerCase());
+                chain.doFilter(request, response);
+            } else {
+                logger.warn("Access denied for user {} (role: {}) to {} {}",
+                        parsedToken.getUserId(), parsedToken.getRoleId(), method, requestURI);
+                sendUnauthorizedResponse(response, "Insufficient permissions");
+            }
+        } catch (Exception e) {
+            logger.error("Error during authorization check for user {} (role: {}) accessing {} {}: {}",
+                    parsedToken.getUserId(), parsedToken.getRoleId(), method, requestURI, e.getMessage(), e);
+            sendUnauthorizedResponse(response, "Authorization error");
         }
     }
 
@@ -115,18 +139,26 @@ public class LoginTokenFilter implements Filter {
      * Send a proper 401 Unauthorized response
      */
     private void sendUnauthorizedResponse(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Sets HTTP 401 status
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        try {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Sets HTTP 401 status
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
 
-        LoginMessage loginMessage = new LoginMessage(401, message);
-        String jsonResponse = JSON.toJSONString(loginMessage);
+            LoginMessage loginMessage = new LoginMessage(401, message);
+            String jsonResponse = JSON.toJSONString(loginMessage);
 
-        response.getOutputStream().write(jsonResponse.getBytes(StandardCharsets.UTF_8));
+            response.getOutputStream().write(jsonResponse.getBytes(StandardCharsets.UTF_8));
+
+            logger.debug("Sent 401 unauthorized response: {}", message);
+        } catch (Exception e) {
+            logger.error("Failed to send unauthorized response: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override
     public void destroy() {
+        logger.info("LoginTokenFilter destroyed");
         Filter.super.destroy();
     }
 }
