@@ -6,8 +6,10 @@ import com.alibaba.fastjson2.JSONObject;
 import com.chen.blogbackend.entities.Post;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.PostService;
 import com.chen.blogbackend.services.PictureService;
+import com.chen.blogbackend.util.MapboxSearchUtil;
 import com.datastax.oss.driver.api.core.cql.PagingState;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedGenerator;
@@ -113,5 +115,12 @@ public class PostController {
     @PostMapping("add_post")
     public LoginMessage addPost(String introduction) {
         return new LoginMessage(-1,introduction);
+    }
+
+    @PostMapping("searchLocation")
+    public Message searchLocation(String keyword) {
+        String s = MapboxSearchUtil.searchByKeyword(keyword);
+        System.out.println(s);
+        return new Message(0,s);
     }
 }
