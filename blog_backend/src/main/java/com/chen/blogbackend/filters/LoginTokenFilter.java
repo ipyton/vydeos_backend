@@ -98,7 +98,6 @@ public class LoginTokenFilter implements Filter {
                 "/account/changePassword",
                 "/account/verifyToken",
                 "/account/sendVerificationCode",
-                "/auth/hasPermission",
                 "/metrics",
                 "/actuator/prometheus",
                 "/account/google",
