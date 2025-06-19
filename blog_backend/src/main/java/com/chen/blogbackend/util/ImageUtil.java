@@ -22,11 +22,16 @@ public class ImageUtil {
             // 每次循环都使用新的 ByteArrayInputStream
             ByteArrayInputStream byteInput = new ByteArrayInputStream(imageBytes);
 
-            Thumbnails.of(byteInput)
-                    .size(widthAndHeight, widthAndHeight)
+            Thumbnails.Builder<? extends InputStream> builder = Thumbnails.of(byteInput)
                     .outputFormat("jpg")
-                    .outputQuality(quality)
-                    .toOutputStream(byteArrayOutputStream);
+                    .outputQuality(quality);
+
+            // 如果 widthAndHeight 不为 0，才设置尺寸，否则保留原比例
+            if (widthAndHeight > 0) {
+                builder.size(widthAndHeight, widthAndHeight);
+            }
+
+            builder.toOutputStream(byteArrayOutputStream);
 
             int currentSize = byteArrayOutputStream.size();
             System.out.println("Current compressed size: " + currentSize / 1024 + " KB, quality: " + quality);
@@ -44,6 +49,7 @@ public class ImageUtil {
 
         return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
     }
+
 
     public static String getType(InputStream inputStream) throws IOException {
         // Wrap InputStream with BufferedInputStream to allow mark/reset

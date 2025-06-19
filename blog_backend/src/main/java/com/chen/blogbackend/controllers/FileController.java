@@ -41,9 +41,14 @@ public class FileController {
 
 
     @PostMapping("uploadPostPic")
-    public ResponseEntity<String> uploadPostPic(HttpServletRequest request, @RequestParam("file") MultipartFile file) {
+    public Message uploadPostPic(HttpServletRequest request, @RequestParam("file") MultipartFile file) {
         String userEmail = request.getAttribute("userEmail").toString();
-        return fileService.uploadPostPics(userEmail, file);
+        try {
+            fileService.uploadPostPics(userEmail, file);
+            return new Message(0, "success");
+        } catch (Exception e) {
+            return new Message(-1, e.getMessage());
+        }
     }
 
     @PostMapping("downloadPostPic/{filename}")

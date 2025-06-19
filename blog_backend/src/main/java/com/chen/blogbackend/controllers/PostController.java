@@ -10,6 +10,7 @@ import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.PostService;
 import com.chen.blogbackend.services.PictureService;
 import com.chen.blogbackend.util.MapboxSearchUtil;
+import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.cql.PagingState;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedGenerator;
@@ -54,7 +55,7 @@ public class PostController {
     public LoginMessage uploadPost(HttpServletRequest request, @RequestBody Post post) {
         String userEmail = (String) request.getAttribute("userEmail");
         post.setAuthorID(userEmail);
-        String uuid = timeBasedGenerator.generate().toString();
+        Long uuid = RandomUtil.generateTimeBasedRandomLong(userEmail);
         post.setPostID(uuid);
         post.setLastModified(Instant.now());
         int result = postService.uploadPost(userEmail, post);
@@ -123,4 +124,11 @@ public class PostController {
         System.out.println(s);
         return new Message(0,s);
     }
+
+//    @PostMapping("uploadPicture")
+//    public Message uploadPicture(HttpServletRequest request, MultipartFile file) {
+//        return new Message();
+//
+//    }
+
 }

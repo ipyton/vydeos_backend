@@ -154,7 +154,7 @@ public class SearchService {
         try {
             IndexResponse response = client.index(i -> i
                     .index("products")
-                    .id(post.getPostID())
+                    .id(post.getPostID().toString())
                     .document(post)
             );
 

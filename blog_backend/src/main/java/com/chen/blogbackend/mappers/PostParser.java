@@ -19,7 +19,7 @@ public class PostParser {
             if (columnDefinitions.contains("receiver_id")) {
                 posts.add(new Post(!columnDefinitions.contains("author_id")?null:row.getString("author_id"),
                         !columnDefinitions.contains("author_name")?null:row.getString("author_name"),
-                        !columnDefinitions.contains("post_id")?null:row.getString("post_id"),
+                        !columnDefinitions.contains("post_id")?null:row.getLong("post_id"),
                         !columnDefinitions.contains("last_modified")?null:row.getInstant("last_modified"),
                         !columnDefinitions.contains("content")?null:row.getString("content"),
                         !columnDefinitions.contains("likes")?0:row.getInt("likes"),
@@ -34,7 +34,7 @@ public class PostParser {
             } else {
                 posts.add(new Post(!columnDefinitions.contains("author_id")?null:row.getString("author_id"),
                         !columnDefinitions.contains("author_name")?null:row.getString("author_name"),
-                        !columnDefinitions.contains("post_id")?null:row.getString("post_id"),
+                        !columnDefinitions.contains("post_id")?null:row.getLong("post_id"),
                         !columnDefinitions.contains("last_modified")?null:row.getInstant("last_modified"),
                         !columnDefinitions.contains("content")?null:row.getString("content"),
                         !columnDefinitions.contains("likes")?0:row.getInt("likes"),
