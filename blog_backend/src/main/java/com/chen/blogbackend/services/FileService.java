@@ -315,10 +315,10 @@ public class FileService {
     public String uploadPostPics(String userEmail, MultipartFile file) throws Exception {
         logger.info("Uploading post picture for user: {}", userEmail);
         Long uuid = RandomUtil.generateTimeBasedRandomLong(userEmail);
-
-        cqlSession.execute(addTempPostImage.bind(userEmail,uuid, Instant.now()));
-        ByteArrayInputStream byteArrayInputStream = ImageUtil.processImage(file.getInputStream(),200,500, 0);
         String path = uuid.toString().substring(0,3) + "/"+ uuid + ".jpg";
+
+        cqlSession.execute(addTempPostImage.bind(userEmail,path, Instant.now()));
+        ByteArrayInputStream byteArrayInputStream = ImageUtil.processImage(file.getInputStream(),200,500, 0);
         uploadGeneral(byteArrayInputStream,(long)byteArrayInputStream.available(),"image/jpeg","posts",  path);
         logger.debug("Generated UUID for post picture: {}", uuid);
         return path;
