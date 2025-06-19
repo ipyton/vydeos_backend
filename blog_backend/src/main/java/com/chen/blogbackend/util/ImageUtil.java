@@ -35,9 +35,13 @@ public class ImageUtil {
                     .outputFormat("jpg")
                     .outputQuality(quality);
 
-            // 如果 widthAndHeight 不为 0，才设置尺寸，否则保留原比例
+            // 关键修复：确保总是设置尺寸或缩放参数
             if (widthAndHeight > 0) {
+                // 设置具体尺寸
                 builder.size(widthAndHeight, widthAndHeight);
+            } else {
+                // 保持原尺寸，设置缩放为1.0
+                builder.scale(1.0);
             }
 
             builder.toOutputStream(byteArrayOutputStream);
