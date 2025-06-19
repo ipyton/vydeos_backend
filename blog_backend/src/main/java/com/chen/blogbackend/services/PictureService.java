@@ -93,7 +93,7 @@ public class PictureService {
                     PutObjectArgs.builder()
                             .bucket(bucketName)
                             .object(filePath)
-                            .stream(byteArrayInputStream, imageBytes.length, -1)
+                            .stream(byteArrayInputStream, imageBytes.length, 5 * 1024 * 1024l)
                             .build()
             );
 

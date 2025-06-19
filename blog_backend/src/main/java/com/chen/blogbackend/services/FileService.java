@@ -291,7 +291,7 @@ public class FileService {
                     PutObjectArgs.builder()
                             .bucket(bucket)
                             .object(filename)
-                            .stream(inputStream, size, -1)
+                            .stream(inputStream, size, 5 * 1024 * 1024l)
                             .contentType(contentType)
                             .build()
             );
