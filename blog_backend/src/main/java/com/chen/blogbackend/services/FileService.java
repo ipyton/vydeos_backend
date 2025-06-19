@@ -279,22 +279,26 @@ public class FileService {
         logger.info("Uploading file (from stream): {} to bucket: {}", filename, bucket);
 
         try {
-            // Get the actual available bytes from the stream
+            // 获取流的实际大小
             int actualSize = inputStream.available();
+            logger.info("Stream actual size: {}, provided size: {}", actualSize, size);
 
-            // Create bucket if not exists
+            // 创建存储桶（如果不存在）
             boolean isBucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
             if (!isBucketExists) {
                 logger.info("Bucket {} does not exist, creating it", bucket);
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
             }
 
-            // Upload with actual size
+            // 重置流到开始位置
+            inputStream.reset();
+
+            // 使用实际大小上传，partSize设为-1让MinIO自动处理
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucket)
                             .object(filename)
-                            .stream(inputStream, actualSize, -1) // Use -1 for part size to let MinIO decide
+                            .stream(inputStream, actualSize, -1)  // 关键：使用actualSize和-1
                             .contentType(contentType)
                             .build()
             );
