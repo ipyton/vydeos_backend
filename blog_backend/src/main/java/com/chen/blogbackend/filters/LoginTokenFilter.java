@@ -94,13 +94,7 @@ public class LoginTokenFilter implements Filter {
         try {
             boolean hasAccess = parsedToken.getRoleId() == -1 || authorizationService.hasAccess(parsedToken.getRoleId(), requestURI);
 
-            if (hasAccess) {
-                logger.debug("Access granted for user {} (role: {}) to {}",
-                        parsedToken.getUserId(), parsedToken.getRoleId(), requestURI);
-                System.out.println(parsedToken);
-                request.setAttribute("userEmail", parsedToken.getUserId().toLowerCase());
-                chain.doFilter(request, response);
-            } else {
+            if (!hasAccess) {
                 logger.warn("Access denied for user {} (role: {}) to {} {}",
                         parsedToken.getUserId(), parsedToken.getRoleId(), method, requestURI);
                 sendUnauthorizedResponse(response, "Insufficient permissions");
@@ -110,6 +104,11 @@ public class LoginTokenFilter implements Filter {
                     parsedToken.getUserId(), parsedToken.getRoleId(), method, requestURI, e.getMessage(), e);
             sendUnauthorizedResponse(response, "Authorization error");
         }
+        logger.debug("Access granted for user {} (role: {}) to {}",
+                parsedToken.getUserId(), parsedToken.getRoleId(), requestURI);
+        System.out.println(parsedToken);
+        request.setAttribute("userEmail", parsedToken.getUserId().toLowerCase());
+        chain.doFilter(request, response);
     }
 
     /**
