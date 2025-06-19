@@ -12,6 +12,15 @@ public class ImageUtil {
     public static ByteArrayInputStream processImage(InputStream inputStream, int targetMinimumByteSize, int targetMaximumByteSize, int widthAndHeight) throws IOException {
         // 先将 InputStream 读取为字节数组，避免重复读取问题
         byte[] imageBytes = inputStream.readAllBytes();
+        int originalSize = imageBytes.length;
+
+        System.out.println("Original image size: " + originalSize / 1024 + " KB");
+
+        // 如果原始大小已经在目标范围内，直接返回
+        if (originalSize >= targetMinimumByteSize && originalSize <= targetMaximumByteSize) {
+            System.out.println("Original size is within target range, no compression needed.");
+            return new ByteArrayInputStream(imageBytes);
+        }
 
         double quality = 0.85;
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -49,7 +58,6 @@ public class ImageUtil {
 
         return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
     }
-
 
     public static String getType(InputStream inputStream) throws IOException {
         // Wrap InputStream with BufferedInputStream to allow mark/reset
