@@ -321,7 +321,6 @@ public class FileService {
         byte[] imageBytes = ImageUtil.processImage(file.getInputStream(),200,500, 0).readAllBytes();
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageBytes);
         uploadGeneral(byteArrayInputStream, imageBytes.length,"image/jpeg","posts",  path);
-        logger.debug("Generated UUID for post picture: {}", uuid);
         return path;
     }
 

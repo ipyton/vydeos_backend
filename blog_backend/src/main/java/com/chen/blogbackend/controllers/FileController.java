@@ -6,6 +6,8 @@ import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.FileService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.filter.OrderedFormContentFilter;
 import org.springframework.core.io.InputStreamResource;
@@ -22,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 @Controller()
 @RequestMapping("file")
 public class FileController {
+    private static final Logger logger = LoggerFactory.getLogger(FileController.class);
 
     @Autowired
     FileService fileService;
@@ -47,6 +50,7 @@ public class FileController {
             fileService.uploadPostPics(userEmail, file);
             return new Message(0, "success");
         } catch (Exception e) {
+            logger.error("An error occurred while processing something", e);
             return new Message(-1, e.getMessage());
         }
     }
