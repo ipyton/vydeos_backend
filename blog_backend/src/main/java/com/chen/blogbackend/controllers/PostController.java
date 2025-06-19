@@ -19,10 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -38,6 +35,7 @@ public class PostController {
     @Autowired
     PictureService pictureService;
 
+
     @Autowired
     PostService postService;
 
@@ -47,7 +45,8 @@ public class PostController {
 
 
     @PostMapping("delete")
-    public LoginMessage deletePost(String articleId) {
+    public LoginMessage deletePost(Long postId) {
+        postService.deletePost(postId);
         return new LoginMessage(-1, "failed");
     }
 
@@ -97,7 +96,6 @@ public class PostController {
         return new LoginMessage(1, JSON.toJSONString(postsByTimestamp));
     }
 
-
     @PostMapping("get_posts_range")
     public LoginMessage getPagingArticles(String userID, PagingState state) {
         return new LoginMessage(-1, "Error");
@@ -125,6 +123,11 @@ public class PostController {
         return new Message(0,s);
     }
 
+    @GetMapping("fetch_pictures/{path}")
+    public StreamingResponseBody fetchPictures(@PathVariable String path) {
+        StreamingResponseBody postPictures = pictureService.getPostPictures(path);
+        return postPictures;
+    }
 //    @PostMapping("uploadPicture")
 //    public Message uploadPicture(HttpServletRequest request, MultipartFile file) {
 //        return new Message();

@@ -198,7 +198,11 @@ public class PostService {
         return "";
     }
 
+    public void deletePost(Long postId) {
 
+
+
+    }
 
 
 //    public PagingMessage<Article> getArticlesByGroup(String userId, String groupId, Long startIndex) {
