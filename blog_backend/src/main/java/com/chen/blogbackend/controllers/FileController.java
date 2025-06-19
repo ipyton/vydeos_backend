@@ -47,8 +47,8 @@ public class FileController {
     public Message uploadPostPic(HttpServletRequest request, @RequestParam("file") MultipartFile file) {
         String userEmail = request.getAttribute("userEmail").toString();
         try {
-            fileService.uploadPostPics(userEmail, file);
-            return new Message(0, "success");
+            String s = fileService.uploadPostPics(userEmail, file);
+            return new Message(0, s);
         } catch (Exception e) {
             logger.error("An error occurred while processing something", e);
             return new Message(-1, e.getMessage());
