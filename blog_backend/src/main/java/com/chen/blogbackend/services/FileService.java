@@ -275,23 +275,26 @@ public class FileService {
     }
 
     public void uploadGeneral(ByteArrayInputStream inputStream, long size,
-                                                String contentType, String bucket, String filename) throws Exception {
+                              String contentType, String bucket, String filename) throws Exception {
         logger.info("Uploading file (from stream): {} to bucket: {}", filename, bucket);
 
         try {
-            // 创建存储桶（如果不存在）
+            // Get the actual available bytes from the stream
+            int actualSize = inputStream.available();
+
+            // Create bucket if not exists
             boolean isBucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
             if (!isBucketExists) {
                 logger.info("Bucket {} does not exist, creating it", bucket);
                 minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
             }
 
-            // 上传文件
+            // Upload with actual size
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucket)
                             .object(filename)
-                            .stream(inputStream, size, 5 * 1024 * 1024l)
+                            .stream(inputStream, actualSize, -1) // Use -1 for part size to let MinIO decide
                             .contentType(contentType)
                             .build()
             );
