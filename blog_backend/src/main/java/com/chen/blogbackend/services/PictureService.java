@@ -84,16 +84,16 @@ public class PictureService {
                 logger.info("Successfully created bucket: {}", bucketName);
             }
 
-            ByteArrayInputStream byteArrayInputStream = ImageUtil.processImage(file.getInputStream(),
-                    0, 500, 512);
-            logger.debug("Image processed successfully, size: {} bytes", byteArrayInputStream.available());
 
+            byte[] imageBytes = ImageUtil.processImage(file.getInputStream(),
+                    0, 500, 512).readAllBytes();
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageBytes);
             // 将文件上传到MinIO
             fileClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
                             .object(filePath)
-                            .stream(byteArrayInputStream, byteArrayInputStream.available(), -1)
+                            .stream(byteArrayInputStream, imageBytes.length, -1)
                             .build()
             );
 

@@ -318,8 +318,9 @@ public class FileService {
         String path = uuid.toString().substring(0,3) + "/"+ uuid + ".jpg";
 
         cqlSession.execute(addTempPostImage.bind(userEmail,path, Instant.now()));
-        ByteArrayInputStream byteArrayInputStream = ImageUtil.processImage(file.getInputStream(),200,500, 0);
-        uploadGeneral(byteArrayInputStream,(long)byteArrayInputStream.available(),"image/jpeg","posts",  path);
+        byte[] imageBytes = ImageUtil.processImage(file.getInputStream(),200,500, 0).readAllBytes();
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageBytes);
+        uploadGeneral(byteArrayInputStream, imageBytes.length,"image/jpeg","posts",  path);
         logger.debug("Generated UUID for post picture: {}", uuid);
         return path;
     }
