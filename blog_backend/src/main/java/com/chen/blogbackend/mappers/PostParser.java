@@ -29,7 +29,7 @@ public class PostParser {
                         !columnDefinitions.contains("voices")?null:row.getList("voices", String.class),
                         !columnDefinitions.contains("videos")?null:row.getList("videos",String.class),
                         !columnDefinitions.contains("comments")?null:row.getList("comments", String.class),
-                        row.getString("receiverId"),
+                        row.getString("receiver_id"),
                         row.getString("location")));
             } else {
                 posts.add(new Post(!columnDefinitions.contains("author_id")?null:row.getString("author_id"),
