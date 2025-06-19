@@ -123,10 +123,17 @@ public class PostController {
         return new Message(0,s);
     }
 
+
     @GetMapping("/fetch_pictures/**")
     public StreamingResponseBody fetchPictures(HttpServletRequest request) {
         String requestURI = request.getRequestURI();
-        String path = requestURI.substring("/fetch_pictures/".length());
+
+        // Since nginx strips /java, the URI will be /post/fetch_pictures/838/8380623876590390108.jpg
+        // We need to extract everything after /fetch_pictures/
+        int startIndex = requestURI.indexOf("/fetch_pictures/") + "/fetch_pictures/".length();
+        String path = requestURI.substring(startIndex);
+
+        // path will now be: "838/8380623876590390108.jpg"
         StreamingResponseBody postPictures = pictureService.getPostPictures(path);
         return postPictures;
     }
