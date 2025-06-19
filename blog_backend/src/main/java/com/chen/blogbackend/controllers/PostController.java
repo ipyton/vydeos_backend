@@ -123,11 +123,14 @@ public class PostController {
         return new Message(0,s);
     }
 
-    @GetMapping("fetch_pictures/{path}")
-    public StreamingResponseBody fetchPictures(@PathVariable String path) {
+    @GetMapping("/fetch_pictures/**")
+    public StreamingResponseBody fetchPictures(HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+        String path = requestURI.substring("/fetch_pictures/".length());
         StreamingResponseBody postPictures = pictureService.getPostPictures(path);
         return postPictures;
     }
+
 //    @PostMapping("uploadPicture")
 //    public Message uploadPicture(HttpServletRequest request, MultipartFile file) {
 //        return new Message();
