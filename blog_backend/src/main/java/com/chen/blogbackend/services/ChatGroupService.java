@@ -1,6 +1,5 @@
 package com.chen.blogbackend.services;
 
-import com.chen.blogbackend.DAO.InvitationDao;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.mappers.GroupParser;
 import com.chen.blogbackend.mappers.InvitationMapper;
@@ -62,8 +61,7 @@ public class ChatGroupService {
     PreparedStatement insertInvitation;
     PreparedStatement getInvitation;
 
-    //generate here.
-    InvitationDao invitationDao;
+
     @Autowired
     private CqlSession cqlSession;
 
@@ -221,7 +219,7 @@ public class ChatGroupService {
                 logger.warn("Expired invitation {} for user {} joining group {}", invitationID, userId, groupId);
                 return false;
             }
-            if (invitation.getTargetType().equals("group") && Objects.equals(invitation.getGroupId(), groupId)) {
+            if (invitation.getType().equals("group") && Objects.equals(invitation.getGroupId(), groupId)) {
                 BatchStatementBuilder builder = new BatchStatementBuilder(BatchType.UNLOGGED);
                 builder.addStatements(insertGroupMemberByUser.bind(groupId, userId, username));
                 logger.info("User {} successfully joined group {} using invitation {}", userId, groupId, invitationID);

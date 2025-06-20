@@ -320,7 +320,7 @@ public class FriendsService {
         if (invitations.isEmpty() || invitations.get(0).getExpireTime().isBefore(Instant.now())) {
             throw new Exception("error code");
         } else {
-            String targetType = invitations.get(0).getTargetType();
+            String targetType = invitations.get(0).getType();
             if (targetType.equals("group")) {
                 Long groupId = invitations.get(0).getGroupId();
                 return chatGroupService.joinGroup(userId, groupId);
@@ -353,7 +353,7 @@ public class FriendsService {
                 }
             } else {
                 Invitation invitation = invitations.get(0);
-                return invitation.getToken();
+                return invitation.getCode();
             }
         } else if (type.equals("single")) {
             ResultSet execute = session.execute(getInvitations.bind(type, groupId, userId));
@@ -368,7 +368,7 @@ public class FriendsService {
                 }
             } else {
                 Invitation invitation = invitations.get(0);
-                return invitation.getToken();
+                return invitation.getCode();
             }
 
         } else {
