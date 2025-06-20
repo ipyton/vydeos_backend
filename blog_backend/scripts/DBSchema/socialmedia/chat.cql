@@ -31,3 +31,7 @@ CREATE TABLE web_push_endpoints (
 );
 drop table chat.unread_messages;
 create table chat.unread_messages(user_id text, sender_id text,member_id text,group_id bigint, type text, messageType text, content text, send_time timestamp, message_id bigint, session_message_id bigint, count int, primary key (user_id,type,group_id,sender_id)  );
+
+drop table chat.invitations;
+create table chat.invitations(type text, group_id bigint, user_id text, expire_time timestamp, code text, create_time text, primary key (type, group_id, user_id) );
+CREATE INDEX invitations_code_idx ON chat.invitations (code);

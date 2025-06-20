@@ -3,19 +3,27 @@ package com.chen.blogbackend.entities;
 import com.datastax.oss.driver.api.mapper.annotations.Entity;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Entity
 public class Invitation {
-    private int invitation_id;
+    private int invitationId;
     private String targetType;
     private String targetId;
     private Long groupId;
     private Instant expireTime;
     private String senderId ;
+    private String userId;
     private String token;
     private int limit;
     private Instant inviteTime;
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 
     public Long getGroupId() {
         return groupId;
@@ -25,8 +33,8 @@ public class Invitation {
         this.groupId = groupId;
     }
 
-    public Invitation(int invitation_id, String targetType, String targetId, Instant expire_time, String senderId, String token, int limit, long groupId, Instant inviteTime) {
-        this.invitation_id = invitation_id;
+    public Invitation(int invitationId, String targetType, String targetId, Instant expire_time, String senderId, String token, int limit, long groupId, Instant inviteTime) {
+        this.invitationId = invitationId;
         this.targetType = targetType;
         this.targetId = targetId;
         this.expireTime = expire_time;
@@ -37,12 +45,12 @@ public class Invitation {
         this.groupId = groupId;
     }
 
-    public int getInvitation_id() {
-        return invitation_id;
+    public int getInvitationId() {
+        return invitationId;
     }
 
-    public void setInvitation_id(int invitation_id) {
-        this.invitation_id = invitation_id;
+    public void setInvitationId(int invitationId) {
+        this.invitationId = invitationId;
     }
 
     public String getTargetType() {

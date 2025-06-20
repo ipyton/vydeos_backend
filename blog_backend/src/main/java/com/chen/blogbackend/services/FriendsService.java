@@ -1,6 +1,7 @@
 package com.chen.blogbackend.services;
 
 import com.chen.blogbackend.entities.*;
+import com.chen.blogbackend.mappers.InvitationMapper;
 import com.chen.blogbackend.mappers.RelationshipParser;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -13,6 +14,9 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -41,8 +45,6 @@ public class FriendsService {
     private PreparedStatement getFollowersByUserId;
     private PreparedStatement getUsersIntro;
     private PreparedStatement initUsersIntro;
-    //  private   PreparedStatement updateFriendDirectionByIdolId;
-//  private   PreparedStatement updateFriendDirectionByUserId;
     private PreparedStatement getFollowRelationship;
     private PreparedStatement block;
     private PreparedStatement unBlock;
@@ -52,10 +54,14 @@ public class FriendsService {
     private PreparedStatement addFriend;
     private PreparedStatement getAllFriends;
     private PreparedStatement getIdolsById;
-
+    private PreparedStatement getInvitations;
     private PreparedStatement createGroup;
 
+    private PreparedStatement setInvitations;
+
     ThreadPoolExecutor executor;
+    @Autowired
+    private ChatGroupService chatGroupService;
 
     private static boolean stringLessThan(String str1, String str2) {
         // 使用compareTo方法进行比较
@@ -77,8 +83,8 @@ public class FriendsService {
             getFollowersByUserId = session.prepare("select * from relationship.following_relationship where friend_id =?;");
             getFollowRelationship = session.prepare("select * from relationship.following_relationship where user_id = ? and friend_id = ?");
 
-            ///createGroup = session.prepare("INSERT INTO group_chat.chat_group_details (group_id, group_name, group_description, owner, config, avatar) VALUES (?,?,?,?,?,?);");
-
+            setInvitations = session.prepare("insert into chat.invitation (type, group_id, user_id, expire_time, code, create_time) values(?,?,?,?,?,?);");
+            getInvitations = session.prepare("select * from chat.invitation where type = ? and group_id = ? and user_id = ?;");
             logger.info("FriendsService prepared statements initialized successfully");
         } catch (Exception e) {
             logger.error("Failed to initialize FriendsService prepared statements", e);
@@ -307,24 +313,66 @@ public class FriendsService {
         }
     }
 
-    public boolean verifyInvitation(Invitation invitation) {
-        logger.debug("Verifying invitation: {}", invitation);
-        // TODO: Implement invitation verification logic
-        logger.warn("Invitation verification not implemented - returning true by default");
+    public boolean verifyInvitation(String userId, String invitationCode) throws Exception {
+        logger.warn("Verifying invitation: {} for {}", invitationCode, userId );
+        ResultSet execute = session.execute(getInvitations.bind(invitationCode));
+        List<Invitation> invitations = InvitationMapper.parseInvitation(execute);
+        if (invitations.isEmpty() || invitations.get(0).getExpireTime().isBefore(Instant.now())) {
+            throw new Exception("error code");
+        } else {
+            String targetType = invitations.get(0).getTargetType();
+            if (targetType.equals("group")) {
+                Long groupId = invitations.get(0).getGroupId();
+                return chatGroupService.joinGroup(userId, groupId);
+
+            } else if (targetType.equals("single")) {
+                String targetUserId = invitations.get(0).getUserId();
+
+                boolean follow = follow(targetUserId, userId, "");
+                boolean follow1 = follow(userId, targetUserId, "");
+
+                return follow1 && follow;
+            }
+        }
         return true;
     }
 
-    public boolean approveInvitation(int invitationId) {
-        logger.info("Approving invitation with ID: {}", invitationId);
-        // TODO: Implement invitation approval logic
-        logger.warn("Invitation approval not implemented - returning true by default");
-        return true;
-    }
 
-    public List<Invitation> getInvitations(String userId) {
-        logger.debug("Getting invitations for user: {}", userId);
-        // TODO: Implement get invitations logic
-        logger.warn("Get invitations not implemented - returning empty list");
-        return new ArrayList<Invitation>();
+
+    public String getInvitations(String type, String userId, Long groupId) throws Exception {
+        if (type.equals("group")) {
+            ResultSet execute = session.execute(getInvitations.bind(type, groupId, userId));
+            List<Invitation> invitations = InvitationMapper.parseInvitation(execute);
+            if (invitations.isEmpty() || invitations.get(0).getExpireTime().isBefore(Instant.now())) {
+                String randomString = RandomUtil.generateRandomString(8);
+                ResultSet execute1 = session.execute(setInvitations.bind(type, groupId, userId, Instant.now().plus(Duration.ofDays(7)), randomString,Instant.now()));
+                if (execute1.getExecutionInfo().getErrors().isEmpty()) {
+                    return  randomString;
+                } else {
+                    throw new Exception(execute1.getExecutionInfo().getErrors().toString());
+                }
+            } else {
+                Invitation invitation = invitations.get(0);
+                return invitation.getToken();
+            }
+        } else if (type.equals("single")) {
+            ResultSet execute = session.execute(getInvitations.bind(type, groupId, userId));
+            List<Invitation> invitations = InvitationMapper.parseInvitation(execute);
+            if (invitations.isEmpty() || invitations.get(0).getExpireTime().isBefore(Instant.now())) {
+                String randomString = RandomUtil.generateRandomString(8);
+                ResultSet execute1 = session.execute(setInvitations.bind(type, groupId, userId, Instant.now().plus(Duration.ofMinutes(5)), randomString,Instant.now()));
+                if (execute1.getExecutionInfo().getErrors().isEmpty()) {
+                    return randomString;
+                } else {
+                    throw new Exception(execute1.getExecutionInfo().getErrors().toString());
+                }
+            } else {
+                Invitation invitation = invitations.get(0);
+                return invitation.getToken();
+            }
+
+        } else {
+            throw new Exception("Unsupported invitation type: " + type);
+        }
     }
 }
