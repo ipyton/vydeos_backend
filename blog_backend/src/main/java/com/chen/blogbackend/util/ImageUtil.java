@@ -12,6 +12,15 @@ public class ImageUtil {
     public static ByteArrayInputStream processImage(InputStream inputStream, int targetMinimumByteSize, int targetMaximumByteSize, int widthAndHeight) throws IOException {
         // 先将 InputStream 读取为字节数组，避免重复读取问题
         byte[] imageBytes = inputStream.readAllBytes();
+        int originalSize = imageBytes.length;
+
+        System.out.println("Original image size: " + originalSize / 1024 + " KB");
+
+        // 如果原始大小已经在目标范围内，直接返回
+        if (originalSize >= targetMinimumByteSize && originalSize <= targetMaximumByteSize) {
+            System.out.println("Original size is within target range, no compression needed.");
+            return new ByteArrayInputStream(imageBytes);
+        }
 
         double quality = 0.85;
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -22,11 +31,20 @@ public class ImageUtil {
             // 每次循环都使用新的 ByteArrayInputStream
             ByteArrayInputStream byteInput = new ByteArrayInputStream(imageBytes);
 
-            Thumbnails.of(byteInput)
-                    .size(widthAndHeight, widthAndHeight)
+            Thumbnails.Builder<? extends InputStream> builder = Thumbnails.of(byteInput)
                     .outputFormat("jpg")
-                    .outputQuality(quality)
-                    .toOutputStream(byteArrayOutputStream);
+                    .outputQuality(quality);
+
+            // 关键修复：确保总是设置尺寸或缩放参数
+            if (widthAndHeight > 0) {
+                // 设置具体尺寸
+                builder.size(widthAndHeight, widthAndHeight);
+            } else {
+                // 保持原尺寸，设置缩放为1.0
+                builder.scale(1.0);
+            }
+
+            builder.toOutputStream(byteArrayOutputStream);
 
             int currentSize = byteArrayOutputStream.size();
             System.out.println("Current compressed size: " + currentSize / 1024 + " KB, quality: " + quality);

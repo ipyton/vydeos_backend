@@ -1,11 +1,12 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.entities.FileUploadStatus;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.FileService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.filter.OrderedFormContentFilter;
 import org.springframework.core.io.InputStreamResource;
@@ -15,13 +16,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 
 @ResponseBody
 @Controller()
 @RequestMapping("file")
 public class FileController {
+    private static final Logger logger = LoggerFactory.getLogger(FileController.class);
 
     @Autowired
     FileService fileService;
@@ -41,9 +41,15 @@ public class FileController {
 
 
     @PostMapping("uploadPostPic")
-    public ResponseEntity<String> uploadPostPic(HttpServletRequest request, @RequestParam("file") MultipartFile file) {
+    public Message uploadPostPic(HttpServletRequest request, @RequestParam("file") MultipartFile file) {
         String userEmail = request.getAttribute("userEmail").toString();
-        return fileService.uploadPostPics(userEmail, file);
+        try {
+            String s = fileService.uploadPostPics(userEmail, file);
+            return new Message(0, s);
+        } catch (Exception e) {
+            logger.error("An error occurred while processing something", e);
+            return new Message(-1, e.getMessage());
+        }
     }
 
     @PostMapping("downloadPostPic/{filename}")

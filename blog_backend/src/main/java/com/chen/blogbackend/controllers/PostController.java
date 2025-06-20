@@ -1,29 +1,22 @@
 package com.chen.blogbackend.controllers;
 
-import co.elastic.clients.elasticsearch.nodes.Http;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.chen.blogbackend.entities.Post;
 import com.chen.blogbackend.responseMessage.LoginMessage;
-
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.PostService;
 import com.chen.blogbackend.services.PictureService;
+import com.chen.blogbackend.util.MapboxSearchUtil;
+import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.cql.PagingState;
 import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-
 import java.time.Instant;
 import java.util.List;
 
@@ -35,6 +28,7 @@ public class PostController {
     @Autowired
     PictureService pictureService;
 
+
     @Autowired
     PostService postService;
 
@@ -42,9 +36,9 @@ public class PostController {
 
     TimeBasedGenerator timeBasedGenerator = Generators.timeBasedGenerator();
 
-
     @PostMapping("delete")
-    public LoginMessage deletePost(String articleId) {
+    public LoginMessage deletePost(Long postId) {
+        postService.deletePost(postId);
         return new LoginMessage(-1, "failed");
     }
 
@@ -52,7 +46,7 @@ public class PostController {
     public LoginMessage uploadPost(HttpServletRequest request, @RequestBody Post post) {
         String userEmail = (String) request.getAttribute("userEmail");
         post.setAuthorID(userEmail);
-        String uuid = timeBasedGenerator.generate().toString();
+        Long uuid = RandomUtil.generateTimeBasedRandomLong(userEmail);
         post.setPostID(uuid);
         post.setLastModified(Instant.now());
         int result = postService.uploadPost(userEmail, post);
@@ -94,7 +88,6 @@ public class PostController {
         return new LoginMessage(1, JSON.toJSONString(postsByTimestamp));
     }
 
-
     @PostMapping("get_posts_range")
     public LoginMessage getPagingArticles(String userID, PagingState state) {
         return new LoginMessage(-1, "Error");
@@ -114,4 +107,33 @@ public class PostController {
     public LoginMessage addPost(String introduction) {
         return new LoginMessage(-1,introduction);
     }
+
+    @PostMapping("searchLocation")
+    public Message searchLocation(String keyword) {
+        String s = MapboxSearchUtil.searchByKeyword(keyword);
+        System.out.println(s);
+        return new Message(0,s);
+    }
+
+
+    @GetMapping("/fetch_pictures/**")
+    public StreamingResponseBody fetchPictures(HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+
+        // Since nginx strips /java, the URI will be /post/fetch_pictures/838/8380623876590390108.jpg
+        // We need to extract everything after /fetch_pictures/
+        int startIndex = requestURI.indexOf("/fetch_pictures/") + "/fetch_pictures/".length();
+        String path = requestURI.substring(startIndex);
+
+        // path will now be: "838/8380623876590390108.jpg"
+        StreamingResponseBody postPictures = pictureService.getPostPictures(path);
+        return postPictures;
+    }
+
+//    @PostMapping("uploadPicture")
+//    public Message uploadPicture(HttpServletRequest request, MultipartFile file) {
+//        return new Message();
+//
+//    }
+
 }

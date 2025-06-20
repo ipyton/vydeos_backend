@@ -51,6 +51,9 @@ public class PostService {
     private PreparedStatement savePostByUserId;
     private PreparedStatement sendToMailbox;
     private PreparedStatement getMailBox;
+
+
+    private PreparedStatement deleteTempPics;
     private int pageSize = 10;
     private long timeSlice = 50;
 
@@ -72,6 +75,7 @@ public class PostService {
         getPostById = session.prepare("select * from posts.posts_by_post_id where post_id = ? ");
         getPostByUserId = session.prepare("select * from posts.posts_by_user_id where author_id = ? order by last_modified  desc");
         getMailBox = session.prepare("select * from posts.mail_box where receiver_id = ? order by last_modified desc;");
+        deleteTempPics = session.prepare("delete from posts.temporary_post_pics where author_id = ?");
         pageSize = 10;
     }
 
@@ -119,6 +123,7 @@ public class PostService {
         builder.addStatement(savePostByUserId.bind(post.getPostID(), post.getLikes(),post.getAuthorID(), post.getAuthorName(),
                 post.getComments(), post.getLastModified(), post.getImages(), post.getVideos(), post.getVoices(),
                 post.getContent(), post.getAccessRules(),post.getNotice(),post.getLocation()));
+        builder.addStatement(deleteTempPics.bind(userId));
         List<Relationship> friends = friendsService.getFriendsByUserId(userId);
         for (Relationship friend : friends) {
             String friendId = friend.getFriendId();
@@ -193,7 +198,11 @@ public class PostService {
         return "";
     }
 
+    public void deletePost(Long postId) {
 
+
+
+    }
 
 
 //    public PagingMessage<Article> getArticlesByGroup(String userId, String groupId, Long startIndex) {

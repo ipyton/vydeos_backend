@@ -3,13 +3,12 @@ package com.chen.blogbackend.controllers;
 import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
-import com.chen.blogbackend.responseMessage.PagingMessage;
+import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.FriendsService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -147,19 +146,29 @@ public class FriendsController {
 
 
     @PostMapping("get_invitation_code")
-    public LoginMessage getInvitationCode(String userId) {
-        List<Invitation> invitations = friendsService.getInvitations(userId);
-        return new LoginMessage(1, JSON.toJSONString(invitations));
+    public Message getInvitationCode(String type, String userId, Long groupId) throws Exception {
+        if (type.equals("single") && (userId ==null || userId.equals(""))) {
+            return new Message(-1, "error");
+        } else if (type.equals("groups") && (groupId == null || groupId == 0)) {
+            return new Message(-1, "error");
+        }
+        String invitationCode = friendsService.getInvitations(type, userId,groupId);
+        return new Message(0, invitationCode);
     }
 
     @PostMapping("verify_invitation_code")
-    public LoginMessage verifyInvitationCode(Invitation invitation) {
-        boolean result = friendsService.verifyInvitation(invitation);
-        if (result) {
-            return new LoginMessage(1, "failed");
+    public LoginMessage verifyInvitationCode(HttpServletRequest request, String invitationCode) {
+        String userId = (String) request.getAttribute("userEmail");
+        try {
+            boolean result = friendsService.verifyInvitation(userId, invitationCode);
+            if (result) {
+                return new LoginMessage(0, "success");
+            }
+        } catch (Exception e) {
+            return new LoginMessage(-1, e.getMessage());
         }
-        return new LoginMessage(-1, "success");
 
+        return new LoginMessage(-1, "Internal error");
     }
 
 }

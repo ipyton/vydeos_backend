@@ -1,7 +1,6 @@
 package com.chen.blogbackend.controllers;
 
 import com.alibaba.fastjson.JSON;
-import com.chen.blogbackend.entities.Path;
 import com.chen.blogbackend.entities.PathDTO;
 import com.chen.blogbackend.entities.Role;
 import com.chen.blogbackend.entities.RoleDTO;
@@ -10,7 +9,6 @@ import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.AuthorizationService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -131,7 +129,7 @@ public class AuthorizationController {
             if (b) {
                 return new Message(0, "Success");
             } else {
-                return new Message(-1, "has permission error");
+                return new Message(-1, "does not have permission");
             }
         } catch (Exception e) {
             e.printStackTrace();

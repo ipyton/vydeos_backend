@@ -1,5 +1,8 @@
 package com.chen.blogbackend.util;
 
+import com.google.common.hash.Hashing;
+
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
@@ -108,6 +111,16 @@ public class RandomUtil {
         Random random = new Random();
         return adjs[(random.nextInt() & Integer.MAX_VALUE) % adjs.length] + " " + fruits[(random.nextInt() & Integer.MAX_VALUE) % fruits.length];
 
+    }
+
+    public static Long generateTimeBasedRandomLong(String name) {
+        long timestamp = System.currentTimeMillis() / 1000;
+
+        // murmur3_32 返回 32 bit 整数，unsigned 才能保证全正数
+        int hash = Hashing.murmur3_32_fixed().hashString(name, StandardCharsets.UTF_8).asInt();
+        long userIdHash = Integer.toUnsignedLong(hash);
+
+        return (userIdHash << 32) | (timestamp & 0xFFFFFFFFL);
     }
 
 }

@@ -2,10 +2,8 @@ package com.chen.blogbackend.controllers;
 
 import com.chen.blogbackend.entities.App;
 import com.chen.blogbackend.entities.ApplicationComment;
-import com.chen.blogbackend.entities.Comment;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.PagingMessage;
-import com.chen.blogbackend.services.AccountService;
 import com.chen.blogbackend.services.ApplicationService;
 import com.chen.blogbackend.util.PagingStateConverter;
 import org.springframework.beans.factory.annotation.Autowired;

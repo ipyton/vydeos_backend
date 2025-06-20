@@ -8,9 +8,7 @@ import com.chen.blogbackend.entities.UnfinishedUpload;
 import com.chen.blogbackend.experiments.XXHashComputer;
 import com.chen.blogbackend.mappers.FileServiceMapper;
 import com.chen.blogbackend.responseMessage.LoginMessage;
-import com.chen.blogbackend.util.FileUtil;
-import com.chen.blogbackend.util.UnfinishedUploadCleaner;
-import com.chen.blogbackend.util.VideoUtil;
+import com.chen.blogbackend.util.*;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
@@ -44,6 +42,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,13 +88,15 @@ public class FileService {
 
 
     PreparedStatement uploadAvatar;
-    PreparedStatement addAssets;
     PreparedStatement getUploadStatus;
 
     //PreparedStatement firstSlice;
     PreparedStatement addSlices;
     PreparedStatement updateStatus;
     PreparedStatement setUploadStatus;
+
+    PreparedStatement addTempPostImage;
+
     final Map<String, String> videoMimeTypes = new HashMap<>();
 
     TimeBasedGenerator timeBasedGenerator = Generators.timeBasedGenerator();
@@ -107,7 +108,6 @@ public class FileService {
         try {
             // Initialize prepared statements
             uploadAvatar = cqlSession.prepare("update userinfo.user_information set avatar=? where user_id=?");
-            addAssets = cqlSession.prepare("insert into files.assets (user_id, bucket, file) values (?,?,?) ");
             getUploadStatus = cqlSession.prepare("select * from files.file_upload_status where resource_id = ? and resource_type = ? and season_id = ? and episode = ?");
             updateStatus = cqlSession.prepare("update files.file_upload_status set status_code = ? where resource_id = ? and resource_type = ?  and season_id = ? and episode = ? and quality = ?");
             addSlices = cqlSession.prepare("update files.file_upload_status set current_slice = ? where resource_id = ? and resource_type = ? and season_id = ? and episode = ? and quality = ?");
@@ -116,7 +116,8 @@ public class FileService {
                     "quality, status_code, format, season_id, episode) values (?,?,?,?,?,?,?,?,?,?,?, ?, ?)");
 
             logger.debug("Prepared statements initialized successfully");
-
+            addTempPostImage = cqlSession.prepare("insert into posts.temporary_post_pics " +
+                    "(author_id, path, timestamp) values(?, ?, ?)");
             // Initialize video MIME types
             videoMimeTypes.put("video/mp4", ".mp4");
             videoMimeTypes.put("video/webm", ".webm");
@@ -273,27 +274,67 @@ public class FileService {
         }
     }
 
+    public void uploadGeneral(ByteArrayInputStream inputStream, long size,
+                              String contentType, String bucket, String filename) throws Exception {
+        logger.info("Uploading file (from stream): {} to bucket: {}", filename, bucket);
+
+        try {
+            // 获取流的实际大小
+            int actualSize = inputStream.available();
+            logger.info("Stream actual size: {}, provided size: {}", actualSize, size);
+
+            // 创建存储桶（如果不存在）
+            boolean isBucketExists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
+            if (!isBucketExists) {
+                logger.info("Bucket {} does not exist, creating it", bucket);
+                minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
+            }
+
+            // 重置流到开始位置
+            inputStream.reset();
+
+            // 使用实际大小上传，partSize设为-1让MinIO自动处理
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(filename)
+                            .stream(inputStream, actualSize, -1)  // 关键：使用actualSize和-1
+                            .contentType(contentType)
+                            .build()
+            );
+
+            logger.info("File uploaded successfully (from stream): {} to bucket: {}", filename, bucket);
+        } catch (Exception e) {
+            logger.error("Error uploading file (from stream): {} to bucket: {}", filename, bucket, e);
+            throw new Exception("Error occurred: " + e.getMessage());
+        }
+    }
+
+
     public ResponseEntity<String> uploadChatPics(String userEmail, MultipartFile file) {
         logger.info("Uploading chat picture for user: {}", userEmail);
         String uuid = timeBasedGenerator.generate().toString();
-        cqlSession.execute(addAssets.bind(userEmail,uuid + ".jpg"));
+        cqlSession.execute(addTempPostImage.bind(userEmail,uuid + ".jpg"));
         logger.debug("Generated UUID for chat picture: {}", uuid);
         return ResponseEntity.ok(uuid + ".jpg");
     }
 
-    public ResponseEntity<String> uploadPostPics(String userEmail, MultipartFile file) {
+    public String uploadPostPics(String userEmail, MultipartFile file) throws Exception {
         logger.info("Uploading post picture for user: {}", userEmail);
-        String uuid = timeBasedGenerator.generate().toString();
-        cqlSession.execute(addAssets.bind(userEmail,"postpics",uuid + ".jpg"));
-        uploadGeneral(file,"postpics", uuid + ".jpg");
-        logger.debug("Generated UUID for post picture: {}", uuid);
-        return ResponseEntity.ok(uuid + ".jpg");
+        Long uuid = RandomUtil.generateTimeBasedRandomLong(userEmail);
+        String path = uuid.toString().substring(0,3) + "/"+ uuid + ".jpg";
+
+        cqlSession.execute(addTempPostImage.bind(userEmail,path, Instant.now()));
+        byte[] imageBytes = ImageUtil.processImage(file.getInputStream(),200,500, 0).readAllBytes();
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageBytes);
+        uploadGeneral(byteArrayInputStream, imageBytes.length,"image/jpeg","posts",  path);
+        return path;
     }
 
     public ResponseEntity<String> uploadChatVideo(String userId, MultipartFile file) {
         logger.info("Uploading chat video for user: {}", userId);
         String uuid = timeBasedGenerator.generate().toString();
-        cqlSession.execute(addAssets.bind(userId,uuid));
+        cqlSession.execute(addTempPostImage.bind(userId,uuid));
         uploadGeneral(file,"chatvideo", uuid + ".jpg");
         logger.debug("Generated UUID for chat video: {}", uuid);
         return ResponseEntity.ok(uuid + ".jpg");
@@ -302,7 +343,7 @@ public class FileService {
     public ResponseEntity<String> uploadPostVideo(String userId, MultipartFile file) {
         logger.info("Uploading post video for user: {}", userId);
         String uuid = timeBasedGenerator.generate().toString();
-        cqlSession.execute(addAssets.bind(userId,uuid));
+        cqlSession.execute(addTempPostImage.bind(userId,uuid));
         uploadGeneral(file,"postvideo", uuid + ".jpg");
         logger.debug("Generated UUID for post video: {}", uuid);
         return ResponseEntity.ok(uuid + ".jpg");
@@ -311,7 +352,7 @@ public class FileService {
     public ResponseEntity<String> uploadChatVoice(String userId, MultipartFile file) {
         logger.info("Uploading chat voice for user: {}", userId);
         String uuid = timeBasedGenerator.generate().toString();
-        cqlSession.execute(addAssets.bind(userId,uuid + ".jpg"));
+        cqlSession.execute(addTempPostImage.bind(userId,uuid + ".jpg"));
         uploadGeneral(file,"chatvoice", uuid + ".jpg");
         logger.debug("Generated UUID for chat voice: {}", uuid);
         return ResponseEntity.ok(uuid + ".jpg");
@@ -320,7 +361,7 @@ public class FileService {
     public ResponseEntity<String> uploadPostVoice(String userId, MultipartFile file) {
         logger.info("Uploading post voice for user: {}", userId);
         String uuid = timeBasedGenerator.generate().toString();
-        cqlSession.execute(addAssets.bind(userId,uuid + ".jpg"));
+        cqlSession.execute(addTempPostImage.bind(userId,uuid + ".jpg"));
         uploadGeneral(file,"postvoice", uuid + ".jpg");
         logger.debug("Generated UUID for post voice: {}", uuid);
         return ResponseEntity.ok(uuid + ".jpg");

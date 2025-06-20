@@ -84,16 +84,16 @@ public class PictureService {
                 logger.info("Successfully created bucket: {}", bucketName);
             }
 
-            ByteArrayInputStream byteArrayInputStream = ImageUtil.processImage(file.getInputStream(),
-                    0, 500, 512);
-            logger.debug("Image processed successfully, size: {} bytes", byteArrayInputStream.available());
 
+            byte[] imageBytes = ImageUtil.processImage(file.getInputStream(),
+                    0, 500, 512).readAllBytes();
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageBytes);
             // 将文件上传到MinIO
             fileClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
                             .object(filePath)
-                            .stream(byteArrayInputStream, byteArrayInputStream.available(), -1)
+                            .stream(byteArrayInputStream, imageBytes.length, 5 * 1024 * 1024l)
                             .build()
             );
 
@@ -157,23 +157,23 @@ public class PictureService {
         return response;
     }
 
-    public StreamingResponseBody getPostPicture(String userId, String articleID, int index) {
-        logger.info("Getting post picture for user: {}, article: {}, index: {}", userId, articleID, index);
+    public StreamingResponseBody getPostPictures(String path) {
+        logger.info("Getting post picture for path: {}", path);
 
         StreamingResponseBody responseBody;
-        String objectName = articleID + Integer.toString(index);
+//        String objectName = articleID + Integer.toString(index);
 
         try {
             InputStream stream = fileClient.getObject(GetObjectArgs.builder()
-                    .bucket("articlePics")
-                    .object(objectName)
+                    .bucket("posts")
+                    .object(path)
                     .build());
 
             responseBody = inputStreamConverter(stream);
-            logger.info("Successfully retrieved post picture: {}", objectName);
+            logger.info("Successfully retrieved post picture: {}", path);
 
         } catch (Exception e) {
-            logger.error("Error occurred while getting post picture for article: {}, index: {}", articleID, index, e);
+            logger.error("Error occurred while getting post picture for path: {}", path, e);
             return null;
         }
         return responseBody;

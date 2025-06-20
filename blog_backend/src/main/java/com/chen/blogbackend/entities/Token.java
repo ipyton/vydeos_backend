@@ -12,16 +12,6 @@ public class Token {
         return tokenString;
     }
 
-    @Override
-    public String toString() {
-        return "Token{" +
-                "userId='" + userId + '\'' +
-                ", expireDatetime=" + expireDatetime +
-                ", roleId=" + roleId +
-                ", tokenString='" + tokenString + '\'' +
-                '}';
-    }
-
     public Token(String tokenString, int role, Instant expireDatetime, String userId) {
         this.tokenString = tokenString;
         this.roleId = role;
@@ -52,6 +42,16 @@ public class Token {
         this.userId = userId;
         this.tokenString = tokenString;
         this.expireDatetime = expireDatetime;
+    }
+
+    @Override
+    public String toString() {
+        return "Token{" +
+                "userId='" + userId + '\'' +
+                ", expireDatetime=" + expireDatetime +
+                ", roleId=" + roleId +
+                ", tokenString='" + tokenString + '\'' +
+                '}';
     }
 
     public void setUserId(String userEmail) {

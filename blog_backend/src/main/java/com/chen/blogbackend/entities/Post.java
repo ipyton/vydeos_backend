@@ -11,7 +11,7 @@ public class Post {
     // The attributes here are providing partial information.
     private String authorID = "";
     private String authorName = "";
-    private String postID = "";
+    private Long postID;
     private Instant lastModified = null;
     private String content = "";
     private int likes = 0;
@@ -27,7 +27,7 @@ public class Post {
     public Post() {
     }
 
-    public Post(String authorID, String authorName, String postID, Instant lastModified, String content, int likes, List<String> notice, List<String> accessRules, List<String> images, List<String> voices, List<String> videos, List<String> comments, String receiverId, String location) {
+    public Post(String authorID, String authorName, Long postID, Instant lastModified, String content, int likes, List<String> notice, List<String> accessRules, List<String> images, List<String> voices, List<String> videos, List<String> comments, String receiverId, String location) {
         this.authorID = authorID;
         this.authorName = authorName;
         this.postID = postID;
@@ -44,7 +44,7 @@ public class Post {
         this.location = location;
     }
 
-    public Post(String authorID, String authorName, String postID, Instant lastModified, String content, int likes, List<String> notice, List<String> accessRules, List<String> images, List<String> voices, List<String> videos, List<String> comments, String location) {
+    public Post(String authorID, String authorName, Long postID, Instant lastModified, String content, int likes, List<String> notice, List<String> accessRules, List<String> images, List<String> voices, List<String> videos, List<String> comments, String location) {
         this.authorID = authorID;
         this.authorName = authorName;
         this.postID = postID;
@@ -84,11 +84,11 @@ public class Post {
         this.authorName = authorName;
     }
 
-    public String getPostID() {
+    public Long getPostID() {
         return postID;
     }
 
-    public void setPostID(String postID) {
+    public void setPostID(Long postID) {
         this.postID = postID;
     }
 
