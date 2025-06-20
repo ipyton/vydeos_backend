@@ -168,7 +168,7 @@ public class FriendsController {
             return new LoginMessage(-1, e.getMessage());
         }
 
-
+        return new LoginMessage(-1, "Internal error");
     }
 
 }
