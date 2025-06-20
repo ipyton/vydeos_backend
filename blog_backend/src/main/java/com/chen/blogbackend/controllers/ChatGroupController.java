@@ -4,15 +4,12 @@ import com.alibaba.fastjson.JSON;
 import com.chen.blogbackend.entities.*;
 import com.chen.blogbackend.responseMessage.LoginMessage;
 import com.chen.blogbackend.responseMessage.Message;
-import com.chen.blogbackend.responseMessage.PagingMessage;
 import com.chen.blogbackend.services.ChatGroupService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RequestMapping("group_chat")
@@ -66,7 +63,6 @@ public class ChatGroupController {
         } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }
-
     }
 
 

@@ -1,11 +1,9 @@
 package com.chen.blogbackend.controllers;
 
-import co.elastic.clients.elasticsearch.nodes.Http;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.chen.blogbackend.entities.Post;
 import com.chen.blogbackend.responseMessage.LoginMessage;
-
 import com.chen.blogbackend.responseMessage.Message;
 import com.chen.blogbackend.services.PostService;
 import com.chen.blogbackend.services.PictureService;
@@ -16,14 +14,9 @@ import com.fasterxml.uuid.Generators;
 import com.fasterxml.uuid.impl.TimeBasedGenerator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-
 import java.time.Instant;
 import java.util.List;
 
@@ -42,7 +35,6 @@ public class PostController {
     private final static int page_size = 10;
 
     TimeBasedGenerator timeBasedGenerator = Generators.timeBasedGenerator();
-
 
     @PostMapping("delete")
     public LoginMessage deletePost(Long postId) {
