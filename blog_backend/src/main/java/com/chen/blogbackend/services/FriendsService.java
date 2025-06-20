@@ -83,8 +83,8 @@ public class FriendsService {
             getFollowersByUserId = session.prepare("select * from relationship.following_relationship where friend_id =?;");
             getFollowRelationship = session.prepare("select * from relationship.following_relationship where user_id = ? and friend_id = ?");
 
-            setInvitations = session.prepare("insert into chat.invitation (type, group_id, user_id, expire_time, code, create_time) values(?,?,?,?,?,?);");
-            getInvitations = session.prepare("select * from chat.invitation where type = ? and group_id = ? and user_id = ?;");
+            setInvitations = session.prepare("insert into chat.invitations (type, group_id, user_id, expire_time, code, create_time) values(?,?,?,?,?,?);");
+            getInvitations = session.prepare("select * from chat.invitations where type = ? and group_id = ? and user_id = ?;");
             logger.info("FriendsService prepared statements initialized successfully");
         } catch (Exception e) {
             logger.error("Failed to initialize FriendsService prepared statements", e);
