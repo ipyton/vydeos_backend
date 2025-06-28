@@ -1,4 +1,4 @@
-# 🎬 Movie Community Platform
+# 🎬 Vydeo.xyz
 
 A full-stack movie community platform where users can browse, post, and discuss films, as well as interact with each other. This project features a modern web architecture with an emphasis on performance, scalability, and user experience.
 
