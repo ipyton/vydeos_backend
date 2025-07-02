@@ -95,13 +95,12 @@ public class EndpointAutoRunner {
     private void run(){
         executorService = Executors.newFixedThreadPool(4); // 根据需要调整线程池大小
         getEndpoints = session.prepare("select endpoint,auth,p256dh from chat.web_push_endpoints where user_id = ?");
-        // 使用新线程异步启动 Kafka 消费
         logger.info(getEndpoints.toString());
         Properties props = new Properties();
         props.put("bootstrap.servers", "127.0.0.1" + ":9092");
         props.setProperty("group.id", "endpoint");
         props.setProperty("enable.auto.commit", "false");
-
+        logger.info("Endpoint auto runner started");
         consumer =  new KafkaConsumer<>(props, new StringDeserializer(), new StringDeserializer());
         new Thread(this::consumeMessages).start();
     }
