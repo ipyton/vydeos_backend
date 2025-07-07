@@ -47,6 +47,9 @@ public class Relationship {
         this.name = name;
     }
 
+    public Relationship() {
+    }
+
     public Relationship(String user_id, String friend_id, String avatar, String group_id, String name) {
         this.user_id = user_id;
         this.friend_id = friend_id;
