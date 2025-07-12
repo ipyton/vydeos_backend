@@ -87,8 +87,6 @@ Kafka is used for logging user interactions and powering feed algorithms
 
  Expand recommendation system with collaborative filtering or embeddings
 
-📸 Screenshots
-(Add screenshots here if available)
 
 🧑‍💻 Author
 Zhiheng Chen
