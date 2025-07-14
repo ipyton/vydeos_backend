@@ -83,8 +83,8 @@ public class FriendsService {
             getFollowersByUserId = session.prepare("select * from relationship.following_relationship where friend_id =?;");
             getFollowRelationship = session.prepare("select * from relationship.following_relationship where user_id = ? and friend_id = ?");
 
-            setInvitations = session.prepare("insert into chat.invitation (type, group_id, user_id, expire_time, code, create_time) values(?,?,?,?,?,?);");
-            getInvitations = session.prepare("select * from chat.invitation where type = ? and group_id = ? and user_id = ?;");
+            setInvitations = session.prepare("insert into chat.invitations (type, group_id, user_id, expire_time, code, create_time) values(?,?,?,?,?,?);");
+            getInvitations = session.prepare("select * from chat.invitations where type = ? and group_id = ? and user_id = ?;");
             logger.info("FriendsService prepared statements initialized successfully");
         } catch (Exception e) {
             logger.error("Failed to initialize FriendsService prepared statements", e);
@@ -320,7 +320,7 @@ public class FriendsService {
         if (invitations.isEmpty() || invitations.get(0).getExpireTime().isBefore(Instant.now())) {
             throw new Exception("error code");
         } else {
-            String targetType = invitations.get(0).getTargetType();
+            String targetType = invitations.get(0).getType();
             if (targetType.equals("group")) {
                 Long groupId = invitations.get(0).getGroupId();
                 return chatGroupService.joinGroup(userId, groupId);
@@ -353,7 +353,7 @@ public class FriendsService {
                 }
             } else {
                 Invitation invitation = invitations.get(0);
-                return invitation.getToken();
+                return invitation.getCode();
             }
         } else if (type.equals("single")) {
             ResultSet execute = session.execute(getInvitations.bind(type, groupId, userId));
@@ -368,7 +368,7 @@ public class FriendsService {
                 }
             } else {
                 Invitation invitation = invitations.get(0);
-                return invitation.getToken();
+                return invitation.getCode();
             }
 
         } else {

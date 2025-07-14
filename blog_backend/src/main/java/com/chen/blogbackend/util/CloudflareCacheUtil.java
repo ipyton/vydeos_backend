@@ -17,30 +17,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class CloudflareCacheUtil {
 
-    private final String apiToken;
-    private final String zoneId;
-    private final HttpClient httpClient;
-    private final ObjectMapper objectMapper;
+    private static final String apiToken = System.getenv("CLOUDFLARE_API_KEY");
+    private static final String zoneId = "a7331783bde6f52242855bb1d1ad910b";
+    private static final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(30))
+            .build();;
+    private static final ObjectMapper objectMapper = new ObjectMapper();;
 
     private static final String CLOUDFLARE_API_BASE_URL = "https://api.cloudflare.com/client/v4";
-
-    public CloudflareCacheUtil(String apiToken, String zoneId) {
-        this.apiToken = apiToken;
-        this.zoneId = zoneId;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(30))
-                .build();
-        this.objectMapper = new ObjectMapper();
-    }
-
 
 
     /**
      * 清除所有缓存
      */
-    public PurgeResponse purgeAll() throws IOException, InterruptedException {
+    public static PurgeResponse purgeAll() throws IOException, InterruptedException {
         String url = String.format("%s/zones/%s/purge_cache", CLOUDFLARE_API_BASE_URL, zoneId);
-
         PurgeAllRequest request = new PurgeAllRequest(true);
         String requestBody = objectMapper.writeValueAsString(request);
 
@@ -60,7 +51,7 @@ public class CloudflareCacheUtil {
     /**
      * 根据URL清除指定缓存
      */
-    public PurgeResponse purgeByUrls(List<String> urls) throws IOException, InterruptedException {
+    public static PurgeResponse purgeByUrls(List<String> urls) throws IOException, InterruptedException {
         if (urls == null || urls.isEmpty()) {
             throw new IllegalArgumentException("URLs列表不能为空");
         }

@@ -1,28 +1,44 @@
 package com.chen.blogbackend.entities;
 
-import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import java.time.Instant;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 
-@Entity
+/**
+ * Entity class representing an invitation record from chat.invitations table
+ */
 public class Invitation {
-    private int invitationId;
-    private String targetType;
-    private String targetId;
+    private String type;
     private Long groupId;
-    private Instant expireTime;
-    private String senderId ;
     private String userId;
-    private String token;
-    private int limit;
-    private Instant inviteTime;
+    private Instant expireTime;
+    private String code;
+    private Instant createTime;
 
-    public String getUserId() {
-        return userId;
+    // Default constructor
+    public Invitation() {}
+
+    // Constructor with all fields
+    public Invitation(String type, Long groupId, String userId, Instant expireTime, String code, Instant createTime) {
+        this.type = type;
+        this.groupId = groupId;
+        this.userId = userId;
+        this.expireTime = expireTime;
+        this.code = code;
+        this.createTime = createTime;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    // Getters and Setters
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public Long getGroupId() {
@@ -33,53 +49,12 @@ public class Invitation {
         this.groupId = groupId;
     }
 
-    public Invitation(int invitationId, String targetType, String targetId, Instant expire_time, String senderId, String token, int limit, long groupId, Instant inviteTime) {
-        this.invitationId = invitationId;
-        this.targetType = targetType;
-        this.targetId = targetId;
-        this.expireTime = expire_time;
-        this.senderId = senderId;
-        this.token = token;
-        this.limit = limit;
-        this.inviteTime = inviteTime;
-        this.groupId = groupId;
+    public String getUserId() {
+        return userId;
     }
 
-    public int getInvitationId() {
-        return invitationId;
-    }
-
-    public void setInvitationId(int invitationId) {
-        this.invitationId = invitationId;
-    }
-
-    public String getTargetType() {
-        return targetType;
-    }
-
-    public void setTargetType(String targetType) {
-        this.targetType = targetType;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
-    }
-
-    public Invitation() {
-    }
-
-
-
-    public String getTargetId() {
-        return targetId;
-    }
-
-    public void setTargetId(String targetId) {
-        this.targetId = targetId;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public Instant getExpireTime() {
@@ -90,35 +65,48 @@ public class Invitation {
         this.expireTime = expireTime;
     }
 
-    public Instant getInviteTime() {
-        return inviteTime;
+    public String getCode() {
+        return code;
     }
 
-    public void setInviteTime(Instant inviteTime) {
-        this.inviteTime = inviteTime;
+    public void setCode(String code) {
+        this.code = code;
     }
 
-    public String getSenderId() {
-        return senderId;
+    public Instant getCreateTime() {
+        return createTime;
     }
 
-    public void setSenderId(String senderId) {
-        this.senderId = senderId;
+    public void setCreateTime(Instant createTime) {
+        this.createTime = createTime;
     }
 
-
-
-    public int getLimit() {
-        return limit;
+    // toString method for debugging
+    @Override
+    public String toString() {
+        return "Invitation{" +
+                "type='" + type + '\'' +
+                ", groupId=" + groupId +
+                ", userId='" + userId + '\'' +
+                ", expireTime=" + expireTime +
+                ", code='" + code + '\'' +
+                ", createTime='" + createTime + '\'' +
+                '}';
     }
 
-    public void setLimit(int limit) {
-        this.limit = limit;
+    // equals and hashCode based on primary key (type, groupId, userId)
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Invitation that = (Invitation) o;
+        return Objects.equals(type, that.type) &&
+                Objects.equals(groupId, that.groupId) &&
+                Objects.equals(userId, that.userId);
     }
 
-
-
-
-
-
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, groupId, userId);
+    }
 }

@@ -33,12 +33,6 @@ public class FileController {
         return fileService.download("avatar", userEmail, MediaType.IMAGE_JPEG);
     }
 
-    @PostMapping("uploadAvatar")
-    public String uploadAvatar(HttpServletRequest httpServletRequest, MultipartFile file) {
-        String userEmail = httpServletRequest.getHeader("useremail");
-        return JSON.toJSONString(fileService.uploadAvatar(userEmail, file));
-    }
-
 
     @PostMapping("uploadPostPic")
     public Message uploadPostPic(HttpServletRequest request, @RequestParam("file") MultipartFile file) {

@@ -345,7 +345,7 @@ public class NotificationServerEndpoint {
             if (session != null) {
                 cleanupSession(session);
             }
-            System.out.println("Failed to send message to " + receiverId + ", deprecated");
+            System.out.println("Failed to send message to " + receiverId + jsonString + ", deprecated");
 
             // Store message for later delivery
             //updateMessageList(receiverId, message);

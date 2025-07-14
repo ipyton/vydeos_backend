@@ -1,5 +1,6 @@
 package com.chen.blogbackend.services;
 
+import com.chen.blogbackend.util.CloudflareCacheUtil;
 import com.chen.blogbackend.util.ImageUtil;
 import com.chen.blogbackend.util.RandomUtil;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -16,8 +17,10 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 @Service
 public class PictureService {
@@ -96,12 +99,20 @@ public class PictureService {
                             .stream(byteArrayInputStream, imageBytes.length, 5 * 1024 * 1024l)
                             .build()
             );
+            String url ="https://apis.vydeo.xyz/java/account/getAvatar/" + "single" + "_"+ userEmail;
+            ArrayList<String> urls = new ArrayList<>();
+            urls.add(url);
+            CloudflareCacheUtil.purgeByUrls(urls);
+
+
 
             logger.info("Avatar uploaded successfully for user: {} to path: {}/{}", userEmail, bucketName, filePath);
 
         } catch (MinioException | IOException | InvalidKeyException | NoSuchAlgorithmException e) {
             logger.error("Error occurred while uploading avatar for user: {}", userEmail, e);
             return false;
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
 
         return true;
