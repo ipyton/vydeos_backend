@@ -10,14 +10,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-    - name: Debug SSH Key (first 2 lines only)
-      run: |
-        echo "🔑 First 2 lines of key:"
-        echo "${{ secrets.SERVER_SSH_KEY }}" | head -n 2
-    
-        echo ""
-        echo "🔒 Key MD5:"
-        echo "${{ secrets.SERVER_SSH_KEY }}" | md5sum
+      - name: Debug SSH Key (first 2 lines only)
+        run: |
+          echo "🔑 First 2 lines of key:"
+          echo "${{ secrets.SERVER_SSH_KEY }}" | head -n 2
+      
+          echo ""
+          echo "🔒 Key MD5:"
+          echo "${{ secrets.SERVER_SSH_KEY }}" | md5sum
           
           
       # ---------- Build Notification ----------
