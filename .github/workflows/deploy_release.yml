@@ -10,14 +10,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Decode SSH Key from Base64
+        run: |
+          echo "🔑 Decoding SSH key from base64..."
+          echo "${{ secrets.SERVER_SSH_KEY }}" | base64 -d > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+          echo "✅ SSH key decoded and saved to /tmp/ssh_key"
+
       - name: Debug SSH Key (first 2 lines only)
         run: |
-          echo "🔑 First 2 lines of key:"
-          echo "${{ secrets.SERVER_SSH_KEY }}" | head -n 2
+          echo "🔑 First 2 lines of decoded key:"
+          head -n 2 /tmp/ssh_key
       
           echo ""
           echo "🔒 Key MD5:"
-          echo "${{ secrets.SERVER_SSH_KEY }}" | md5sum
+          md5sum /tmp/ssh_key
           
           
       # ---------- Build Notification ----------
@@ -32,7 +39,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           port: 50022
           username: root
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          key_path: /tmp/ssh_key
           source: "Notification/target/*.jar"
           target: "~/notification"
           strip_components: 2  # Remove Notification/target/ prefix
@@ -48,7 +55,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: root
           port: 50022 
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          key_path: /tmp/ssh_key
           script: |
             echo "========================================="
             echo "🚀 NOTIFICATION SERVICE DEPLOYMENT START"
@@ -199,7 +206,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: root
           port: 50022
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          key_path: /tmp/ssh_key
           source: "blog_backend/target/*.jar"
           target: "~/blog_backend"
           strip_components: 2  # Remove blog_backend/target/ prefix
@@ -215,7 +222,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: root
           port: 50022
-          key: ${{ secrets.SERVER_SSH_KEY }}
+          key_path: /tmp/ssh_key
           script: |
             echo "========================================="
             echo "🚀 BLOG BACKEND SERVICE DEPLOYMENT START"
@@ -353,3 +360,11 @@ jobs:
             echo "🆔 Process ID: $(pgrep -f "java -jar.*$(pwd)/app.jar")"
             echo "📅 Completion Time: $(date)"
             echo "========================================="
+
+      # ---------- Cleanup ----------
+      - name: Cleanup SSH Key
+        if: always()
+        run: |
+          echo "🧹 Cleaning up SSH key file..."
+          rm -f /tmp/ssh_key
+          echo "✅ SSH key cleaned up"
