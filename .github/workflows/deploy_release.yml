@@ -9,7 +9,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        
+      - name: Debug host connection
+        run: echo "Connecting to host: ${{ secrets.SERVER_HOST }} on port 50022"
       - name: Test SSH connectivity
         run: |
           timeout 10 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.SERVER_HOST }}/50022" && echo "✅ Port 50022 is open" || echo "❌ Port 50022 is closed"
