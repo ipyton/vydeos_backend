@@ -9,9 +9,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        
       - name: Test SSH port connectivity with nc
         run: |
-          apt-get update && apt-get install -y netcat
+          sudo apt-get update
+          sudo apt-get install -y netcat
           nc -zv ${{ secrets.SERVER_HOST }} 50022 || true
 
       # ---------- Build Notification ----------
