@@ -10,11 +10,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         
-      - name: Test SSH port connectivity with nc
+      - name: Test SSH connectivity
         run: |
-          sudo apt-get update
-          sudo apt-get install -y netcat
-          nc -zv ${{ secrets.SERVER_HOST }} 50022 || true
+          timeout 10 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.SERVER_HOST }}/50022" && echo "✅ Port 50022 is open" || echo "❌ Port 50022 is closed"
 
       # ---------- Build Notification ----------
       - name: Build Notification
