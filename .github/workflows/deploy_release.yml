@@ -9,16 +9,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Test SSH port connectivity
+      - name: Test SSH port connectivity with nc
         run: |
-          apt-get update && apt-get install -y telnet
-          telnet ${{ secrets.SERVER_HOST }} 50022 || true
-            - name: Set up Java 17
-              uses: actions/setup-java@v3
-              with:
-                distribution: 'temurin'
-                java-version: '17'
-                cache: 'maven'  # Enable Maven cache for faster builds
+          apt-get update && apt-get install -y netcat
+          nc -zv ${{ secrets.SERVER_HOST }} 50022 || true
 
       # ---------- Build Notification ----------
       - name: Build Notification
