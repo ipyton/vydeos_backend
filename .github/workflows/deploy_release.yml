@@ -37,6 +37,10 @@ jobs:
           source: "Notification/target/*.jar"
           target: "~/notification"
           strip_components: 2  # Remove Notification/target/ prefix
+          timeout: 180s              # 3 minutes timeout
+          command_timeout: 300s      # 5 minutes command timeout
+          debug: true                # Enable debug mode
+          overwrite: true            # Overwrite existing files
 
       # ---------- Restart Notification Service ----------
       - name: Restart Notification Java App
@@ -200,6 +204,10 @@ jobs:
           source: "blog_backend/target/*.jar"
           target: "~/blog_backend"
           strip_components: 2  # Remove blog_backend/target/ prefix
+          timeout: 180s              # 3 minutes timeout
+          command_timeout: 300s      # 5 minutes command timeout
+          debug: true                # Enable debug mode
+          overwrite: true            # Overwrite existing files
 
       # ---------- Restart blog_backend Service ----------
       - name: Restart blog_backend Java App
