@@ -14,7 +14,9 @@ jobs:
         run: |
           echo "🔑 Decoding SSH key from base64..."
           # Remove any whitespace/newlines and decode
-          echo "${{ secrets.SERVER_SSH_KEY }}" | tr -d '[:space:]' | base64 -d > /tmp/ssh_key
+          echo "${{ secrets.SERVER_SSH_KEY }}" \
+            | tr -d '[:space:]' \
+            | base64 -d > /tmp/ssh_key
           chmod 600 /tmp/ssh_key
           echo "✅ SSH key decoded and saved to /tmp/ssh_key"
           
@@ -26,6 +28,7 @@ jobs:
             echo "First line: $(head -n 1 /tmp/ssh_key)"
             exit 1
           fi
+
 
       - name: Debug SSH Key (first 2 lines only)
         run: |
