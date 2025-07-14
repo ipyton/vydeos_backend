@@ -13,9 +13,19 @@ jobs:
       - name: Decode SSH Key from Base64
         run: |
           echo "🔑 Decoding SSH key from base64..."
-          echo "${{ secrets.SERVER_SSH_KEY }}" | base64 -d > /tmp/ssh_key
+          # Remove any whitespace/newlines and decode
+          echo "${{ secrets.SERVER_SSH_KEY }}" | tr -d '[:space:]' | base64 -d > /tmp/ssh_key
           chmod 600 /tmp/ssh_key
           echo "✅ SSH key decoded and saved to /tmp/ssh_key"
+          
+          # Verify the key format
+          if head -n 1 /tmp/ssh_key | grep -q "BEGIN.*PRIVATE KEY"; then
+            echo "✅ SSH key appears to be valid"
+          else
+            echo "❌ SSH key format may be invalid"
+            echo "First line: $(head -n 1 /tmp/ssh_key)"
+            exit 1
+          fi
 
       - name: Debug SSH Key (first 2 lines only)
         run: |
