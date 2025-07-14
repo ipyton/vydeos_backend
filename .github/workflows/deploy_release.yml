@@ -10,15 +10,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Test SSH connectivity to 157.20.83.59
+      - name: Debug SSH key and connection settings
         run: |
-          echo "🔍 Testing connectivity to 157.20.83.59:50022"
-          
-          if timeout 10 bash -c "cat < /dev/null > /dev/tcp/157.20.83.59/50022" 2>/dev/null; then
-            echo "✅ Port 50022 is open and accessible"
-          else
-            echo "❌ Port 50022 is closed or filtered"
-          fi
+          echo "🔑 SSH Key (first 2 lines):"
+          echo "${{ secrets.SERVER_SSH_KEY }}" | head -n 2
+          echo ""
+          echo "🌐 Host: ${{ secrets.SERVER_HOST }}"
+          echo "👤 User: root"
+          echo "🔌 Port: 50022"
           
           
       # ---------- Build Notification ----------
