@@ -11,16 +11,16 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Test SSH connectivity to 157.20.83.59
-              run:|
-                echo "🔍 Testing connectivity to 157.20.83.59:50022"
-                
-                if timeout 10 bash -c "cat < /dev/null > /dev/tcp/157.20.83.59/50022" 2>/dev/null; then
-                  echo "✅ Port 50022 is open and accessible"
-                else
-                  echo "❌ Port 50022 is closed or filtered"
-                fi
-                
-                
+        run: |
+          echo "🔍 Testing connectivity to 157.20.83.59:50022"
+          
+          if timeout 10 bash -c "cat < /dev/null > /dev/tcp/157.20.83.59/50022" 2>/dev/null; then
+            echo "✅ Port 50022 is open and accessible"
+          else
+            echo "❌ Port 50022 is closed or filtered"
+          fi
+          
+          
       # ---------- Build Notification ----------
       - name: Build Notification
         working-directory: ./Notification
