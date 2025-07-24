@@ -85,8 +85,9 @@ public class ChatGroupService {
             getGroupMember = session.prepare("select * from group_chat.chat_group_members_by_group where group_id = ? and user_id = ?");
             getGroupOwner = session.prepare("select owner_id from group_chat.chat_group_details where group_id = ?;");
             updateGroupDetails = session.prepare("UPDATE group_chat.chat_group_details SET introduction = ?, name = ?, allow_invite_by_token = ? WHERE group_id = ?;");
-            insertInvitation = session.prepare("insert into group_chat.invitations (source_id, expire_time, code, userId, create_time) values (?, ?, ?, ?, ?)");
-            getInvitation = session.prepare("select * from group_chat.invitations where code = ?;");
+            //create table chat.invitations(type text, group_id bigint, user_id text, expire_time timestamp, code text, create_time text, primary key (type, group_id, user_id) );
+            insertInvitation = session.prepare("insert into chat.invitations (type, group_id, user_id, expire_time, code, create_time) values (?, ?, ?, ?, ?,?);");
+            getInvitation = session.prepare("select * from chat.invitations where code = ?;");
             removeGroupMemberByGroup = session.prepare("delete from group_chat.chat_group_members_by_group where user_id = ? and group_id = ?;");
             removeGroupMemberByUser =session.prepare("delete from group_chat.chat_group_members_by_user where user_id = ? and group_id = ?;");
             getGroupMessages = session.prepare("select * from chat.group_chat_records where group_id = ? and session_message_id <= ? order by session_message_id desc limit 15;");
