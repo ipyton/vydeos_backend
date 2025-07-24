@@ -510,6 +510,10 @@ public class AccountService {
             Verification verification = CodeMapper.codeMapper(execute1);
             if (verification != null && Instant.now().isBefore(verification.getExpiration()) && verification.getCode().equals(code)) {
                 ResultSet execute = session.execute(insertPasswordAndRoleId.bind(encrypted, 1, userId));
+                Account account = new Account();
+                account.setUserId(userId);
+                account.setUserName(userId);
+                insertUserDetails(account);
                 boolean success = execute.getExecutionInfo().getErrors().isEmpty();
                 if (success) {
                     logger.info("Successfully completed registration step 3 for user ID: {}", userId);
@@ -655,6 +659,11 @@ public class AccountService {
             List<Row> all = execute.all();
             if (all.isEmpty()) {
 //                // Register new user
+                Account account = new Account();
+                account.setUserId(name);
+                account.setAvatar(pictureUrl);
+                account.setUserName(email);
+                insertUserDetails(account);
                 token = TokenUtil.createToken(new Token(email, 1,Instant.now().plus((long) (30 * 3600 * 24), ChronoUnit.SECONDS), email));
                 session.execute(insertAccount.bind(email,email, "","",1));
                 session.execute(setToken.bind(token.getTokenString(), email, token.getExpireDatetime()));

@@ -99,4 +99,3 @@ CREATE TABLE if not exists userinfo.user_registration_code  (   kind text,
                                                  PRIMARY KEY (kind, userid)
 );
 
-update user_auth set roleId = 0 where email = 'czh1278341834@gmail.com';
