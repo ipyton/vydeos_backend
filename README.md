@@ -15,8 +15,9 @@ A full-stack movie community platform where users can browse, post, and discuss 
 
 - **Flask (Python)** – RESTful API for user auth, movie data, comments, etc.  
 - **Spring Boot (Java)** – Microservices for modular architecture  
-- **Redis** – Caching, rate limiting, and hot content tracking  
+- **Redis** – Caching, rate limiting, sequence number generation,and hot content tracking
 - **Kafka** – Event streaming and asynchronous logging  
+- **Node.js** – User routing and endpoint scale up. 
 - **Cassandra** – Distributed storage for activity streams  
 - **MySQL (AWS RDS)** – Relational database for core data (users, movies, comments)  
 
