@@ -9,7 +9,6 @@ create table user_auth (userId text, password text, email text, telephone text,t
 create table user_tokens (user_token text primary key , userId text,  invalid_date timestamp);
 CREATE INDEX ON user_tokens (userId);
 
-create table user_registration_code (userId text primary key, code text, expire_time timestamp);
 
 CREATE TABLE IF NOT EXISTS role_auths (
                                      roleId int,
@@ -37,7 +36,8 @@ insert into role_auths (roleId, path, name, version, type) VALUES (0, '/download
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/userManage', 'User Management', 0, 'nav' );
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/role', 'Role Management', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/download', 'Download', 0, 'nav');
-
+insert into role_auths (roleId, path, name, version, type) VALUES (0, '/post', 'Download', 0, 'nav');
+insert into role_auths (roleId, path, name, version, type) VALUES (0, '/**', 'All', 0, 'api' );
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/edit', 'Edit', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/chat', 'Chat', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/trending', 'Trending', 0, 'nav' );
@@ -51,6 +51,22 @@ insert into role_auths (roleId, path, name, version, type) VALUES (0, '/settings
 insert into role_auths (roleId, path, name, version, type) VALUES (0, '/friends', 'Friends', 0, 'nav');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/i18n/**', 'languages', 0, 'api');
 
+
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/account/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/auth/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/article/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/search/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/api/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/movie/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/friends/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/chat/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/file/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/post/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/gallery/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/comment/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/play_videos/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/movie_management/\*\*', 'Friends', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/movie/get_meta', 'Friends', 0, 'api');
 
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/account/**', 'Friends', 0, 'api');
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/auth/**', 'Friends', 0, 'api');
@@ -69,9 +85,18 @@ insert into role_auths (roleId, path, name, version, type) VALUES (1, '/movie_ma
 insert into role_auths (roleId, path, name, version, type) VALUES (1, '/movie/get_meta', 'Friends', 0, 'api');
 insert into role_auths (roleId, path, name, version, type) VALUES (0,  '/**', 'All Permissions ', 0, 'api');
 
+use userinfo;
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/auth/getNavPaths', 'Get Auths', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/chat/**', 'All chats related things', 0, 'api');
+insert into role_auths (roleId, path, name, version, type) VALUES (1, '/gallery/**', 'All friends Related things', 0, 'api');
+
+insert into userinfo.role_auths (roleId, path, name, version, type) VALUES (1, '/gallery/**', 'All friends Related things', 0, 'api');
+
 CREATE TABLE if not exists userinfo.user_registration_code  (   kind text,
                                                  userid text,
                                                  code text,
                                                  expire_time timestamp,
                                                  PRIMARY KEY (kind, userid)
 );
+
+update user_auth set roleId = 0 where email = 'czh1278341834@gmail.com';

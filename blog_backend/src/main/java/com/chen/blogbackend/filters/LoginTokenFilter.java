@@ -98,6 +98,7 @@ public class LoginTokenFilter implements Filter {
                 logger.warn("Access denied for user {} (role: {}) to {} {}",
                         parsedToken.getUserId(), parsedToken.getRoleId(), method, requestURI);
                 sendUnauthorizedResponse(response, "Insufficient permissions");
+                return;
             }
         } catch (Exception e) {
             logger.error("Error during authorization check for user {} (role: {}) accessing {} {}: {}",

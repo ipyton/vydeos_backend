@@ -60,13 +60,12 @@ public class AuthorizationService {
             }
         }
 
-        if (logger.isDebugEnabled()) {
             for (Map.Entry<Integer, List<String>> entry : allowedPaths.entrySet()) {
                 for (String path : entry.getValue()) {
                     logger.debug("Role {} has access to path: {}", entry.getKey(), path);
                 }
             }
-        }
+
         logger.info("Authorization paths reload completed. Total roles: {}", allowedPaths.size());
     }
 
