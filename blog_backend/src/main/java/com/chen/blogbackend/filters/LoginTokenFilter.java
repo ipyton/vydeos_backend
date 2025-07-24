@@ -92,7 +92,7 @@ public class LoginTokenFilter implements Filter {
 
         // Check authorization (role -1 appears to be admin/bypass role)
         try {
-            boolean hasAccess = parsedToken.getRoleId() == -1 || authorizationService.hasAccess(parsedToken.getRoleId(), requestURI);
+            boolean hasAccess = parsedToken.getRoleId() == -1 || parsedToken.getRoleId() == 0 || authorizationService.hasAccess(parsedToken.getRoleId(), requestURI);
 
             if (!hasAccess) {
                 logger.warn("Access denied for user {} (role: {}) to {} {}",
