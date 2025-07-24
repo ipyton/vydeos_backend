@@ -650,16 +650,18 @@ public class AccountService {
 
             // Check if user exists in database
             ResultSet execute = session.execute(getAccount.bind(email));
-            Token token = TokenUtil.createToken(new Token(email, 1,Instant.now().plus((long) (30 * 3600 * 24), ChronoUnit.SECONDS), email));
+            Token token = null;
 
             List<Row> all = execute.all();
-            if (all.size() == 0) {
+            if (all.isEmpty()) {
 //                // Register new user
+                token = TokenUtil.createToken(new Token(email, 1,Instant.now().plus((long) (30 * 3600 * 24), ChronoUnit.SECONDS), email));
                 session.execute(insertAccount.bind(email,email, "","",1));
                 session.execute(setToken.bind(token.getTokenString(), email, token.getExpireDatetime()));
                 logger.info("New user registered via Google: {}", email);
             } else {
-
+                Integer roleId = all.get(0).get("roleId", Integer.class);
+                token = TokenUtil.createToken(new Token(email, roleId,Instant.now().plus((long) (30 * 3600 * 24), ChronoUnit.SECONDS), email));
                 logger.info("Existing user logged in via Google: {}", email);
                 session.execute(setToken.bind(token.getTokenString(),email, token.getExpireDatetime()));
             }
