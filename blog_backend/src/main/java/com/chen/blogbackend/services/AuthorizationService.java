@@ -62,7 +62,7 @@ public class AuthorizationService {
 
             for (Map.Entry<Integer, List<String>> entry : allowedPaths.entrySet()) {
                 for (String path : entry.getValue()) {
-                    logger.debug("Role {} has access to path: {}", entry.getKey(), path);
+                    logger.info("Role {} has access to path: {}", entry.getKey(), path);
                 }
             }
 
